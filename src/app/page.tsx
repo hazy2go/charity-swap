@@ -1,5 +1,6 @@
 import { ConnectButton } from "@/components/ConnectButton";
 import { SwapCard } from "@/components/SwapCard";
+import { DesktopIcons } from "@/components/DesktopIcons";
 
 export default function Home() {
   return (
@@ -8,60 +9,85 @@ export default function Home() {
       <header className="xp-taskbar">
         <ConnectButton />
 
-        {/* Open "applications" */}
-        <div className="xp-taskbar__task xp-taskbar__task--active" aria-current="true">
+        {/* Open "applications" — hidden on mobile to save space */}
+        <a
+          href="#swap-window"
+          className="xp-taskbar__task xp-taskbar__task--active hidden sm:flex"
+          aria-current="true"
+        >
           <span aria-hidden>🪟</span>
           <span>Swap.exe</span>
-        </div>
-        <div className="xp-taskbar__task">
+        </a>
+        <a
+          href="#notepad-window"
+          className="xp-taskbar__task hidden md:flex"
+        >
           <span aria-hidden>📝</span>
           <span>ReadMe.txt — Notepad</span>
-        </div>
+        </a>
 
-        {/* Tray */}
-        <div className="xp-tray">
-          <span className="xp-tray__icon" title="MCP">🔌</span>
+        {/* Tray — collapses on small screens */}
+        <div className="xp-tray text-[10px] sm:text-[11px]">
           <a
             href="https://builders.sodax.com/mcp"
             target="_blank"
             rel="noreferrer"
-            className="hover:underline"
+            className="hover:underline flex items-center gap-1"
             title="SODAX Builders MCP"
           >
-            builders.sodax.com/mcp
+            <span className="xp-tray__icon" aria-hidden>🔌</span>
+            <span className="hidden sm:inline">builders.sodax.com/mcp</span>
+            <span className="sm:hidden">MCP</span>
           </a>
-          <span className="opacity-70">|</span>
-          <span title="Network">SODAX V2</span>
+          <span className="opacity-70 hidden sm:inline">|</span>
+          <span className="hidden sm:inline" title="Network">SODAX V2</span>
         </div>
       </header>
 
       {/* Desktop */}
       <main
-        className="flex-1 p-8 relative"
+        className="flex-1 p-3 sm:p-6 md:p-8 relative overflow-x-hidden"
         style={{
           backgroundImage:
             "radial-gradient(circle at 8% 12%, rgba(255,255,255,0.06) 0%, transparent 22%), radial-gradient(circle at 92% 88%, rgba(0,0,0,0.18) 0%, transparent 28%)",
         }}
       >
-        {/* Desktop icons — left rail */}
-        <div className="hidden md:flex flex-col gap-5 absolute left-6 top-6">
-          <DesktopIcon glyph="💾" label="charity-swap" />
-          <DesktopIcon glyph="🧾" label="BUILD-LOG.md" />
-          <DesktopIcon glyph="🔗" label="Repo on&nbsp;GitHub" />
-          <DesktopIcon glyph="🛠" label="SODAX MCP" />
-          <DesktopIcon glyph="🗑" label="Recycle Bin" />
-        </div>
+        {/* Functional desktop icons (md+) */}
+        <DesktopIcons />
 
         {/* Two-window composition */}
-        <div className="flex flex-wrap gap-6 justify-center items-start pt-2 md:pl-28">
-          <SwapCard />
+        <div className="flex flex-wrap gap-4 sm:gap-6 justify-center items-start pt-1 sm:pt-2 md:pl-28">
+          <section id="swap-window" className="scroll-mt-12">
+            <SwapCard />
+          </section>
 
-          <NotepadWindow />
+          <section id="notepad-window" className="scroll-mt-12">
+            <NotepadWindow />
+          </section>
         </div>
 
-        {/* Watermark — "Charity Swap Silver Edition" — bottom-right */}
+        {/* Mobile: tiny chip with quick links since desktop icons are hidden */}
+        <nav className="md:hidden mt-4 flex flex-wrap justify-center gap-2 text-[10px]">
+          <MobileChip
+            href="https://github.com/hazy2go/charity-swap"
+            label="GitHub"
+            glyph="🔗"
+          />
+          <MobileChip
+            href="https://github.com/hazy2go/charity-swap/blob/main/BUILD-LOG.md"
+            label="Build Log"
+            glyph="🧾"
+          />
+          <MobileChip
+            href="https://builders.sodax.com/mcp"
+            label="SODAX MCP"
+            glyph="🛠"
+          />
+        </nav>
+
+        {/* Watermark — hidden on small screens, visible from md+ */}
         <div
-          className="absolute bottom-12 right-8 text-right select-none"
+          className="hidden md:block absolute bottom-12 right-8 text-right select-none"
           style={{
             color: "rgba(255,255,255,0.55)",
             textShadow: "1px 1px 1px rgba(0,0,0,0.6)",
@@ -82,21 +108,25 @@ export default function Home() {
   );
 }
 
-function DesktopIcon({
-  glyph,
+function MobileChip({
+  href,
   label,
+  glyph,
 }: {
-  glyph: string;
+  href: string;
   label: string;
+  glyph: string;
 }) {
   return (
-    <div className="xp-desktop-icon">
-      <div className="xp-desktop-icon__glyph">{glyph}</div>
-      <div
-        className="xp-desktop-icon__label"
-        dangerouslySetInnerHTML={{ __html: label }}
-      />
-    </div>
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="xp-button !min-w-0 !h-auto inline-flex items-center gap-1 !px-2 !py-1"
+    >
+      <span aria-hidden>{glyph}</span>
+      <span>{label}</span>
+    </a>
   );
 }
 
@@ -127,7 +157,7 @@ function NotepadWindow() {
       </div>
 
       <div className="px-3 pb-3 pt-2 bg-[var(--xp-face)]">
-        <pre className="xp-notepad">{`CHARITY SWAP — README.TXT
+        <pre className="xp-notepad text-[11px] sm:text-[12px] overflow-x-auto">{`CHARITY SWAP — README.TXT
 ============================
 
 Day 3 of a 2-week public build on the SODAX SDK V2.
@@ -151,7 +181,7 @@ STATUS THIS COMMIT
   [x] EVM wallet connect (Hana / MetaMask / Rabby)
   [x] Live quotes via useQuote
   [x] Approve + Swap path via useSwap
-  [x] 3 preset USDC/USDT pairs
+  [x] 8 preset pairs (★ SODA buy/sell/bridge first)
   [ ] Partner fee  ............ Day 9
   [ ] Points ledger  .......... Day 4
   [ ] Charity vote  ........... Day 11

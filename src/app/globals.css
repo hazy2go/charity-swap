@@ -63,11 +63,23 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html, body {
   -webkit-font-smoothing: antialiased;
   font-family: "Tahoma", "Geneva", "Verdana", "Segoe UI", sans-serif;
   font-size: 11px;
   color: #000;
+  /* Prevents iOS auto-zoom on input focus */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Inputs at >=16px font-size prevent iOS Safari from zooming on focus */
+.xp-input--big { font-size: 16px; }
+@media (min-width: 640px) {
+  .xp-input--big { font-size: 18px; }
 }
 
 body {
@@ -281,11 +293,13 @@ body {
    ---------------------------------------------------------- */
 
 .xp-taskbar {
-  height: 30px;
+  height: 32px;
   display: flex;
   align-items: stretch;
   gap: 4px;
   padding: 2px 4px;
+  min-width: 0;
+  overflow: hidden;
   background:
     linear-gradient(180deg,
       var(--xp-taskbar-1) 0%,
@@ -333,9 +347,11 @@ body {
 .xp-tray {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-left: auto;
   padding: 0 8px 0 10px;
+  flex: 0 0 auto;
+  min-width: 0;
   background: linear-gradient(180deg, #6786ad 0%, #3a5b86 100%);
   border-left: 1px solid #1d2433;
   box-shadow: inset 1px 0 0 0 rgba(255,255,255,0.35);
@@ -356,8 +372,10 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 14px 0 8px;
+  padding: 0 12px 0 7px;
   height: 100%;
+  flex: 0 0 auto;
+  white-space: nowrap;
   color: white;
   font-family: "Tahoma", sans-serif;
   font-weight: bold;
