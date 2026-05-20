@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useXAccount,
   useXConnect,
@@ -24,6 +24,37 @@ export function ConnectButton() {
   const { mutateAsync: connect, isPending, error } = useXConnect();
   const account = useXAccount({ xChainType: "EVM" });
   const disconnect = useXDisconnect();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Robust click-outside: ignore the same click that opened the menu
+  // (defer one tick) and only close when a real subsequent click lands
+  // outside the start button + menu container.
+  useEffect(() => {
+    if (!open) return;
+    let armed = false;
+    const arm = setTimeout(() => {
+      armed = true;
+    }, 0);
+    const onMouseDown = (e: MouseEvent) => {
+      if (!armed) return;
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(arm);
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   // ---- Connected state (system tray) ----
   if (account.address) {
@@ -49,7 +80,7 @@ export function ConnectButton() {
 
   // ---- Disconnected state — Start button + Start menu ----
   return (
-    <div className="relative h-full">
+    <div className="relative h-full" ref={wrapperRef}>
       <button
         className="xp-start h-full"
         onClick={() => setOpen((v) => !v)}
@@ -61,28 +92,20 @@ export function ConnectButton() {
       </button>
 
       {open && (
-        <>
-          {/* click-away */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setOpen(false)}
-            aria-hidden
-          />
-          <StartMenu
-            connectors={connectors}
-            onConnect={async (c) => {
-              try {
-                await connect(c);
-              } catch {
-                /* surfaced via error */
-              } finally {
-                setOpen(false);
-              }
-            }}
-            error={error?.message}
-            isPending={isPending}
-          />
-        </>
+        <StartMenu
+          connectors={connectors}
+          onConnect={async (c) => {
+            try {
+              await connect(c);
+            } catch {
+              /* surfaced via error */
+            } finally {
+              setOpen(false);
+            }
+          }}
+          error={error?.message}
+          isPending={isPending}
+        />
       )}
     </div>
   );
