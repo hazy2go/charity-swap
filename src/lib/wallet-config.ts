@@ -1,9 +1,14 @@
 import { ChainKeys } from "@sodax/types";
 import type { SodaxWalletConfig } from "@sodax/wallet-sdk-react";
 
+const wcProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+
 export const walletConfig: SodaxWalletConfig = {
   EVM: {
     ssr: true,
+    // When the project id is missing the connector is silently skipped
+    // (EIP-6963 wallets keep working) — local dev without the env stays sane.
+    ...(wcProjectId ? { walletConnect: { projectId: wcProjectId } } : {}),
     chains: {
       [ChainKeys.SONIC_MAINNET]: {
         rpcUrl: process.env.NEXT_PUBLIC_SONIC_RPC_URL ?? "https://rpc.soniclabs.com",
