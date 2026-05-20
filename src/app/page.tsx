@@ -56,12 +56,12 @@ export default function Home() {
           <p>
             Repo:{" "}
             <a
-              href="https://github.com/hazyatom/charity-swap"
+              href="https://github.com/hazy2go/charity-swap"
               className="underline decoration-dotted underline-offset-4 hover:text-neutral-900 dark:hover:text-neutral-100"
               target="_blank"
               rel="noreferrer"
             >
-              github.com/hazyatom/charity-swap
+              github.com/hazy2go/charity-swap
             </a>{" "}
             · MIT · built in public.
           </p>
