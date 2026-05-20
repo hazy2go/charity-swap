@@ -13,6 +13,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// SODAX wallet store reads persisted Zustand state at module load; that
+// trips Next's SSG of `/_not-found` (and any other static route) with
+// "Cannot read properties of undefined (reading 'hasHydrated')". Forcing
+// dynamic rendering skips static prerender — the app is a dapp anyway,
+// nothing to gain from SSG.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Charity Swap — built in public on SODAX",
   description:
