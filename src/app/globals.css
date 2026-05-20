@@ -299,7 +299,7 @@ body {
   gap: 4px;
   padding: 2px 4px;
   min-width: 0;
-  overflow: hidden;
+  /* No overflow:hidden — would clip the Start menu that drops out below. */
   background:
     linear-gradient(180deg,
       var(--xp-taskbar-1) 0%,
