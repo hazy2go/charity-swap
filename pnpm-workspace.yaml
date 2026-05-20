@@ -1,0 +1,16 @@
+allowBuilds:
+  '@reown/appkit': true
+  '@stellar/stellar-sdk': true
+  bigint-buffer: true
+  blake-hash: true
+  bufferutil: true
+  core-js: true
+  core-js-pure: true
+  keccak: true
+  protobufjs: true
+  secp256k1: true
+  sharp: true
+  tiny-secp256k1: true
+  unrs-resolver: true
+  usb: false
+  utf-8-validate: true
