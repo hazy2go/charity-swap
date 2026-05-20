@@ -85,7 +85,7 @@ This is the part the community is asked to trust, so I'm explicit:
 
 ### Try it
 
-- 🌐 **Live:** *(deploy URL goes here once Vercel is provisioned)*
+- 🌐 **Live:** https://charity-swap-hasantoprak28-4555s-projects.vercel.app
 - 💻 **Repo:** https://github.com/hazy2go/charity-swap
 - 🛠️ **MCP we built against:** https://builders.sodax.com/mcp
 

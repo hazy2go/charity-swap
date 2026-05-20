@@ -59,7 +59,6 @@ export function SwapCard() {
           inputToken: preset.src.address,
           outputToken: preset.dst.address,
           inputAmount: parsedAmount,
-          // 0.5% slippage tolerance for now (community-configurable later)
           minOutputAmount: (quotedOut * 995n) / 1000n,
           deadline: 0n,
           allowPartialFill: false,
@@ -113,88 +112,165 @@ export function SwapCard() {
   const canSwap =
     !!intentParams && !!walletProvider && !isSwapping && !isApproving;
 
+  const buttonLabel = !account.address
+    ? "Connect wallet to swap"
+    : isApproving
+      ? "Approving…"
+      : isSwapping
+        ? "Swapping…"
+        : isApproved === false
+          ? `Approve ${preset.src.symbol} & Swap`
+          : "Execute Swap";
+
   return (
-    <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Swap</h2>
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
-          Mainnet · 0% fee (yet)
+    <div className="xp-window w-[420px] max-w-[95vw]">
+      {/* Title bar */}
+      <div className="xp-titlebar">
+        <span className="xp-titlebar__icon" aria-hidden>
+          {/* tiny pixel icon */}
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+            <rect x="1" y="1" width="12" height="12" fill="#cfdef3" stroke="#003c74" />
+            <path d="M3 5h6l-2-2M11 9H5l2 2" stroke="#003c74" strokeWidth="1.2" fill="none" strokeLinecap="square" />
+          </svg>
         </span>
-      </div>
-
-      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
-        Pair
-      </label>
-      <select
-        value={presetId}
-        onChange={(e) => setPresetId(e.target.value)}
-        className="mb-4 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
-      >
-        {SWAP_PRESETS.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.label}
-          </option>
-        ))}
-      </select>
-
-      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-neutral-500">
-        Amount ({preset.src.symbol})
-      </label>
-      <input
-        inputMode="decimal"
-        placeholder="0.0"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        className="mb-4 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-lg font-mono dark:border-neutral-700 dark:bg-neutral-950"
-      />
-
-      <div className="mb-4 rounded-md bg-neutral-100 px-3 py-2 text-sm dark:bg-neutral-800/50">
-        <div className="flex items-center justify-between">
-          <span className="text-neutral-500">You receive</span>
-          <span className="font-mono">
-            {isQuoting && parsedAmount > 0n ? (
-              <span className="text-neutral-400">fetching…</span>
-            ) : quotedOut > 0n ? (
-              `${formatUnits(quotedOut, preset.dst.decimals)} ${preset.dst.symbol}`
-            ) : (
-              <span className="text-neutral-400">—</span>
-            )}
-          </span>
+        <span className="xp-titlebar__title">Swap.exe — Charity Edition</span>
+        <div className="xp-titlebar__controls">
+          <button className="xp-ctrl" aria-label="Minimize" tabIndex={-1}>
+            <span style={{display:"inline-block",width:8,height:2,background:"#000",marginTop:8}} />
+          </button>
+          <button className="xp-ctrl" aria-label="Maximize" tabIndex={-1}>
+            <span style={{display:"inline-block",width:10,height:9,border:"1px solid #000",borderTopWidth:2}} />
+          </button>
+          <button className="xp-ctrl xp-ctrl--close" aria-label="Close" tabIndex={-1}>
+            <span style={{fontFamily:'"Marlett","Tahoma",sans-serif',fontWeight:"bold",lineHeight:1}}>×</span>
+          </button>
         </div>
       </div>
 
-      <button
-        onClick={handleSwap}
-        disabled={!canSwap}
-        className="w-full rounded-md bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-      >
-        {!account.address
-          ? "Connect wallet to swap"
-          : isApproving
-            ? "Approving…"
-            : isSwapping
-              ? "Swapping…"
-              : isApproved === false
-                ? `Approve ${preset.src.symbol} & swap`
-                : "Swap"}
-      </button>
+      {/* Menu bar */}
+      <div className="xp-menubar">
+        <span className="xp-menubar__item"><u>F</u>ile</span>
+        <span className="xp-menubar__item"><u>E</u>dit</span>
+        <span className="xp-menubar__item"><u>V</u>iew</span>
+        <span className="xp-menubar__item"><u>H</u>elp</span>
+        <span className="ml-auto self-center pr-1">
+          <span className="xp-pill">MAINNET · 0% fee (until Day 9)</span>
+        </span>
+      </div>
 
-      {status.kind === "ok" && (
-        <p className="mt-3 break-words text-xs text-green-600 dark:text-green-400">
-          {status.message}
-        </p>
-      )}
-      {status.kind === "err" && (
-        <p className="mt-3 break-words text-xs text-red-600 dark:text-red-400">
-          {status.message}
-        </p>
-      )}
+      {/* Window body */}
+      <div className="bg-[var(--xp-face)] px-3 pb-3 pt-2">
+        <fieldset className="xp-fieldset">
+          <legend>Cross-chain pair</legend>
+          <select
+            value={presetId}
+            onChange={(e) => setPresetId(e.target.value)}
+            className="xp-select"
+          >
+            {SWAP_PRESETS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
 
-      <p className="mt-4 text-xs leading-relaxed text-neutral-500">
-        Partner fee is <strong>not yet enabled</strong>. From Day 9 a 0.3%
-        fee (community-tunable) accrues to a public multisig on Sonic. 100%
-        of fees go to charity.
-      </p>
+          <div className="grid grid-cols-2 gap-2 mt-2 text-[10px] text-[#3a3a3a]">
+            <div className="xp-readout !min-h-[24px] !py-[2px] !text-[11px]">
+              <span className="text-[#666]">From:</span>
+              <span>{preset.src.symbol}</span>
+            </div>
+            <div className="xp-readout !min-h-[24px] !py-[2px] !text-[11px]">
+              <span className="text-[#666]">To:</span>
+              <span>{preset.dst.symbol}</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset className="xp-fieldset mt-3">
+          <legend>Amount</legend>
+          <label className="xp-label">
+            Send ({preset.src.symbol})
+          </label>
+          <input
+            inputMode="decimal"
+            placeholder="0.00000000"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="xp-input xp-input--big"
+          />
+
+          <label className="xp-label mt-3">
+            You receive ({preset.dst.symbol})
+          </label>
+          <div className="xp-readout">
+            <span className="text-[#888]">≈</span>
+            <span>
+              {isQuoting && parsedAmount > 0n
+                ? <span className="text-[#666] italic xp-cursor">fetching quote</span>
+                : quotedOut > 0n
+                  ? formatUnits(quotedOut, preset.dst.decimals)
+                  : <span className="text-[#999]">—</span>}
+            </span>
+          </div>
+
+          <div className="mt-2 flex items-center justify-between text-[10px] text-[#555]">
+            <span>Slippage tolerance: <strong>0.50%</strong></span>
+            <span>Solver: <strong>any</strong></span>
+          </div>
+        </fieldset>
+
+        {/* Dialog buttons row */}
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <button
+            className="xp-button"
+            type="button"
+            onClick={() => setAmount("")}
+            disabled={!amount}
+          >
+            Clear
+          </button>
+          <button
+            className="xp-button xp-button--primary !min-w-[160px]"
+            type="button"
+            onClick={handleSwap}
+            disabled={!canSwap}
+          >
+            {buttonLabel}
+          </button>
+        </div>
+
+        {status.kind === "ok" && (
+          <div className="mt-3 xp-readout !block !font-sans !text-[11px] !text-[#0a4a0a]">
+            <strong>OK:</strong> {status.message}
+          </div>
+        )}
+        {status.kind === "err" && (
+          <div className="mt-3 xp-readout !block !font-sans !text-[11px] !text-[#7a0a0a]">
+            <strong>Error:</strong> {status.message}
+          </div>
+        )}
+
+        <p className="mt-3 text-[10px] leading-snug text-[#444]">
+          Partner fee is currently <strong>0%</strong>. From Day 9 a 0.3% fee
+          (community-tunable) accrues to a public multisig on Sonic.
+          <strong> 100% of fees go to charity.</strong>
+        </p>
+      </div>
+
+      {/* Status bar */}
+      <div className="xp-statusbar">
+        <span className="xp-statusbar__cell">
+          {account.address
+            ? <>Connected · <span className="font-mono">{account.address.slice(0,6)}…{account.address.slice(-4)}</span></>
+            : "Wallet: disconnected"}
+        </span>
+        <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
+          SODAX V2
+        </span>
+        <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
+          {preset.src.chain.split(".").pop()} → {preset.dst.chain.split(".").pop()}
+        </span>
+      </div>
     </div>
   );
 }
