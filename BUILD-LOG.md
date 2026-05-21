@@ -1,8 +1,67 @@
-# Build Log — Charity Swap
+# Build Log — Swaps without Borders
 
-A day-by-day public log of building Charity Swap on the
+> Previously known as *Charity Swap* (working title, Days 1-3). The
+> community named it on **Day 4 (Thu 2026-05-21)**: **Swaps without Borders**.
+
+A day-by-day public log of building Swaps without Borders on the
 [SODAX SDK V2](https://docs.sodax.com), scaffolded against the
 [SODAX Builders MCP](https://builders.sodax.com/mcp).
+
+---
+
+## Day 4 — Thu 2026-05-21 — Name decided · points ledger · leaderboard route
+
+**Status:** the name vote closed. The community picked **Swaps without Borders.**
+Today landed two of the four Day 4 milestones from the roadmap plus two
+stretch items that set up Day 5 in advance. No money-state changed — the
+partner fee is still 0% and there is still no charity wallet (Day 9 stays sealed).
+
+### What shipped
+
+| Area | What landed today |
+|---|---|
+| **Name** | **Swaps without Borders.** Repo renamed (`hazy2go/charity-swap` → `hazy2go/swaps-without-borders`, GitHub auto-301s the old URL), `package.json` slug, window titles, README, BUILD-LOG, watermark, all internal copy |
+| **Points-ledger schema (Day 4 milestone)** | `prisma/schema.prisma` with `SwapEvent`, `PayoutVote`, `Ballot`, `Charity` models plus enums. Bigints stored as decimal strings (no JS number loss). USD value stored alongside the row (audit trail). Indexes on `wallet`, `createdAt`, `(status, createdAt)`. Prisma 6 to avoid v7's new config layout. Postgres + Supabase pooled connection (`DATABASE_URL`) + direct connection for migrations (`DIRECT_URL`) |
+| **Prisma client singleton** | `src/lib/db.ts` — globalThis-cached client to survive hot-reload and avoid pooler exhaustion in prod |
+| **Points preview in SwapCard** | New "Charity rewards" GroupBox. Live `+X pts` display as the amount changes. USD estimate, formula explainer ("1 pt / $1 — Day 11 vote"), explicit "preview only" footer pointing at the committed schema |
+| **`/leaderboard` route** | Real route with an XP-styled empty state. Sortable-looking table header, big empty placeholder, "activates Day 5" copy, two action buttons (Back / View schema). Wired into desktop icons + taskbar task + mobile chip nav |
+| **Fee-timing notice** | Inline pill on the SwapCard: "Today: 0% fee — From Day 9 (Tue 2026-05-26) a 0.3% charity fee accrues to a public multisig on Sonic." Pure copy. The actual fee config doesn't flip until Day 9 |
+
+### Roadmap discipline
+
+The handover document said Day 4 = "Name vote closes · points-system poll opens · code: design points ledger schema". I shipped the schema (the code milestone) and the rename (the public milestone). Everything else today is **ahead-of-schedule prep**, not borrowed-from-later:
+
+- ✅ Points preview UI is Day 5 polish, brought forward as a no-cost UI hook.
+- ✅ `/leaderboard` route as empty-state shell is the same — Day 5 lights it up.
+- ❌ Did **not** touch the partner fee. (Day 9 gate.)
+- ❌ Did **not** deploy or write any charity-related state on-chain. (Day 9 gate.)
+- ❌ Did **not** seed any charity rows yet. (Day 8 milestone.)
+
+### Numbers
+
+- **Files added:** 5 (`prisma/schema.prisma`, `src/lib/db.ts`, `src/lib/points.ts`, `src/app/leaderboard/page.tsx`, this build log update)
+- **Files modified:** 9 (rename pass + SwapCard + DesktopIcons + page + .env.example + package.json + README)
+- **New routes:** 1 (`/leaderboard`)
+- **Lines of code (src/ + prisma/):** ~480 (up from ~330 on Day 3)
+- **Money-touching changes:** 0
+- **Database queries executed against production:** 0 (Supabase not provisioned yet — Hazy adds the URL when ready, schema is staged)
+
+### Try it
+
+- 🌐 **Live:** https://charity-swap-hasantoprak28-4555s-projects.vercel.app
+- 🏆 **Leaderboard:** https://charity-swap-hasantoprak28-4555s-projects.vercel.app/leaderboard
+- 💻 **Repo:** https://github.com/hazy2go/swaps-without-borders
+- 🛠️ **Schema:** [`prisma/schema.prisma`](https://github.com/hazy2go/swaps-without-borders/blob/main/prisma/schema.prisma)
+- 🛠️ **MCP we built against:** https://builders.sodax.com/mcp
+
+### What's next (Day 5)
+
+- Provision Supabase project, drop `DATABASE_URL` + `DIRECT_URL` into Vercel env
+- `prisma db push` to materialize the schema
+- `POST /api/swap-events` endpoint — wired to the `useSwap` `onSuccess` hook
+- `GET /api/leaderboard?limit=N` reading from `SwapEvent`
+- Replace the empty state on `/leaderboard` with the real data
+- Discord stage #1 — live swap with points incrementing on the leaderboard in real time
 
 ---
 
@@ -86,7 +145,7 @@ This is the part the community is asked to trust, so I'm explicit:
 ### Try it
 
 - 🌐 **Live:** https://charity-swap-hasantoprak28-4555s-projects.vercel.app
-- 💻 **Repo:** https://github.com/hazy2go/charity-swap
+- 💻 **Repo:** https://github.com/hazy2go/swaps-without-borders
 - 🛠️ **MCP we built against:** https://builders.sodax.com/mcp
 
 ---

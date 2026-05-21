@@ -1,0 +1,127 @@
+// Swaps without Borders — points ledger
+// Day 4 schema. Connected to a live Supabase database from Day 5.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // DIRECT_URL is used by `prisma migrate` to talk to the DB directly
+  // (bypassing Supabase's pgbouncer connection pooler). DATABASE_URL
+  // stays on the pooled connection for the running app.
+  directUrl = env("DIRECT_URL")
+}
+
+/// One row per real on-chain swap executed through the dapp.
+/// Source of truth for the leaderboard, the running tally, and the
+/// points-weighted vote ballots.
+model SwapEvent {
+  id            String   @id @default(cuid())
+
+  // Identity
+  wallet        String   // checksummed src address — the points subject
+  presetId      String?  // which SWAP_PRESETS entry was used, for analytics
+
+  // Route
+  srcChain      String   // ChainKeys value, e.g. "0xa4b1.arbitrum"
+  dstChain      String   // ChainKeys value, e.g. "sonic"
+  srcToken      String   // ERC-20 address on src chain
+  dstToken      String   // ERC-20 address on dst chain
+  srcSymbol     String
+  dstSymbol     String
+
+  // Amounts — bigints stored as decimal strings to avoid JS number loss
+  srcAmountRaw  String   // e.g. "1500000" for 1.5 USDC (6 decimals)
+  srcDecimals   Int
+  dstQuotedRaw  String?
+  dstDecimals   Int
+
+  // USD-equivalent at submit time (pricing snapshot)
+  usdValue      Decimal? @db.Decimal(20, 6)
+  priceSource   String?  // "coingecko" | "cached" | "manual" — for audit
+
+  // Points awarded (points-to-USD ratio is community-decided, Day 4 vote)
+  pointsAwarded Int      @default(0)
+
+  // Result
+  txHash        String?  @unique
+  status        SwapStatus @default(submitted)
+
+  createdAt     DateTime @default(now())
+  confirmedAt   DateTime?
+
+  @@index([wallet])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@map("swap_events")
+}
+
+enum SwapStatus {
+  submitted
+  confirmed
+  failed
+}
+
+/// Snapshot of an in-flight or completed payout vote.
+/// Wired up Day 11 once the threshold + duration polls close.
+model PayoutVote {
+  id            String   @id @default(cuid())
+
+  thresholdUsd  Decimal  @db.Decimal(20, 6)
+  startsAt      DateTime
+  endsAt        DateTime
+  totalPoints   Int      @default(0)
+
+  // FK to Charity once it's seeded — stays nullable until the vote closes
+  winningCharityId String?
+
+  ballots       Ballot[]
+
+  createdAt     DateTime @default(now())
+  closedAt      DateTime?
+
+  @@index([endsAt])
+  @@map("payout_votes")
+}
+
+/// A wallet's spend of points on a candidate charity within one vote.
+model Ballot {
+  id           String   @id @default(cuid())
+
+  voteId       String
+  vote         PayoutVote @relation(fields: [voteId], references: [id])
+
+  wallet       String
+  charityId    String
+  pointsSpent  Int
+
+  createdAt    DateTime @default(now())
+
+  @@unique([voteId, wallet, charityId])
+  @@index([voteId])
+  @@index([wallet])
+  @@map("ballots")
+}
+
+/// Curated shortlist seeded Day 8 from the community suggestion pool.
+model Charity {
+  id           String   @id @default(cuid())
+
+  name         String
+  blurb        String   // 1-2 sentence summary
+  website      String?
+  payoutKind   PayoutKind @default(wallet)
+  payoutTarget String   // wallet address OR off-ramp identifier
+  active       Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+
+  @@map("charities")
+}
+
+enum PayoutKind {
+  wallet
+  offramp
+}

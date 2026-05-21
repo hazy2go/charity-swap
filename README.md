@@ -1,8 +1,10 @@
-# Charity Swap
+# Swaps without Borders
 
 > **A cross-chain swap app where 100% of fees go to charity.**
 > Built in public over two weeks on the [SODAX SDK V2](https://docs.sodax.com).
 > Shaped by community polls. Mainnet from day one.
+>
+> Name picked by the community on **Day 4 (Thu 2026-05-21)**.
 
 [![Built with SODAX](https://img.shields.io/badge/built%20with-SODAX%20SDK%20V2-7C3AED)](https://docs.sodax.com)
 [![Scaffolded with the SODAX Builders MCP](https://img.shields.io/badge/scaffolded%20with-SODAX%20Builders%20MCP-3B82F6)](https://builders.sodax.com/mcp)
@@ -118,8 +120,8 @@ flow, allowance handling, the EVM connect button — fell out in an afternoon.
 |----:|------|------------------|----------------|
 | 1   | Mon 2026-05-18 | Announcement | — |
 | 2   | Tue 2026-05-19 | Name vote opens | Skeleton swap working locally |
-| **3** | **Wed 2026-05-20** | **Build Log #1** | **Working EVM connect + real `useSwap`** ← *we are here* |
-| 4   | Thu 2026-05-21 | Name vote closes · points-system poll opens | Points ledger schema (Prisma + Supabase) |
+| 3   | Wed 2026-05-20 | Build Log #1 | Working EVM connect + real `useSwap` ✅ |
+| **4** | **Thu 2026-05-21** | **Name vote closes ✅ · points-system poll opens** | **Points ledger schema (Prisma + Supabase) ✅** ← *we are here* |
 | 5   | Fri 2026-05-22 | Discord stage #1 | Points tracking live, leaderboard endpoint |
 | 6   | Sat 2026-05-23 | Week 1 recap | Bug triage |
 | 7   | Sun 2026-05-24 | — | Rest |
@@ -135,20 +137,26 @@ flow, allowance handling, the EVM connect button — fell out in an afternoon.
 
 ## What's live right now
 
-**Day 3 — Build Log #1.** What works in this commit:
+**Day 4.** What works in this commit:
 
+- ✅ Name: **Swaps without Borders** (community vote, Day 4)
 - ✅ EVM wallet connect via `@sodax/wallet-sdk-react` (Hana, MetaMask, Rabby, plus any EIP-6963 wallet)
-- ✅ Three preset swap pairs (BSC ↔ Arbitrum ↔ Base USDT/USDC)
+- ✅ 8 preset swap pairs, default ★ **Arbitrum USDC → Sonic SODA**
 - ✅ Live quotes via `useQuote` (auto-refreshes every 3s)
 - ✅ Allowance + approve flow via `useSwapAllowance` / `useSwapApprove`
 - ✅ Real `useSwap` execution on mainnet
 - ✅ 0.5% slippage tolerance (community-tunable later)
+- ✅ **Points-ledger schema** (Prisma + Supabase) — committed to `prisma/schema.prisma`
+- ✅ **Points preview** in the SwapCard ("+X pts" beside every quote)
+- ✅ **`/leaderboard`** route with a live empty state — activates Day 5
+- ✅ Windows XP Luna Silver UI (taskbar, windows, functional desktop icons)
+- ✅ Mobile-aware layout (taskbar collapses, chip nav replaces icons)
 
 What's intentionally **not** live yet:
 
 - ❌ **Partner fee** — lands Day 9, after the charity multisig is deployed and disclosed
-- ❌ **Points ledger** — lands Day 4 once the schema is settled
-- ❌ **Token picker** — Day 4-5 (presets carry us through the first stage)
+- ❌ **Live points persistence** — schema is ready; wired to Supabase on Day 5
+- ❌ **Token picker** — presets carry us through Day 5
 - ❌ **Voting** — Day 10-11 once the community picks the rules
 - ❌ **Non-EVM chains** — added as time and demand allow
 
@@ -173,7 +181,7 @@ Open http://localhost:3000.
 ## Project layout
 
 ```
-charity-swap/
+swaps-without-borders/
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx          Geist fonts + Providers
@@ -201,7 +209,7 @@ change once the community votes:
 
 | Decision | Default | Decided on |
 |---|---|---|
-| Project name | "Charity Swap" (placeholder) | Day 4 |
+| Project name | **Swaps without Borders** (decided Day 4 ✅) | Day 4 |
 | Points-to-vote conversion | TBD | Day 4 |
 | Charity shortlist | TBD | Day 8-10 |
 | Payout threshold | TBD | Day 11 |
@@ -215,6 +223,7 @@ change once the community votes:
 Day-by-day write-ups live in [**BUILD-LOG.md**](BUILD-LOG.md).
 
 - [Day 3 — Scaffold + first working swap](BUILD-LOG.md#day-3--wed-2026-05-20--scaffold--first-working-swap)
+- [Day 4 — Name decided · points ledger · leaderboard route](BUILD-LOG.md#day-4--thu-2026-05-21--name-decided--points-ledger--leaderboard-route)
 
 ---
 

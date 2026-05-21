@@ -10,7 +10,7 @@ import { Providers } from "./providers";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Charity Swap — built in public on SODAX",
+  title: "Swaps without Borders — built in public on SODAX",
   description:
     "A cross-chain swap app where every fee goes to charity. Community votes the payouts. Built in public over two weeks on the SODAX SDK.",
 };

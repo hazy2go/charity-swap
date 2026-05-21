@@ -11,6 +11,7 @@ import {
 import { useWalletProvider, useXAccount } from "@sodax/wallet-sdk-react";
 import type { CreateIntentParams } from "@sodax/sdk";
 import { SWAP_PRESETS } from "@/lib/swap-presets";
+import { previewPoints, formatPoints, DEFAULT_POINTS_PER_USD } from "@/lib/points";
 
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000" as const;
 
@@ -133,7 +134,7 @@ export function SwapCard() {
             <path d="M3 5h6l-2-2M11 9H5l2 2" stroke="#003c74" strokeWidth="1.2" fill="none" strokeLinecap="square" />
           </svg>
         </span>
-        <span className="xp-titlebar__title">Swap.exe — Charity Edition</span>
+        <span className="xp-titlebar__title">Swap.exe — Swaps without Borders</span>
         <div className="xp-titlebar__controls">
           <button className="xp-ctrl" aria-label="Minimize" tabIndex={-1}>
             <span style={{display:"inline-block",width:8,height:2,background:"#000",marginTop:8}} />
@@ -219,6 +220,22 @@ export function SwapCard() {
           </div>
         </fieldset>
 
+        {/* Charity Rewards GroupBox — points preview + fee notice */}
+        <fieldset className="xp-fieldset mt-3">
+          <legend>Charity rewards</legend>
+          <PointsPreview
+            amountRaw={parsedAmount}
+            decimals={preset.src.decimals}
+            symbol={preset.src.symbol}
+          />
+          <p className="mt-2 text-[10px] leading-snug text-[#444]">
+            <span className="xp-pill xp-pill--info">Today: 0% fee</span>{" "}
+            From <strong>Day 9 (Tue 2026-05-26)</strong> a 0.3% charity fee
+            (community-tunable) accrues to a public multisig on Sonic.{" "}
+            <strong>100% of fees go to charity.</strong>
+          </p>
+        </fieldset>
+
         {/* Dialog buttons row */}
         <div className="mt-4 flex items-center justify-end gap-2">
           <button
@@ -250,11 +267,6 @@ export function SwapCard() {
           </div>
         )}
 
-        <p className="mt-3 text-[10px] leading-snug text-[#444]">
-          Partner fee is currently <strong>0%</strong>. From Day 9 a 0.3% fee
-          (community-tunable) accrues to a public multisig on Sonic.
-          <strong> 100% of fees go to charity.</strong>
-        </p>
       </div>
 
       {/* Status bar */}
@@ -271,6 +283,45 @@ export function SwapCard() {
           {preset.src.chain.split(".").pop()} → {preset.dst.chain.split(".").pop()}
         </span>
       </div>
+    </div>
+  );
+}
+
+function PointsPreview({
+  amountRaw,
+  decimals,
+  symbol,
+}: {
+  amountRaw: bigint;
+  decimals: number;
+  symbol: string;
+}) {
+  const preview =
+    amountRaw > 0n ? previewPoints(amountRaw, decimals, symbol) : null;
+
+  return (
+    <div className="xp-readout !block">
+      <div className="flex items-baseline justify-between">
+        <span className="text-[10px] uppercase tracking-wider text-[#666]">
+          You would earn
+        </span>
+        <span className="font-mono text-[18px] font-bold text-[#0a2a6b]">
+          {preview ? `+${formatPoints(preview.points)}` : "—"}{" "}
+          <span className="text-[10px] font-normal text-[#666]">pts</span>
+        </span>
+      </div>
+      <div className="mt-1 text-[10px] text-[#555] flex items-center justify-between">
+        <span>
+          {preview
+            ? <>≈ <strong>${preview.usd.toFixed(2)}</strong> swapped</>
+            : "Points unlock once a quote is in"}
+        </span>
+        <span>{DEFAULT_POINTS_PER_USD} pt / $1 (Day 11 vote)</span>
+      </div>
+      <p className="mt-2 text-[9px] leading-snug text-[#777] italic">
+        Preview only — persistence + leaderboard activate Day 5. Schema is
+        already committed in <code className="font-mono">prisma/schema.prisma</code>.
+      </p>
     </div>
   );
 }

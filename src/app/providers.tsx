@@ -68,7 +68,7 @@ function SsrBootSkeleton() {
           <div className="xp-window" style={{ width: 320 }}>
             <div className="xp-titlebar">
               <span className="xp-titlebar__icon" aria-hidden>⏳</span>
-              <span className="xp-titlebar__title">Charity Swap — loading</span>
+              <span className="xp-titlebar__title">Swaps without Borders — loading</span>
             </div>
             <div
               style={{

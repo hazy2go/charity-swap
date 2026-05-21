@@ -18,8 +18,14 @@ const ICONS: IconDef[] = [
   {
     id: "swap",
     glyph: "💾",
-    label: "charity-swap",
+    label: "Swaps&nbsp;without&nbsp;Borders",
     action: { kind: "scroll", to: "swap-window" },
+  },
+  {
+    id: "leaderboard",
+    glyph: "🏆",
+    label: "Leaderboard",
+    action: { kind: "link", href: "/leaderboard" },
   },
   {
     id: "buildlog",
@@ -27,7 +33,7 @@ const ICONS: IconDef[] = [
     label: "BUILD-LOG.md",
     action: {
       kind: "link",
-      href: "https://github.com/hazy2go/charity-swap/blob/main/BUILD-LOG.md",
+      href: "https://github.com/hazy2go/swaps-without-borders/blob/main/BUILD-LOG.md",
       target: "_blank",
     },
   },
@@ -37,7 +43,7 @@ const ICONS: IconDef[] = [
     label: "Repo on&nbsp;GitHub",
     action: {
       kind: "link",
-      href: "https://github.com/hazy2go/charity-swap",
+      href: "https://github.com/hazy2go/swaps-without-borders",
       target: "_blank",
     },
   },
@@ -61,7 +67,12 @@ const ICONS: IconDef[] = [
 
 function runAction(action: IconAction, onRecycle: () => void) {
   if (action.kind === "link") {
-    window.open(action.href, action.target ?? "_self", "noreferrer");
+    if (action.href.startsWith("/")) {
+      // Internal route — same tab, real navigation
+      window.location.href = action.href;
+    } else {
+      window.open(action.href, action.target ?? "_self", "noreferrer");
+    }
   } else if (action.kind === "scroll") {
     document
       .getElementById(action.to)

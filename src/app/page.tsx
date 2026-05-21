@@ -19,6 +19,13 @@ export default function Home() {
           <span>Swap.exe</span>
         </a>
         <a
+          href="/leaderboard"
+          className="xp-taskbar__task hidden sm:flex"
+        >
+          <span aria-hidden>🏆</span>
+          <span>Leaderboard</span>
+        </a>
+        <a
           href="#notepad-window"
           className="xp-taskbar__task hidden md:flex"
         >
@@ -68,13 +75,14 @@ export default function Home() {
 
         {/* Mobile: tiny chip with quick links since desktop icons are hidden */}
         <nav className="md:hidden mt-4 flex flex-wrap justify-center gap-2 text-[10px]">
+          <MobileChip href="/leaderboard" label="Leaderboard" glyph="🏆" />
           <MobileChip
-            href="https://github.com/hazy2go/charity-swap"
+            href="https://github.com/hazy2go/swaps-without-borders"
             label="GitHub"
             glyph="🔗"
           />
           <MobileChip
-            href="https://github.com/hazy2go/charity-swap/blob/main/BUILD-LOG.md"
+            href="https://github.com/hazy2go/swaps-without-borders/blob/main/BUILD-LOG.md"
             label="Build Log"
             glyph="🧾"
           />
@@ -94,10 +102,10 @@ export default function Home() {
           }}
         >
           <div className="text-[18px] font-bold leading-none">
-            Charity Swap
+            Swaps without Borders
           </div>
           <div className="text-[11px] tracking-wider uppercase opacity-80">
-            Silver Edition · build 0.0.1 · Day 3
+            Silver Edition · build 0.0.2 · Day 4
           </div>
           <div className="text-[10px] opacity-70 mt-1">
             For evaluation purposes only. Mainnet.
@@ -157,10 +165,12 @@ function NotepadWindow() {
       </div>
 
       <div className="px-3 pb-3 pt-2 bg-[var(--xp-face)]">
-        <pre className="xp-notepad text-[11px] sm:text-[12px] overflow-x-auto">{`CHARITY SWAP — README.TXT
-============================
+        <pre className="xp-notepad text-[11px] sm:text-[12px] overflow-x-auto">{`SWAPS WITHOUT BORDERS — README.TXT
+====================================
 
-Day 3 of a 2-week public build on the SODAX SDK V2.
+Day 4 of a 2-week public build on the SODAX SDK V2.
+The community picked the name. The community picks the
+points system, the charities, the threshold, the vote.
 
 WHAT THIS DOES
   Cross-chain swap. Fees route to a public charity
@@ -177,16 +187,20 @@ SCAFFOLDED WITH
   place in an afternoon. If you're evaluating SODAX
   as a build target — start there.
 
-STATUS THIS COMMIT
+STATUS THIS COMMIT (Day 4)
   [x] EVM wallet connect (Hana / MetaMask / Rabby)
   [x] Live quotes via useQuote
   [x] Approve + Swap path via useSwap
   [x] 8 preset pairs (★ SODA buy/sell/bridge first)
+  [x] Name: Swaps without Borders (community vote)
+  [x] Points ledger schema (Prisma + Supabase)
+  [x] Points preview in SwapCard
+  [x] /leaderboard route (live empty state)
   [ ] Partner fee  ............ Day 9
-  [ ] Points ledger  .......... Day 4
+  [ ] Charity multisig  ....... Day 9
   [ ] Charity vote  ........... Day 11
 
-REPO   github.com/hazy2go/charity-swap     MIT
+REPO   github.com/hazy2go/swaps-without-borders   MIT
 BUILT  by Hazy (SODAX community) · Kobe JST
 
 Press Alt+F4 to close.`}</pre>
