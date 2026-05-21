@@ -10,6 +10,7 @@
 [![Scaffolded with the SODAX Builders MCP](https://img.shields.io/badge/scaffolded%20with-SODAX%20Builders%20MCP-3B82F6)](https://builders.sodax.com/mcp)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Build in public](https://img.shields.io/badge/build-in%20public-orange)](BUILD-LOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-day%204-blueviolet)](CHANGELOG.md)
 
 ---
 
@@ -220,7 +221,8 @@ change once the community votes:
 
 ## Build log
 
-Day-by-day write-ups live in [**BUILD-LOG.md**](BUILD-LOG.md).
+- 📔 **[BUILD-LOG.md](BUILD-LOG.md)** — narrative day-by-day write-up with rationale
+- 📋 **[CHANGELOG.md](CHANGELOG.md)** — punchy patch notes per commit cluster
 
 - [Day 3 — Scaffold + first working swap](BUILD-LOG.md#day-3--wed-2026-05-20--scaffold--first-working-swap)
 - [Day 4 — Name decided · points ledger · leaderboard route](BUILD-LOG.md#day-4--thu-2026-05-21--name-decided--points-ledger--leaderboard-route)
