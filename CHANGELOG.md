@@ -5,6 +5,50 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 5 — Fri 2026-05-22 — Live points + leaderboard
+
+### 🗄 Supabase wired in
+- Project `swaps-without-borders` provisioned in **Tokyo (`ap-northeast-1`)**
+- `DATABASE_URL` (pooled, port 6543) + `DIRECT_URL` (direct, port 5432) set in `.env.local` + Vercel production env
+- `pnpm db:push` executed against the live DB → all four tables materialized (`swap_events`, `payout_votes`, `ballots`, `charities` + the two enums)
+
+### 💱 Real USD pricing
+- `src/lib/pricing.ts` — CoinGecko `/simple/price` snapshot at swap-submit time
+- 60-second in-memory cache; falls back to last cached value on transient errors; final fallback pins stables to $1
+- 4-second timeout so a slow CoinGecko never hangs the log
+
+### 🔌 API routes
+- **`POST /api/swap-events`** — accepts the swap payload, prices via CoinGecko, awards `floor(usd) × 1` points (community-tunable Day 11), persists as `SwapEvent` (status=`submitted`). Idempotent on duplicate `txHash`. Validates wallet, decimals, raw amount string.
+- **`GET /api/leaderboard?limit=N`** — Prisma `groupBy` over `swap_events` summing points + USD + count per wallet. Returns rows + totals. Limit 1–250.
+
+### 🏆 Live leaderboard
+- `/leaderboard` page now reads directly from Prisma (server component, force-dynamic)
+- Totals strip (wallets · swaps · volume)
+- Top-3 gets 🥇🥈🥉 medals
+- Hover row highlight (XP-blue)
+- "LIVE · reads from Supabase" pill in the menu bar
+- Graceful error + empty states stay XP-styled
+
+### 🪝 SwapCard hook
+- After `useSwap` confirms, POSTs the swap to `/api/swap-events` fire-and-forget
+- Status line on success now shows **"Swap submitted · +N pts logged to leaderboard"** when the log succeeded
+- Logging failure never breaks the swap report
+
+### ✅ Smoke-tested
+- `pnpm build` clean: 5 routes (`/`, `/_not-found`, `/api/leaderboard`, `/api/swap-events`, `/leaderboard`)
+- `curl localhost:3457/api/leaderboard` against the live Supabase returns `{"rows":[],"totals":{...}}` ⇒ connection healthy
+
+### 🔒 Money state — unchanged
+- Still no `partnerFee` in `src/lib/sodax.ts`
+- Still no charity wallet
+- **Day 9 gate sealed**
+
+### 📦 Files
+- **+3 new** — `src/lib/pricing.ts`, `src/app/api/swap-events/route.ts`, `src/app/api/leaderboard/route.ts`
+- **2 modified** — `src/components/SwapCard.tsx` (onSuccess hook), `src/app/leaderboard/page.tsx` (real data)
+
+---
+
 ## Day 4 — Thu 2026-05-21 — `4ae547f`
 
 ### 🏷 Naming

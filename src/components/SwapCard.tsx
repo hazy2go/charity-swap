@@ -94,13 +94,53 @@ export function SwapCard() {
       if (!isApproved) {
         await approve({ params: intentParams, walletProvider });
       }
-      const { solverExecutionResponse } = await swap({
+      const { solverExecutionResponse, intent } = await swap({
         params: intentParams,
         walletProvider,
       });
+
+      // Fire-and-forget log to /api/swap-events. Don't block UX on it —
+      // a points-ledger write failure should never break the swap report.
+      const txHash =
+        (intent && typeof intent === "object" && "txHash" in intent
+          ? (intent as { txHash?: string }).txHash
+          : undefined) ?? undefined;
+
+      let pointsAwarded: number | null = null;
+      try {
+        const res = await fetch("/api/swap-events", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            wallet: intentParams.srcAddress,
+            presetId: preset.id,
+            srcChain: preset.src.chain,
+            dstChain: preset.dst.chain,
+            srcToken: preset.src.address,
+            dstToken: preset.dst.address,
+            srcSymbol: preset.src.symbol,
+            dstSymbol: preset.dst.symbol,
+            srcAmountRaw: parsedAmount.toString(),
+            srcDecimals: preset.src.decimals,
+            dstQuotedRaw: quotedOut.toString(),
+            dstDecimals: preset.dst.decimals,
+            txHash,
+          }),
+        });
+        if (res.ok) {
+          const j = (await res.json()) as { pointsAwarded?: number };
+          pointsAwarded = j.pointsAwarded ?? null;
+        }
+      } catch {
+        // swallow — logging failure is logged-only.
+      }
+
       setStatus({
         kind: "ok",
-        message: `Swap submitted. Solver: ${JSON.stringify(solverExecutionResponse).slice(0, 80)}…`,
+        message:
+          pointsAwarded != null
+            ? `Swap submitted · +${pointsAwarded.toLocaleString()} pts logged to leaderboard`
+            : `Swap submitted. Solver: ${JSON.stringify(solverExecutionResponse).slice(0, 80)}…`,
       });
     } catch (e) {
       setStatus({
