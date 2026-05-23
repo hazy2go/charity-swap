@@ -5,6 +5,41 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 6 — Sat 2026-05-23 — Charities page + seed scaffold + Week 1 recap
+
+### 🎗 `/charities` page
+- Server component reading from `Charity` table via Prisma
+- XP window styling, "X candidate(s)" pill in the menu bar
+- Empty state points at Monday's poll
+- Per-charity card: name, blurb, payout kind, short payout target, optional website
+- Wired into: desktop icons (🎗 Charities), taskbar task tab (md+), mobile chip nav
+- Cross-link from `/leaderboard` footer
+
+### 🌱 `prisma/seed.ts`
+- Idempotent: `findFirst` by name → `update` if present, `create` otherwise (no schema migration required)
+- `CHARITIES` const at top of file — Hazy fills 5 entries Monday after community input
+- `pnpm db:seed` script + Prisma `seed` config so `prisma migrate reset` re-seeds
+- `tsx` installed as devDep (Prisma seed runner)
+- Smoke-tested empty seed: prints "nothing to seed" hint and exits 0
+
+### 🧷 Misc
+- `MobileChip` fixed: internal hrefs no longer open in a new tab
+
+### 📔 Week 1 recap
+- Long-form recap appended to `BUILD-LOG.md` covering Days 1–5 + Week 2 calendar
+- Five tables, the "what we promised but haven't done yet" honesty box, the MCP pitch
+
+### 🔒 Money state — unchanged
+- No `partnerFee` in `src/lib/sodax.ts`
+- No charity wallet
+- **Day 9 gate sealed**
+
+### 📦 Files
+- **+2 new** — `src/app/charities/page.tsx`, `prisma/seed.ts`
+- **5 modified** — `src/components/DesktopIcons.tsx`, `src/app/page.tsx`, `src/app/leaderboard/page.tsx`, `package.json`, `BUILD-LOG.md`
+
+---
+
 ## Day 5 — Fri 2026-05-22 — Live points + leaderboard
 
 ### 🗄 Supabase wired in

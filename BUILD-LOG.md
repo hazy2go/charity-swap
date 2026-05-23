@@ -9,6 +9,106 @@ A day-by-day public log of building Swaps without Borders on the
 
 ---
 
+## Week 1 recap — Sat 2026-05-23 — five days in
+
+Halfway through the build. The first week is done. Here's where we landed.
+
+### What we set out to do
+
+A cross-chain swap app where **100% of the fees go to charity** — picked by
+the community, voted on, paid out from a wallet anyone can audit. Two
+weeks. One person. Built in public on the **SODAX SDK V2**, scaffolded
+against the **[SODAX Builders MCP](https://builders.sodax.com/mcp)**.
+
+### What's actually live, five days in
+
+- 🌐 **Public dapp:** https://charity-swap-hasantoprak28-4555s-projects.vercel.app
+- 🏆 **Live leaderboard** reading from Supabase — `/leaderboard`
+- 🎗 **Charities shortlist page** (empty until Monday's poll closes) — `/charities`
+- 💱 **8 swap presets**, default ★ Arbitrum USDC → Sonic SODA
+- 💎 **Points awarded** on every confirmed swap, USD value snapshotted via CoinGecko at submit time
+- 🪟 The whole thing in **Windows XP Luna Silver chrome** because why not
+
+### What we promised but haven't done yet
+
+We're holding the line on these — they're the Week 2 milestones, not late deliverables:
+
+- ❌ **Partner fee** — still 0%. Turns on **Tuesday (Day 9)**.
+- ❌ **Charity multisig** — not deployed. Public address comes Tuesday with the fee.
+- ❌ **Charity shortlist** — Monday's community thread → 5 candidates seeded → page populates
+- ❌ **Payout vote** — schema's ready (`PayoutVote`, `Ballot` tables exist), UI lands Day 10, backend Day 11
+
+### What we built, day by day
+
+| Day | Public | Code |
+|---|---|---|
+| 1 (Mon) | Announcement | — |
+| 2 (Tue) | Name vote opens | Skeleton swap working locally |
+| 3 (Wed) | **Build Log #1** | Working EVM connect + real `useSwap` + XP UI |
+| 4 (Thu) | Name vote closes → **Swaps without Borders** | Prisma + Supabase schema, points preview, `/leaderboard` route |
+| 5 (Fri) | **Discord stage #1** | Supabase live, CoinGecko pricing, `POST /api/swap-events`, `GET /api/leaderboard`, useSwap hook |
+
+### The line we keep saying out loud
+
+> "If you're evaluating SODAX as a build target — install the Builders MCP. Point your AI agent at it. Be writing cross-chain code in ten minutes."
+
+This whole project is the receipt. Five afternoons. One person. The MCP gave my agent live SDK docs + live chain config + the partner-fee primitives. I never tabbed-hopped to a docs site. **That is the actual unlock.**
+
+### Numbers
+
+- **Routes:** 5 (`/`, `/leaderboard`, `/charities`, `/api/swap-events`, `/api/leaderboard`)
+- **Lines of code (`src/` + `prisma/`):** ~700 (up from ~330 on Day 3)
+- **Commits this week:** ~15
+- **External deps added:** `@sodax/sdk`, `@sodax/dapp-kit`, `@sodax/wallet-sdk-react`, `@tanstack/react-query`, `viem`, `prisma`, `@prisma/client`, `tsx`
+- **`partnerFee` config touched:** 0 ← important
+- **Charity wallet addresses written anywhere:** 0 ← important
+- **Real money routed to charity:** 0 ← honest
+
+### Week 2 calendar
+
+| Day | Date | What lands |
+|---|---|---|
+| 7 (Sun) | 2026-05-24 | Rest |
+| 8 (Mon) | 2026-05-25 | Charity shortlist poll → 5 candidates seeded |
+| **9 (Tue)** | **2026-05-26** | **🚨 Partner fee turns ON · charity multisig deployed on Sonic · public address announced** |
+| 10 (Wed) | 2026-05-27 | 3 winning charities locked, voting UI shell |
+| 11 (Thu) | 2026-05-28 | Threshold + duration polls, voting backend |
+| 12 (Fri) | 2026-05-29 | **Discord stage #2** — v1 demo with real fees flowing |
+| 13 (Sat) | 2026-05-30 | Docs + bug triage |
+| 14 (Sun) | 2026-05-31 | Internal review |
+
+### Want to help?
+
+- ⭐ **Star the repo** — [github.com/hazy2go/swaps-without-borders](https://github.com/hazy2go/swaps-without-borders)
+- 🗳 **Suggest a charity** in the Discord thread (opens Monday)
+- 💱 **Try a swap** — even $1. Your wallet shows up on the leaderboard.
+- 🛠 **Build your own SODAX project** — use the [Builders MCP](https://builders.sodax.com/mcp)
+
+### And the same disclaimer as every day
+
+The fee is currently **zero**. Nothing routes to charity yet. Tuesday flips it. Until Tuesday, everything in this app is plumbing.
+
+---
+
+## Day 6 — Sat 2026-05-23 — Charity page + seed scaffold + Week 1 recap
+
+**Status:** lightweight Saturday by design. No bugs reported from stage #1 — straight to Week 2 prep.
+
+### What shipped
+
+- **`/charities` page** — server component reading from the `Charity` table. XP window styling. Empty state pointing at Monday's poll. Wired into desktop icons + taskbar task + mobile chip nav.
+- **`prisma/seed.ts`** — idempotent seed script (`findFirst` → `update` or `create`) reading from a `CHARITIES` const at the top. Empty until Monday's community thread closes; then drop in 5 entries, run `pnpm db:seed`, page populates.
+- **`pnpm db:seed`** + Prisma `seed` config + `tsx` runner installed
+- **Week 1 recap** (above) — long-form public-facing narrative for Discord/X
+
+### Money state — unchanged
+
+- Still no `partnerFee` in `src/lib/sodax.ts`
+- Still no charity wallet
+- Day 9 gate sealed
+
+---
+
 ## Day 4 — Thu 2026-05-21 — Name decided · points ledger · leaderboard route
 
 **Status:** the name vote closed. The community picked **Swaps without Borders.**

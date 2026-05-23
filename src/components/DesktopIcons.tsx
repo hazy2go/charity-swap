@@ -28,6 +28,12 @@ const ICONS: IconDef[] = [
     action: { kind: "link", href: "/leaderboard" },
   },
   {
+    id: "charities",
+    glyph: "🎗",
+    label: "Charities",
+    action: { kind: "link", href: "/charities" },
+  },
+  {
     id: "buildlog",
     glyph: "🧾",
     label: "BUILD-LOG.md",

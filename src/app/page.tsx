@@ -26,6 +26,13 @@ export default function Home() {
           <span>Leaderboard</span>
         </a>
         <a
+          href="/charities"
+          className="xp-taskbar__task hidden md:flex"
+        >
+          <span aria-hidden>🎗</span>
+          <span>Charities</span>
+        </a>
+        <a
           href="#notepad-window"
           className="xp-taskbar__task hidden md:flex"
         >
@@ -76,6 +83,7 @@ export default function Home() {
         {/* Mobile: tiny chip with quick links since desktop icons are hidden */}
         <nav className="md:hidden mt-4 flex flex-wrap justify-center gap-2 text-[10px]">
           <MobileChip href="/leaderboard" label="Leaderboard" glyph="🏆" />
+          <MobileChip href="/charities" label="Charities" glyph="🎗" />
           <MobileChip
             href="https://github.com/hazy2go/swaps-without-borders"
             label="GitHub"
@@ -125,11 +133,11 @@ function MobileChip({
   label: string;
   glyph: string;
 }) {
+  const isInternal = href.startsWith("/");
   return (
     <a
       href={href}
-      target="_blank"
-      rel="noreferrer"
+      {...(isInternal ? {} : { target: "_blank", rel: "noreferrer" })}
       className="xp-button !min-w-0 !h-auto inline-flex items-center gap-1 !px-2 !py-1"
     >
       <span aria-hidden>{glyph}</span>

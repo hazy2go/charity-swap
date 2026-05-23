@@ -1,0 +1,187 @@
+import Link from "next/link";
+import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+type Charity = {
+  id: string;
+  name: string;
+  blurb: string;
+  website: string | null;
+  payoutKind: "wallet" | "offramp";
+  payoutTarget: string;
+  active: boolean;
+  createdAt: Date;
+};
+
+async function loadCharities(): Promise<{ rows: Charity[]; error: string | null }> {
+  try {
+    const rows = await prisma.charity.findMany({
+      where: { active: true },
+      orderBy: { createdAt: "asc" },
+    });
+    return { rows: rows as Charity[], error: null };
+  } catch (err) {
+    return { rows: [], error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+function shortTarget(target: string, kind: "wallet" | "offramp"): string {
+  if (kind === "wallet" && target.startsWith("0x") && target.length >= 10) {
+    return `${target.slice(0, 6)}…${target.slice(-4)}`;
+  }
+  return target;
+}
+
+export default async function CharitiesPage() {
+  const { rows, error } = await loadCharities();
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <header className="xp-taskbar">
+        <Link href="/" className="xp-start h-full" aria-label="Back to desktop">
+          <span className="xp-start__flag">⟁</span>
+          <span>Back</span>
+        </Link>
+        <span className="xp-taskbar__task xp-taskbar__task--active">
+          <span aria-hidden>🎗</span>
+          <span>Charities.exe</span>
+        </span>
+        <div className="xp-tray text-[10px] sm:text-[11px]">
+          <a
+            href="https://builders.sodax.com/mcp"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:underline flex items-center gap-1"
+          >
+            <span className="xp-tray__icon" aria-hidden>🔌</span>
+            <span className="hidden sm:inline">builders.sodax.com/mcp</span>
+            <span className="sm:hidden">MCP</span>
+          </a>
+        </div>
+      </header>
+
+      <main
+        className="flex-1 p-3 sm:p-6 md:p-8 grid place-items-center"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 8% 12%, rgba(255,255,255,0.06) 0%, transparent 22%), radial-gradient(circle at 92% 88%, rgba(0,0,0,0.18) 0%, transparent 28%)",
+        }}
+      >
+        <div className="xp-window w-[640px] max-w-[95vw]">
+          <div className="xp-titlebar">
+            <span className="xp-titlebar__icon" aria-hidden>🎗</span>
+            <span className="xp-titlebar__title">
+              Charities.exe — Swaps without Borders
+            </span>
+            <div className="xp-titlebar__controls">
+              <Link
+                href="/"
+                className="xp-ctrl xp-ctrl--close"
+                aria-label="Close"
+                tabIndex={-1}
+              >
+                <span style={{ fontWeight: "bold", lineHeight: 1 }}>×</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="xp-menubar">
+            <span className="xp-menubar__item"><u>F</u>ile</span>
+            <span className="xp-menubar__item"><u>V</u>iew</span>
+            <span className="xp-menubar__item"><u>H</u>elp</span>
+            <span className="ml-auto self-center pr-1">
+              <span className="xp-pill">{rows.length} candidate(s)</span>
+            </span>
+          </div>
+
+          <div className="bg-[var(--xp-face)] px-4 py-4">
+            <p className="text-[11px] text-[#444] mb-3 leading-snug">
+              The community-curated shortlist of charities eligible to receive
+              the next payout. Suggestions open <strong>Mon 2026-05-25 (Day 8)</strong>.
+              The top <strong>5 candidates</strong> get added here; the points-weighted vote on
+              <strong> Day 11+</strong> picks one winner per payout cycle.
+            </p>
+
+            {error ? (
+              <div className="xp-readout !block !text-[11px] !text-[#7a0a0a]">
+                <strong>Error reading charities:</strong> {error}
+              </div>
+            ) : rows.length === 0 ? (
+              <div className="xp-readout !block !py-8 text-center text-[#666]">
+                <div className="text-[24px] mb-2" aria-hidden>🎗</div>
+                <div className="font-bold text-[13px] text-[#111]">
+                  No charities seeded yet
+                </div>
+                <div className="mt-1 text-[11px]">
+                  The 5-charity shortlist lands <strong>Mon 2026-05-25 (Day 8)</strong> once the
+                  community suggestion thread closes.
+                  <br />
+                  Schema is in{" "}
+                  <code className="font-mono">prisma/schema.prisma</code>;
+                  seed script in{" "}
+                  <code className="font-mono">prisma/seed.ts</code>.
+                </div>
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {rows.map((c) => (
+                  <li
+                    key={c.id}
+                    className="xp-readout !block !p-3 hover:bg-[#dde8f6]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="font-bold text-[13px]">{c.name}</div>
+                        <div className="text-[11px] text-[#444] mt-1 leading-snug">
+                          {c.blurb}
+                        </div>
+                      </div>
+                      <div className="text-right text-[10px] text-[#666] font-mono shrink-0">
+                        <div className="uppercase tracking-wider">
+                          {c.payoutKind}
+                        </div>
+                        <div>{shortTarget(c.payoutTarget, c.payoutKind)}</div>
+                      </div>
+                    </div>
+                    {c.website && (
+                      <div className="mt-2 text-[10px]">
+                        <a
+                          href={c.website}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline decoration-dotted underline-offset-2 text-[#0a2a6b]"
+                        >
+                          {c.website}
+                        </a>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-3 flex justify-end gap-2">
+              <Link href="/" className="xp-button">
+                Back to Swap.exe
+              </Link>
+              <Link href="/leaderboard" className="xp-button">
+                Leaderboard
+              </Link>
+            </div>
+          </div>
+
+          <div className="xp-statusbar">
+            <span className="xp-statusbar__cell">
+              {rows.length} active · payout vote opens Day 11
+            </span>
+            <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
+              Day 6 · pre-seed
+            </span>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

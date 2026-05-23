@@ -213,6 +213,9 @@ export default async function LeaderboardPage() {
               <Link href="/" className="xp-button">
                 Back to Swap.exe
               </Link>
+              <Link href="/charities" className="xp-button">
+                Charities
+              </Link>
               <a
                 href="https://github.com/hazy2go/swaps-without-borders/blob/main/prisma/schema.prisma"
                 target="_blank"
