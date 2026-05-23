@@ -44,7 +44,9 @@ export function previewPoints(
   const usd = previewUsdValue(amountRaw, decimals, symbol);
   if (usd == null) return null;
   return {
-    points: Math.floor(usd * DEFAULT_POINTS_PER_USD),
+    // round (not floor) — matches the API route so the preview number
+    // is what the user actually gets logged.
+    points: Math.round(usd * DEFAULT_POINTS_PER_USD),
     usd,
   };
 }

@@ -5,40 +5,58 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
-## Day 6 — Sat 2026-05-23 — Charities page + seed scaffold + Week 1 recap
+## Day 6 — Sat 2026-05-23 — Charities + seed + audits + security hardening
 
-### 🎗 `/charities` page
+### 🎗 `/charities` page (Day 8 prep)
 - Server component reading from `Charity` table via Prisma
-- XP window styling, "X candidate(s)" pill in the menu bar
-- Empty state points at Monday's poll
+- XP window styling, "X candidate(s)" pill, empty state pointing at Monday's poll
 - Per-charity card: name, blurb, payout kind, short payout target, optional website
-- Wired into: desktop icons (🎗 Charities), taskbar task tab (md+), mobile chip nav
-- Cross-link from `/leaderboard` footer
+- Wired into desktop icons, taskbar tab (md+), mobile chip nav, leaderboard footer
 
 ### 🌱 `prisma/seed.ts`
-- Idempotent: `findFirst` by name → `update` if present, `create` otherwise (no schema migration required)
-- `CHARITIES` const at top of file — Hazy fills 5 entries Monday after community input
-- `pnpm db:seed` script + Prisma `seed` config so `prisma migrate reset` re-seeds
-- `tsx` installed as devDep (Prisma seed runner)
-- Smoke-tested empty seed: prints "nothing to seed" hint and exits 0
+- Idempotent (`findFirst` → `update` or `create`, no schema migration required)
+- `CHARITIES` const at top — Hazy fills 5 entries Monday after community input
+- `pnpm db:seed` + Prisma `seed` config + `tsx` runner installed
+- Smoke-tested empty: prints "nothing to seed" and exits 0
 
-### 🧷 Misc
-- `MobileChip` fixed: internal hrefs no longer open in a new tab
+### 🧪 Functionality audit (5 bugs found + fixed)
+1. **Points bug** — `Math.floor(0.99 × 1) = 0` meant sub-dollar swaps earned 0 points but still polluted the leaderboard. Fixed: `Math.floor` → `Math.round` in both server and preview helper.
+2. **Leaderboard 500** — `?limit=abc` → `NaN` → Prisma error. Fixed: safe coercion with default 50.
+3. **Stale watermark** — page said "Day 5"; bumped to "build 0.0.4 · Day 6".
+4. **Stale Notepad ReadMe** — Day 5 checklist; updated to Day 6 state.
+5. **Audit data in prod DB** — 3 test rows from earlier curl tests were visible on the public leaderboard. Deleted via one-off Prisma script.
 
-### 📔 Week 1 recap
-- Long-form recap appended to `BUILD-LOG.md` covering Days 1–5 + Week 2 calendar
-- Five tables, the "what we promised but haven't done yet" honesty box, the MCP pitch
+### 🔐 Security audit (deep pass — no wallet-drain vectors)
+
+**Wallet drain surface — clean.** No URL-controlled addresses. `srcAddress`/`dstAddress` always = connected wallet. Solver always `address(0)`. Token addresses hardcoded in `swap-presets.ts`. `partnerFee` not configured (Day 9). pnpm-lock committed, SODAX pkgs pinned exact `2.0.0-rc.1`.
+
+**API hardening — applied:**
+- Strict regex on every string field: `srcToken` / `dstToken` must be `0x` + 40 hex; `txHash` must be `0x` + 64 hex; symbols `[A-Za-z0-9._-]{1,32}`; preset id `[A-Za-z0-9._-]{1,64}` (so `<script>` 400s); chain keys `[a-zA-Z0-9._:-]{1,64}`
+- `srcAmountRaw` capped at 80 digits
+- `srcDecimals` / `dstDecimals` integer in `[0, 36]`
+- `content-length > 4096 → 413`
+- **Rate limit** on both endpoints (`src/lib/rate-limit.ts`): 30 POSTs/min on `/api/swap-events`, 120 GETs/min on `/api/leaderboard`, per IP, returns 429 with `retry-after`
+- **USD value capped at $10M** per swap, **points capped at 10M** per swap — defends against CoinGecko returning nonsense or MITM injection
+- Internal error messages no longer echoed; logged server-side, generic response
+
+**Headers:** added via `next.config.ts` → `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (no camera/mic/geo/cohorts), `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`.
+
+**Verified:** no secrets in git (only `.env.example` tracked), no XSS surface (React default escaping + format validation pre-DB), no SQL injection surface (Prisma parameterized), client bundle exposes only `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (intended).
+
+**Deferred (not exploits, just to-do):**
+- CSP — wallet SDKs need careful allowlist; tackled Day 13 docs pass
+- Rate limiter is in-memory per-instance; swap in Upstash for production-grade
+- `SwapEvent.status` never transitions to `confirmed` (would need `useStatus` polling)
 
 ### 🔒 Money state — unchanged
-- No `partnerFee` in `src/lib/sodax.ts`
-- No charity wallet
-- **Day 9 gate sealed**
+- No `partnerFee` · no charity wallet · Day 9 gate sealed
 
 ### 📦 Files
-- **+2 new** — `src/app/charities/page.tsx`, `prisma/seed.ts`
-- **5 modified** — `src/components/DesktopIcons.tsx`, `src/app/page.tsx`, `src/app/leaderboard/page.tsx`, `package.json`, `BUILD-LOG.md`
+- **+5 new** — `src/app/charities/page.tsx`, `prisma/seed.ts`, `src/lib/rate-limit.ts`, plus modifications to two API routes
+- **8 modified** — `next.config.ts` (headers), `src/lib/points.ts`, `src/app/api/swap-events/route.ts`, `src/app/api/leaderboard/route.ts`, `src/components/DesktopIcons.tsx`, `src/app/page.tsx`, `src/app/leaderboard/page.tsx`, `package.json`
 
 ---
+
 
 ## Day 5 — Fri 2026-05-22 — Live points + leaderboard
 

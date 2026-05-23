@@ -113,7 +113,7 @@ export default function Home() {
             Swaps without Borders
           </div>
           <div className="text-[11px] tracking-wider uppercase opacity-80">
-            Silver Edition · build 0.0.3 · Day 5
+            Silver Edition · build 0.0.4 · Day 6
           </div>
           <div className="text-[10px] opacity-70 mt-1">
             For evaluation purposes only. Mainnet.
@@ -176,9 +176,10 @@ function NotepadWindow() {
         <pre className="xp-notepad text-[11px] sm:text-[12px] overflow-x-auto">{`SWAPS WITHOUT BORDERS — README.TXT
 ====================================
 
-Day 5 of a 2-week public build on the SODAX SDK V2.
-The community picked the name. The community picks the
-points system, the charities, the threshold, the vote.
+Day 6 of a 2-week public build on the SODAX SDK V2.
+Week 1 done. Discord stage #1 shipped. The community
+picks the points system, the charities, the threshold,
+the vote.
 
 WHAT THIS DOES
   Cross-chain swap. Fees route to a public charity
@@ -195,7 +196,7 @@ SCAFFOLDED WITH
   place in an afternoon. If you're evaluating SODAX
   as a build target — start there.
 
-STATUS THIS COMMIT (Day 5)
+STATUS THIS COMMIT (Day 6)
   [x] EVM wallet connect (Hana / MetaMask / Rabby)
   [x] Live quotes via useQuote
   [x] Approve + Swap path via useSwap
@@ -205,7 +206,10 @@ STATUS THIS COMMIT (Day 5)
   [x] Points preview in SwapCard
   [x] Supabase live · CoinGecko USD pricing
   [x] /api/swap-events + /api/leaderboard
-  [x] /leaderboard reads from DB
+  [x] /leaderboard reads from DB · medals + totals
+  [x] /charities (empty until Day 8 seed)
+  [x] Functionality audit + bug-fix pass
+  [ ] Charity shortlist seed .. Day 8
   [ ] Partner fee  ............ Day 9
   [ ] Charity multisig  ....... Day 9
   [ ] Charity vote  ........... Day 11

@@ -90,9 +90,9 @@ The fee is currently **zero**. Nothing routes to charity yet. Tuesday flips it. 
 
 ---
 
-## Day 6 — Sat 2026-05-23 — Charity page + seed scaffold + Week 1 recap
+## Day 6 — Sat 2026-05-23 — Charity page + seed scaffold + Week 1 recap + audit
 
-**Status:** lightweight Saturday by design. No bugs reported from stage #1 — straight to Week 2 prep.
+**Status:** lightweight Saturday by design. No bugs reported from stage #1 — straight to Week 2 prep, plus a full functionality + bug-fix audit so we go into Tuesday's money-flip with a clean baseline.
 
 ### What shipped
 
@@ -100,6 +100,113 @@ The fee is currently **zero**. Nothing routes to charity yet. Tuesday flips it. 
 - **`prisma/seed.ts`** — idempotent seed script (`findFirst` → `update` or `create`) reading from a `CHARITIES` const at the top. Empty until Monday's community thread closes; then drop in 5 entries, run `pnpm db:seed`, page populates.
 - **`pnpm db:seed`** + Prisma `seed` config + `tsx` runner installed
 - **Week 1 recap** (above) — long-form public-facing narrative for Discord/X
+- **Functionality + bug audit** — see below
+
+### Audit pass
+
+Smoke-tested every route, every API endpoint, every error path. Five bugs found and fixed in the same commit.
+
+#### Routes
+
+| Route | Method | Result |
+|---|---|---|
+| `/` | GET | 200 ✅ |
+| `/leaderboard` | GET | 200 ✅ |
+| `/charities` | GET | 200 ✅ |
+| `/api/leaderboard` | GET | 200 ✅ |
+| `/api/swap-events` | GET | 405 (POST-only) ✅ |
+| `/nonexistent` | GET | 404 ✅ |
+
+#### API validation paths
+
+| Case | Expected | Got |
+|---|---|---|
+| `POST` with missing wallet | 400 `wallet must be a 0x address` | ✅ |
+| `POST` with wallet `"nope"` | 400 same | ✅ |
+| `POST` with `srcAmountRaw: "1.5"` (non-integer) | 400 `srcAmountRaw must be a decimal string` | ✅ |
+| `POST` with empty body | 400 `invalid json` | ✅ |
+| `POST` happy path (1 USDC) | 200 + row created | ✅ |
+| `POST` same `txHash` again | 200 `{idempotent:true}` | ✅ |
+| `POST` unknown token symbol | 200, `usdValue:null`, `pointsAwarded:0` | ✅ |
+
+#### Bugs found & fixed
+
+| # | Bug | Severity | Fix |
+|---|---|---|---|
+| 1 | `Math.floor(0.99 × 1) = 0` — anyone swapping under $1 earned 0 points but still appeared on the leaderboard | High (silent UX failure) | `Math.floor` → `Math.round` in both `src/lib/points.ts` (preview) and `src/app/api/swap-events/route.ts` (server) so the preview matches what's logged |
+| 2 | `GET /api/leaderboard?limit=abc` returned 500 — `Number("abc") = NaN` propagated to Prisma | Medium (exposed 500) | Coerce safely: `Number.isFinite(n) && n > 0 ? n : 50` |
+| 3 | Page watermark stale at "build 0.0.3 · Day 5" | Cosmetic | Bumped to "build 0.0.4 · Day 6" |
+| 4 | Notepad ReadMe content stale at Day 5 status | Cosmetic | Day 6 headline + updated checklist (Week 1 done, audit done, charities scaffold listed) |
+| 5 | Three audit rows from earlier testing visible on the public leaderboard (`0xDEAD` wallet, 3 swaps, $100, 99 pts) | High (public data integrity) | Deleted via one-off Prisma script; leaderboard back to empty |
+
+#### Known incomplete (deferred, not bugs)
+
+- `SwapEvent.status` is always written as `submitted`; we never transition to `confirmed` because the `useSwap` resolution fires on solver acceptance, not final settlement. Wiring `useStatus` polling to flip the row is a Day 12 polish.
+- `/leaderboard` currently shows all swaps, not just `confirmed` ones. Same root cause.
+- CoinGecko free tier has a soft rate limit (~30 req/min). Our 60s cache means one fetch per token per minute, which is well under the limit, but a viral spike could 429. Acceptable for current scale.
+
+### Security audit
+
+Followed the functionality audit with a deep security pass. The shipping concern is twofold: people execute real on-chain swaps through this UI, and we have a public write endpoint feeding a public leaderboard. Two attack surfaces, audited separately.
+
+#### Surface 1 — wallet drain
+
+The thing we care about most. Can anyone craft a link, a referrer, or a UI state that tricks a user into approving the wrong contract, sending tokens to the wrong address, or signing the wrong intent?
+
+**Findings: no holes in our code.**
+
+- `intentParams.srcAddress` and `intentParams.dstAddress` are always `account.address` (the connected wallet). Never URL-controlled, never query-parametrized, never user-typed.
+- `intentParams.solver` is always `address(0)` ("any solver"). No malicious solver targeting.
+- `inputToken` / `outputToken` come from `SWAP_PRESETS` — hardcoded in `src/lib/swap-presets.ts`, sourced from the SODAX SDK's bundled token registry. No URL override path.
+- `partnerFee` is **not configured**. Nothing routes to anywhere.
+- `useSwapApprove` calls into the SDK's own approval function — the spender is SODAX's swap router address, set by the SDK, not by us.
+- `pnpm-lock.yaml` is committed. `@sodax/*` packages pinned to exact `2.0.0-rc.1` (no caret). Supply-chain ✅.
+
+**Trust boundary:** we trust `@sodax/sdk` and `@sodax/dapp-kit` to direct approvals + intents to the right contracts. That's the right trust boundary — it's the SDK's job, and they own the addresses. Day 9 partner-fee config will introduce one new piece of trusted state (`PartnerFee.address`); when that lands, the charity multisig address goes into a single line of code that's reviewed in chat before commit, per the money-gates rule.
+
+**Deferred verification:** the exact approval scope (`MaxUint256` vs exact amount) lives inside `sodax.swaps.approve()`. If it's `MaxUint256`, anyone using the dapp grants the SODAX router unbounded allowance on the input token. That's standard DEX behavior but worth confirming with the SODAX team for the Day 9 announcement. Not a vuln in our code either way.
+
+#### Surface 2 — public write API (`POST /api/swap-events`)
+
+The endpoint is unauthenticated by design (you don't need an account to log a swap; the wallet is the identity). So everything goes through validation + caps instead.
+
+| Hardening | Before | After |
+|---|---|---|
+| Wallet format | basic `^0x{40}` regex | same |
+| Token addresses | accepted any string | strict `^0x[a-fA-F0-9]{40}$` |
+| Chain keys | accepted any non-empty string | `^[a-zA-Z0-9._:-]{1,64}$` |
+| Symbols | accepted any non-empty string | `^[A-Za-z0-9._-]{1,32}$` |
+| Preset id | accepted any non-empty string | `^[A-Za-z0-9._-]{1,64}$` (so `<script>` 400s) |
+| Amount strings | `\d+` no length cap | `^\d{1,80}$` |
+| Decimals | `typeof === 'number'` | integer in `[0, 36]` |
+| txHash | accepted any non-empty string | `^0x[a-fA-F0-9]{64}$` |
+| Body size | unbounded | `content-length > 4096 → 413` |
+| Rate limit | none | 30 POSTs / 60s per IP, 429 with `retry-after` |
+| USD cap | none | $10M per swap (defends against pricing-oracle poisoning) |
+| Points cap | none | 10,000,000 per swap |
+| 500 detail | full error message echoed | logged server-side, generic `{error:"write failed"}` returned |
+
+Same treatment on `GET /api/leaderboard`: 120 reads/min per IP, generic error responses, `?limit` already coerced safely from the functionality pass.
+
+#### Other vectors
+
+- **XSS:** every user-derived field rendered to the leaderboard goes through React's default escaping (text children, no `dangerouslySetInnerHTML` on DB fields). Wallets are lowercased + format-validated before insert. No XSS surface.
+- **SQL injection:** Prisma queries are parameterized end-to-end. No raw SQL anywhere in the codebase.
+- **CSRF:** the POST is intentionally unauthenticated, so CSRF is moot — there's no user session to ride on.
+- **Secrets in git:** verified — only `.env.example` is tracked. `.env` and `.env.local` are ignored. `grep` across tracked files: zero password leaks.
+- **Client bundle:** only `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is exposed, which is expected (it's a public client identifier, not a credential).
+- **Security headers:** added via `next.config.ts` → `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` denying camera/mic/geo/cohorts, `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`.
+- **CSP:** intentionally deferred. Wallet SDKs fetch from many RPC origins and contain bundled `eval`-style code; a wrong CSP silently breaks connect/sign. Adding a permissive but real CSP is on the Day 13 docs-pass list.
+
+#### Known limitations (deferred, not exploits)
+
+- Rate limit is in-memory per-instance — survives within one Vercel function instance, doesn't survive cold starts or share state across instances. Good for spam, not a serious DDoS defense. Upstash Redis swap-in is one file (`src/lib/rate-limit.ts`).
+- `SwapEvent.status` always written as `submitted` — we never poll back to `confirmed`. A failed-to-settle swap counts toward the leaderboard. Fix is `useStatus` polling, Day 12 polish.
+- Database password was shared in chat during Day 5 wiring. Rotation reminder is in `project_status.md` memory.
+
+#### Cleanup
+
+All 25 audit rows generated during this pass have been deleted from Supabase. Public leaderboard is back to empty totals.
 
 ### Money state — unchanged
 
