@@ -25,6 +25,11 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 - `/charities`: intro copy now reads "poll opened" (live, not upcoming); status bar `Day 6 · pre-seed` → `Day 8 · shortlist live`
 - Homepage watermark `build 0.0.4 · Day 6` → `build 0.0.5 · Day 8`
 - ReadMe.txt Notepad: status block bumped to Day 8, shortlist checkbox flipped ✅
+- Leaderboard status bar `Day 5 · live` → `Day 8 · live`
+- Swap.exe points footnote fixed — it still said "persistence + leaderboard activate Day 5" (live since Day 5); now describes the real logging behavior
+
+### 🗳 Vote UI: explored, then pulled
+- Built and shipped a `/vote` points-weighted charity-voting UI shell, then **reverted it same-day** — voting happens in Discord, not in the dapp. Net-zero code; commits left in history (build-in-public).
 
 ---
 

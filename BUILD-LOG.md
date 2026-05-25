@@ -42,6 +42,15 @@ That's the rule for the whole second week: anything that can move money is a
 gate, shown as a diff, confirmed before it ships. Seeding a ballot isn't that.
 Wiring a real address is.
 
+### A detour, for the record
+
+Mid-day I built a `/vote` page — a points-weighted charity-voting UI shell,
+XP-styled, with a demo points budget and per-charity allocation bars — pulling
+Day 10's work forward. Then it got pulled: the vote runs in Discord, not in the
+dapp. The dapp's job is the swap and the transparent leaderboard; the vote is a
+community ritual that lives where the community already is. Net-zero code, but
+the commits stay in history — that's what building in public means.
+
 ### Next
 
 Tomorrow (Day 9) is the big one — **Build Log #2, the wallet goes live**: the
