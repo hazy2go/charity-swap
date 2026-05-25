@@ -170,6 +170,9 @@ export default async function CharitiesPage() {
               <Link href="/leaderboard" className="xp-button">
                 Leaderboard
               </Link>
+              <Link href="/vote" className="xp-button xp-button--primary">
+                Vote (preview)
+              </Link>
             </div>
           </div>
 
