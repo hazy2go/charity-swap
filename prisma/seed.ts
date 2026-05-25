@@ -22,17 +22,57 @@ type CharityInput = {
   active?: boolean;
 };
 
-// 🚨 Empty until the Day 8 community thread closes.
-// Sample shape (commented out):
-//   {
-//     name: "GiveDirectly",
-//     blurb: "Unconditional cash transfers to people living in extreme poverty.",
-//     website: "https://www.givedirectly.org",
-//     payoutKind: PayoutKind.offramp,
-//     payoutTarget: "givedirectly-usdc-offramp",
-//     active: true,
-//   },
-const CHARITIES: CharityInput[] = [];
+// Day 8 shortlist — five globally-recognized orgs that already accept
+// crypto and fit the "without borders" theme (poverty, water, digital
+// rights, health, education). The community poll picks the 3 winners
+// (Day 10); editing this list + re-running the seed is the public process.
+//
+// ⚠️ payoutTarget is an `offramp` PLACEHOLDER SLUG, not a real address.
+// Real on-chain payout addresses are money-routing — they get locked in
+// only after winners are chosen, as a single reviewed change. Nothing
+// here moves funds; it only populates the ballot.
+const CHARITIES: CharityInput[] = [
+  {
+    name: "GiveDirectly",
+    blurb: "Unconditional cash transfers straight to people living in extreme poverty.",
+    website: "https://www.givedirectly.org",
+    payoutKind: PayoutKind.offramp,
+    payoutTarget: "givedirectly-offramp-tbd",
+    active: true,
+  },
+  {
+    name: "charity: water",
+    blurb: "Funds clean and safe drinking water projects in communities that lack it.",
+    website: "https://www.charitywater.org",
+    payoutKind: PayoutKind.offramp,
+    payoutTarget: "charitywater-offramp-tbd",
+    active: true,
+  },
+  {
+    name: "Electronic Frontier Foundation",
+    blurb: "Defends civil liberties, privacy, and free expression in the digital world.",
+    website: "https://www.eff.org",
+    payoutKind: PayoutKind.offramp,
+    payoutTarget: "eff-offramp-tbd",
+    active: true,
+  },
+  {
+    name: "Doctors Without Borders",
+    blurb: "Independent emergency medical care delivered across borders, wherever the need is greatest.",
+    website: "https://www.doctorswithoutborders.org",
+    payoutKind: PayoutKind.offramp,
+    payoutTarget: "msf-offramp-tbd",
+    active: true,
+  },
+  {
+    name: "Khan Academy",
+    blurb: "Free, world-class education for anyone, anywhere.",
+    website: "https://www.khanacademy.org",
+    payoutKind: PayoutKind.offramp,
+    payoutTarget: "khanacademy-offramp-tbd",
+    active: true,
+  },
+];
 
 async function main() {
   if (CHARITIES.length === 0) {

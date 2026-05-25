@@ -99,9 +99,10 @@ export default async function CharitiesPage() {
           <div className="bg-[var(--xp-face)] px-4 py-4">
             <p className="text-[11px] text-[#444] mb-3 leading-snug">
               The community-curated shortlist of charities eligible to receive
-              the next payout. Suggestions open <strong>Mon 2026-05-25 (Day 8)</strong>.
-              The top <strong>5 candidates</strong> get added here; the points-weighted vote on
-              <strong> Day 11+</strong> picks one winner per payout cycle.
+              the next payout. The poll opened <strong>Mon 2026-05-25 (Day 8)</strong> with
+              these <strong>5 candidates</strong>; the points-weighted vote on
+              <strong> Day 11+</strong> picks the winners per payout cycle. Payout
+              addresses are placeholders until winners are locked in.
             </p>
 
             {error ? (
@@ -177,7 +178,7 @@ export default async function CharitiesPage() {
               {rows.length} active · payout vote opens Day 11
             </span>
             <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
-              Day 6 · pre-seed
+              Day 8 · shortlist live
             </span>
           </div>
         </div>

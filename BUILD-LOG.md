@@ -9,6 +9,47 @@ A day-by-day public log of building Swaps without Borders on the
 
 ---
 
+## Day 8 — Mon 2026-05-25 — the charity shortlist goes live
+
+Week 2 opens with the part that gives this whole thing its name: the charities.
+
+The `Charity` table and the `/charities` page have been sitting there since
+Day 6, empty, waiting on this. Today they got filled. Five candidates, chosen
+to be globally recognizable, to already accept crypto, and to fit the *without
+borders* theme — so the spread covers poverty, water, digital rights, health,
+and education rather than five flavors of the same cause:
+
+- **GiveDirectly** — unconditional cash transfers to people in extreme poverty
+- **charity: water** — clean and safe drinking water projects
+- **Electronic Frontier Foundation** — digital civil liberties and privacy
+- **Doctors Without Borders** — emergency medical care, across borders
+- **Khan Academy** — free education for anyone, anywhere
+
+`pnpm db:seed` pushed them into Supabase; the seed is idempotent (it upserts by
+name), so the list stays editable as the community thread runs. Refresh
+`/charities` and all five are there now.
+
+### The one line that matters for safety
+
+These are *ballot candidates*, not payout destinations — not yet. Every
+`payoutTarget` is a placeholder slug (`givedirectly-offramp-tbd`, etc.), kind
+`offramp`, deliberately **not** a real wallet address. Nothing on this page can
+route a cent. The real on-chain addresses get locked in only after the
+community picks winners, and that lands as one reviewed diff — same discipline
+as the fee switch.
+
+That's the rule for the whole second week: anything that can move money is a
+gate, shown as a diff, confirmed before it ships. Seeding a ballot isn't that.
+Wiring a real address is.
+
+### Next
+
+Tomorrow (Day 9) is the big one — **Build Log #2, the wallet goes live**: the
+Sonic multisig gets deployed and `partnerFee` turns on. That's the money-gate
+day. Nothing about it ships without an explicit go on the diff.
+
+---
+
 ## Week 1 recap — Sat 2026-05-23 — five days in
 
 Halfway through the build. The first week is done. Here's where we landed.

@@ -5,6 +5,29 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 8 — Mon 2026-05-25 — Charity shortlist poll goes live
+
+### 🎗 5-candidate shortlist seeded
+- `prisma/seed.ts` `CHARITIES` array filled with five globally-recognized orgs that already accept crypto, spanning poverty / water / digital rights / health / education:
+  - **GiveDirectly** — unconditional cash transfers to people in extreme poverty
+  - **charity: water** — clean and safe drinking water projects
+  - **Electronic Frontier Foundation** — digital civil liberties & privacy
+  - **Doctors Without Borders** — emergency medical care across borders
+  - **Khan Academy** — free education for anyone, anywhere
+- `pnpm db:seed` run against Supabase — `/charities` now renders all five live
+- Idempotent re-run confirmed (upsert by name); the list stays editable as the community thread evolves
+
+### 🔒 Money-gate respected
+- Every `payoutTarget` is an **`offramp` placeholder slug** (`*-offramp-tbd`), **not** a real wallet address
+- No funds are routable from the shortlist — real on-chain payout addresses get locked in only after winners are chosen, as a single reviewed change
+
+### 🧹 Copy / version sync
+- `/charities`: intro copy now reads "poll opened" (live, not upcoming); status bar `Day 6 · pre-seed` → `Day 8 · shortlist live`
+- Homepage watermark `build 0.0.4 · Day 6` → `build 0.0.5 · Day 8`
+- ReadMe.txt Notepad: status block bumped to Day 8, shortlist checkbox flipped ✅
+
+---
+
 ## Day 6 — Sat 2026-05-23 — Charities + seed + audits + security hardening
 
 ### 🎗 `/charities` page (Day 8 prep)
