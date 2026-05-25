@@ -359,8 +359,9 @@ function PointsPreview({
         <span>{DEFAULT_POINTS_PER_USD} pt / $1 (Day 11 vote)</span>
       </div>
       <p className="mt-2 text-[9px] leading-snug text-[#777] italic">
-        Preview only — persistence + leaderboard activate Day 5. Schema is
-        already committed in <code className="font-mono">prisma/schema.prisma</code>.
+        Estimate — actual points are logged on a confirmed swap and appear on the{" "}
+        <a href="/leaderboard" className="underline">leaderboard</a>. USD value is
+        snapshotted via CoinGecko at submit time.
       </p>
     </div>
   );

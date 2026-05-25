@@ -232,7 +232,7 @@ export default async function LeaderboardPage() {
               {totals.swapCount} swap(s) · {totals.walletCount} wallet(s)
             </span>
             <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
-              Day 5 · live
+              Day 8 · live
             </span>
           </div>
         </div>
