@@ -16,6 +16,7 @@ import {
   findToken,
   chainInfo,
   isNativeToken,
+  xChainTypeOf,
   DEFAULT_SRC,
   DEFAULT_DST,
   type TokenInfo,
@@ -25,8 +26,8 @@ import { previewPoints, formatPoints, DEFAULT_POINTS_PER_USD } from "@/lib/point
 
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000" as const;
 
-const SWAPPABLE = CHAINS.filter((c) => c.swappable);
-const NON_SWAPPABLE = CHAINS.filter((c) => !c.swappable);
+const EVM_CHAINS = CHAINS.filter((c) => c.type === "EVM");
+const ALT_CHAINS = CHAINS.filter((c) => c.type !== "EVM");
 
 export function SwapCard() {
   const [srcChain, setSrcChain] = useState<ChainKey>(DEFAULT_SRC.chain);
@@ -40,7 +41,13 @@ export function SwapCard() {
   const dst: TokenInfo =
     findToken(dstChain, dstAddr) ?? tokensForChain(dstChain)[0];
 
-  const account = useXAccount({ xChainType: "EVM" });
+  // Resolve the account for each side by its chain's ecosystem. A swap
+  // signs on the source chain and settles to an address on the dest chain,
+  // so cross-ecosystem routes need both wallets connected.
+  const srcType = xChainTypeOf(src.chain);
+  const dstType = xChainTypeOf(dst.chain);
+  const srcAccount = useXAccount({ xChainType: srcType });
+  const dstAccount = useXAccount({ xChainType: dstType });
   const walletProvider = useWalletProvider({ xChainId: src.chain });
 
   function pickChain(side: "src" | "dst", key: ChainKey) {
@@ -91,7 +98,7 @@ export function SwapCard() {
   const quotedOut = quoteResult?.ok ? BigInt(quoteResult.value.quoted_amount) : 0n;
 
   const intentParams: CreateIntentParams | undefined =
-    account.address && quotedOut > 0n
+    srcAccount.address && dstAccount.address && quotedOut > 0n
       ? {
           inputToken: src.address,
           outputToken: dst.address,
@@ -101,8 +108,8 @@ export function SwapCard() {
           allowPartialFill: false,
           srcChainKey: src.chain,
           dstChainKey: dst.chain,
-          srcAddress: account.address,
-          dstAddress: account.address,
+          srcAddress: srcAccount.address,
+          dstAddress: dstAccount.address,
           solver: ADDRESS_ZERO,
           data: "0x",
         }
@@ -197,17 +204,21 @@ export function SwapCard() {
   const canSwap =
     !!intentParams && !!walletProvider && !isSwapping && !isApproving && !samePair;
 
-  const buttonLabel = !account.address
-    ? "Connect wallet to swap"
-    : samePair
-      ? "Pick two different tokens"
-      : isApproving
-        ? "Approving…"
-        : isSwapping
-          ? "Swapping…"
-          : needsApprove
-            ? `Approve ${src.symbol} & Swap`
-            : "Execute Swap";
+  const srcLabel = chainInfo(src.chain)?.label ?? srcType;
+  const dstLabel = chainInfo(dst.chain)?.label ?? dstType;
+  const buttonLabel = !srcAccount.address
+    ? `Connect ${srcLabel} wallet`
+    : !dstAccount.address
+      ? `Connect ${dstLabel} wallet (to receive)`
+      : samePair
+        ? "Pick two different tokens"
+        : isApproving
+          ? "Approving…"
+          : isSwapping
+            ? "Swapping…"
+            : needsApprove
+              ? `Approve ${src.symbol} & Swap`
+              : "Execute Swap";
 
   return (
     <div className="xp-window w-[440px] max-w-[95vw]">
@@ -358,9 +369,9 @@ export function SwapCard() {
       {/* Status bar */}
       <div className="xp-statusbar">
         <span className="xp-statusbar__cell">
-          {account.address
-            ? <>Connected · <span className="font-mono">{account.address.slice(0,6)}…{account.address.slice(-4)}</span></>
-            : "Wallet: disconnected"}
+          {srcAccount.address
+            ? <>{srcLabel} · <span className="font-mono">{srcAccount.address.slice(0,6)}…{srcAccount.address.slice(-4)}</span></>
+            : `${srcLabel}: disconnected`}
         </span>
         <span className="xp-statusbar__cell xp-statusbar__cell--fixed">SODAX V2</span>
         <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
@@ -384,16 +395,14 @@ function ChainSelect({
       value={value}
       onChange={(e) => onChange(e.target.value as ChainKey)}
     >
-      <optgroup label="EVM — swappable">
-        {SWAPPABLE.map((c) => (
+      <optgroup label="EVM">
+        {EVM_CHAINS.map((c) => (
           <option key={c.key} value={c.key}>{c.label}</option>
         ))}
       </optgroup>
-      <optgroup label="Other networks — wallet coming">
-        {NON_SWAPPABLE.map((c) => (
-          <option key={c.key} value={c.key} disabled>
-            {c.label} (soon)
-          </option>
+      <optgroup label="Other ecosystems">
+        {ALT_CHAINS.map((c) => (
+          <option key={c.key} value={c.key}>{c.label}</option>
         ))}
       </optgroup>
     </select>

@@ -28,14 +28,18 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 - Status block: `Partner fee → 0.1% LIVE`, `Charity wallet → interim EOA`
 - Watermark `build 0.0.5 · Day 8` → `build 0.0.6 · Day 9`
 
-### 🌐 All networks + full token picker
-- Swap.exe rebuilt: the 8 hardcoded presets are gone, replaced by a **chain → token** picker on both the From and To sides, plus a ⇅ flip button
-- **All 18 SODAX networks** surfaced. The **12 EVM chains** (Sonic, Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain, Avalanche, HyperEVM, LightLink, Redbelly, Kaia) are fully swappable; the 6 non-EVM networks (Solana, Sui, Injective, ICON, Stellar, NEAR) are shown but disabled — honest about the EVM-only wallet, more adapters to come
-- New `src/lib/swap-tokens.ts` registry (sourced from MCP `sodax_get_swap_tokens`); ~80 EVM tokens incl. native gas tokens, USDC/USDT/bnUSD, SODA on every chain, WBTC/cbBTC/tBTC, weETH/wstETH, and the LightLink/Redbelly wrappers
-- Wallet config + SDK config expanded from 6 → all 12 EVM chains (RPC defaults lifted from `@sodax/sdk` source, each env-overridable)
+### 🌐 Every network, every token — full multi-VM swap
+- Swap.exe rebuilt: the 8 hardcoded presets are gone, replaced by a **chain → token** picker on both From and To sides, plus a ⇅ flip button
+- **All 18 SODAX networks are swappable** — not just EVM. The 12 EVM chains (Sonic, Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain, Avalanche, HyperEVM, LightLink, Redbelly, Kaia) **and** the 6 non-EVM ecosystems (Solana, Sui, Injective, ICON, Stellar, NEAR)
+- *(Shipped EVM-only first, then expanded to all VMs the same day once the bundled adapters were confirmed — both commits in history.)*
+- **Multi-VM wallet layer:** `wallet-config.ts` now mounts every ecosystem slot (Solana, Sui, Injective, ICON, Stellar, NEAR — all adapter libs ship bundled in the SODAX wallet SDK). ConnectButton rebuilt to connect **one wallet per ecosystem**; a cross-VM swap needs both sides connected
+- **Per-side account resolution:** SwapCard resolves the source/destination account by each chain's ecosystem (`useXAccount({ xChainType })`), so e.g. Solana→Sonic signs with Phantom and settles to your EVM address
+- New `src/lib/swap-tokens.ts` registry (from MCP `sodax_get_swap_tokens`): ~115 tokens across all 18 chains — native gas tokens, USDC/USDT/bnUSD, SODA everywhere, BTC variants, LSTs, Sui staked-SUI family
+- Wallet + SDK config expanded 6 → all 12 EVM chains (RPC defaults from `@sodax/sdk` source, env-overridable)
+- `/api/swap-events` validation widened to accept non-EVM address formats (base58, Sui `::` type tags, NEAR names, ICON `cx…`) on a safe allowlist; **stops lowercasing** non-EVM addresses (case-sensitive) while still rejecting injection
 - Native tokens (`address(0)`) skip the ERC-20 approval step; same-token guard disables nonsense pairs
-- Pricing map extended (BNB, AVAX, POL, HYPE, KAIA, WBTC, weETH, wstETH, tBTC, cbBTC, bnUSD…) so points reflect real USD value; exotic wrappers left unpriced rather than mispriced
-- Fee notice in the card corrected: `0% (until Day 9)` / `0.3%` → **`LIVE: 0.1% → charity`**
+- Pricing map extended (BNB, AVAX, POL, HYPE, KAIA, WBTC, weETH, wstETH, tBTC, cbBTC, bnUSD…)
+- Fee notice corrected: `0% (until Day 9)` / `0.3%` → **`LIVE: 0.1% → charity`**
 
 ---
 

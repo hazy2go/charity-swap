@@ -50,4 +50,13 @@ export const walletConfig: SodaxWalletConfig = {
       },
     },
   },
+  // Non-EVM ecosystems. All adapter libs ship bundled in the wallet SDK;
+  // each slot mounts that ecosystem's provider with registry defaults.
+  // Bitcoin/Stacks omitted — SODAX exposes no swap tokens for them.
+  SOLANA: {},
+  SUI: {},
+  INJECTIVE: {},
+  ICON: {},
+  STELLAR: {},
+  NEAR: {},
 };

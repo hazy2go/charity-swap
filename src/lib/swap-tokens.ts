@@ -49,14 +49,21 @@ export const CHAINS: ChainInfo[] = [
   { key: ChainKeys.LIGHTLINK_MAINNET, label: "LightLink",  type: "EVM", swappable: true },
   { key: ChainKeys.REDBELLY_MAINNET,  label: "Redbelly",   type: "EVM", swappable: true },
   { key: ChainKeys.KAIA_MAINNET,      label: "Kaia",       type: "EVM", swappable: true },
-  // Non-EVM — visible, not yet swappable from this build.
-  { key: ChainKeys.SOLANA_MAINNET,    label: "Solana",     type: "SOLANA",    swappable: false },
-  { key: ChainKeys.SUI_MAINNET,       label: "Sui",        type: "SUI",       swappable: false },
-  { key: ChainKeys.INJECTIVE_MAINNET, label: "Injective",  type: "INJECTIVE", swappable: false },
-  { key: ChainKeys.ICON_MAINNET,      label: "ICON",       type: "ICON",      swappable: false },
-  { key: ChainKeys.STELLAR_MAINNET,   label: "Stellar",    type: "STELLAR",   swappable: false },
-  { key: ChainKeys.NEAR_MAINNET,      label: "NEAR",       type: "NEAR",      swappable: false },
+  // Non-EVM ecosystems — each has its own wallet adapter (Phantom, Sui
+  // Wallet, Keplr, Hana/ICONex, Freighter, NEAR wallets). Swappable once
+  // the matching wallet is connected for both the source and destination.
+  { key: ChainKeys.SOLANA_MAINNET,    label: "Solana",     type: "SOLANA",    swappable: true },
+  { key: ChainKeys.SUI_MAINNET,       label: "Sui",        type: "SUI",       swappable: true },
+  { key: ChainKeys.INJECTIVE_MAINNET, label: "Injective",  type: "INJECTIVE", swappable: true },
+  { key: ChainKeys.ICON_MAINNET,      label: "ICON",       type: "ICON",      swappable: true },
+  { key: ChainKeys.STELLAR_MAINNET,   label: "Stellar",    type: "STELLAR",   swappable: true },
+  { key: ChainKeys.NEAR_MAINNET,      label: "NEAR",       type: "NEAR",      swappable: true },
 ];
+
+// ChainType doubles as the SDK's xChainType identifier.
+export function xChainTypeOf(chainKey: ChainKey): ChainType {
+  return chainInfo(chainKey)?.type ?? "EVM";
+}
 
 // EVM tokens per chain (the only swappable set today). Addresses verbatim
 // from sodax_get_swap_tokens.
@@ -159,6 +166,45 @@ export const TOKENS: TokenInfo[] = [
   { chain: ChainKeys.KAIA_MAINNET, symbol: "USDT",  name: "Tether USD", address: "0xd077a400968890eacc75cdc901f0356c943e4fdb", decimals: 6 },
   { chain: ChainKeys.KAIA_MAINNET, symbol: "SODA",  name: "SODAX",      address: "0x772ffe538e45b2cddfb5823041ec26c44815b9ab", decimals: 18 },
   { chain: ChainKeys.KAIA_MAINNET, symbol: "bnUSD", name: "bnUSD",      address: "0xF8D13cAcb8E2B6BA8396DbA35a7365EF6b603cd6", decimals: 18 },
+
+  // ── Solana (non-EVM) ──
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "SOL",   name: "Solana",   address: "11111111111111111111111111111111", decimals: 9 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "USDC",  name: "USD Coin", address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", decimals: 6 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "SODA",  name: "SODAX",    address: "8Bj8gSbga8My8qRkT1RrvgxFBExiGFgdRNHFaR9o2T3Q", decimals: 9 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "bnUSD", name: "bnUSD",    address: "3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5", decimals: 9 },
+
+  // ── Sui (non-EVM) ──
+  { chain: ChainKeys.SUI_MAINNET, symbol: "SUI",       name: "SUI",                 address: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "USDC",      name: "USD Coin",            address: "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC", decimals: 6 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "SODA",      name: "SODAX",               address: "0x0a0393721732617a2a771535e83c0a46f04aeef7d03239bbbb1249bc0981b952::soda::SODA", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "bnUSD",     name: "bnUSD",               address: "0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "afSUI",     name: "Aftermath Staked Sui", address: "0xf325ce1300e8dac124071d3152c5c5ee6174914f8bc2161e88329cf579246efc::afsui::AFSUI", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "mSUI",      name: "Mirai Staked SUI",    address: "0x922d15d7f55c13fd790f6e54397470ec592caa2b508df292a2e8553f3d3b274f::msui::MSUI", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "haSUI",     name: "haSUI",               address: "0xbde4ba4c2e274a60ce15c1cfff9e5c42e41654ac8b6d906a57efa4bd3c29f47d::hasui::HASUI", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "vSUI",      name: "Volo Staked SUI",     address: "0x549e8b69270defbfafd4f94e17ec44cdbdd99820b33bda2278dea3b9a32d3f55::cert::CERT", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "yapSUI",    name: "Yap Staked SUI",      address: "0x83f1bb8c91ecd1fd313344058b0eed94d63c54e41d8d1ae5bff1353443517d65::yap_sui::YAP_SUI", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "trevinSUI", name: "Trevin Staked SUI",   address: "0x502867b177303bf1bf226245fcdd3403c177e78d175a55a56c0602c7ff51c7fa::trevin_sui::TREVIN_SUI", decimals: 9 },
+
+  // ── Injective (non-EVM) ──
+  { chain: ChainKeys.INJECTIVE_MAINNET, symbol: "SODA", name: "SODAX", address: "factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/soda", decimals: 18 },
+
+  // ── ICON (non-EVM) ──
+  { chain: ChainKeys.ICON_MAINNET, symbol: "ICX",   name: "ICON",         address: "cx0000000000000000000000000000000000000000", decimals: 18 },
+  { chain: ChainKeys.ICON_MAINNET, symbol: "wICX",  name: "Wrapped ICX",  address: "cx3975b43d260fb8ec802cef6e60c2f4d07486f11d", decimals: 18 },
+  { chain: ChainKeys.ICON_MAINNET, symbol: "bnUSD", name: "bnUSD (legacy)", address: "cx88fd7df7ddff82f7cc735c871dc519838cb235bb", decimals: 18 },
+
+  // ── Stellar (non-EVM) ──
+  { chain: ChainKeys.STELLAR_MAINNET, symbol: "XLM",   name: "Stellar Lumens", address: "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA", decimals: 7 },
+  { chain: ChainKeys.STELLAR_MAINNET, symbol: "USDC",  name: "USD Coin",       address: "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75", decimals: 7 },
+  { chain: ChainKeys.STELLAR_MAINNET, symbol: "SODA",  name: "SODAX",          address: "CAH5LKJC2ZB4RVUVEVL2QWJWNJLHQE2UF767ILLQ5EQ4O3OURR2XIUGM", decimals: 7 },
+  { chain: ChainKeys.STELLAR_MAINNET, symbol: "bnUSD", name: "bnUSD",          address: "CD6YBFFWMU2UJHX2NGRJ7RN76IJVTCC7MRA46DUBXNB7E6W7H7JRJ2CX", decimals: 7 },
+
+  // ── NEAR (non-EVM) ──
+  { chain: ChainKeys.NEAR_MAINNET, symbol: "NEAR",  name: "NEAR",       address: "NEAR", decimals: 24 },
+  { chain: ChainKeys.NEAR_MAINNET, symbol: "USDC",  name: "USD Coin",   address: "17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1", decimals: 6 },
+  { chain: ChainKeys.NEAR_MAINNET, symbol: "USDT",  name: "Tether USD", address: "usdt.tether-token.near", decimals: 6 },
+  { chain: ChainKeys.NEAR_MAINNET, symbol: "SODA",  name: "SODAX",      address: "soda.sodax.near", decimals: 24 },
+  { chain: ChainKeys.NEAR_MAINNET, symbol: "bnUSD", name: "bnUSD",      address: "bnusd.sodax.near", decimals: 24 },
 ];
 
 export const SWAPPABLE_CHAINS = CHAINS.filter((c) => c.swappable);

@@ -24,6 +24,16 @@ const RX_DECIMAL_STR = /^\d{1,80}$/;
 const RX_CHAIN_KEY = /^[a-zA-Z0-9._:-]{1,64}$/;
 const RX_SYMBOL = /^[A-Za-z0-9._-]{1,32}$/;
 const RX_PRESET = /^[A-Za-z0-9._-]{1,64}$/;
+// Wallets and token ids span ecosystems: EVM 0x-hex, Solana/Stellar base58/32,
+// Sui `0x…::mod::TYPE`, NEAR `name.near`, ICON `cx…`, Injective `factory/inj…/x`.
+// Safe allowlist of the characters those formats use, length-capped.
+const RX_CHAIN_ADDR = /^[A-Za-z0-9:._/-]{1,128}$/;
+
+// Only EVM 0x addresses are case-folded for canonical dedupe. Base58 (Solana),
+// Sui type tags, and Stellar keys are CASE-SENSITIVE — lowercasing corrupts them.
+function canonAddr(v: string): string {
+  return RX_ADDR_40.test(v) ? v.toLowerCase() : v;
+}
 
 type Body = {
   wallet?: unknown;
@@ -79,8 +89,8 @@ export async function POST(req: Request) {
   }
 
   // 4. Validate every field with strict regex + bounds.
-  if (typeof body.wallet !== "string" || !RX_ADDR_40.test(body.wallet)) {
-    return NextResponse.json({ error: "wallet must be a 0x address" }, { status: 400 });
+  if (typeof body.wallet !== "string" || !RX_CHAIN_ADDR.test(body.wallet)) {
+    return NextResponse.json({ error: "invalid wallet address" }, { status: 400 });
   }
   if (!isStr(body.srcChain) || !RX_CHAIN_KEY.test(body.srcChain)) {
     return NextResponse.json({ error: "invalid srcChain" }, { status: 400 });
@@ -88,11 +98,11 @@ export async function POST(req: Request) {
   if (!isStr(body.dstChain) || !RX_CHAIN_KEY.test(body.dstChain)) {
     return NextResponse.json({ error: "invalid dstChain" }, { status: 400 });
   }
-  if (typeof body.srcToken !== "string" || !RX_ADDR_40.test(body.srcToken)) {
-    return NextResponse.json({ error: "srcToken must be a 0x address" }, { status: 400 });
+  if (typeof body.srcToken !== "string" || !RX_CHAIN_ADDR.test(body.srcToken)) {
+    return NextResponse.json({ error: "invalid srcToken" }, { status: 400 });
   }
-  if (typeof body.dstToken !== "string" || !RX_ADDR_40.test(body.dstToken)) {
-    return NextResponse.json({ error: "dstToken must be a 0x address" }, { status: 400 });
+  if (typeof body.dstToken !== "string" || !RX_CHAIN_ADDR.test(body.dstToken)) {
+    return NextResponse.json({ error: "invalid dstToken" }, { status: 400 });
   }
   if (!isStr(body.srcSymbol, 32) || !RX_SYMBOL.test(body.srcSymbol)) {
     return NextResponse.json({ error: "invalid srcSymbol" }, { status: 400 });
@@ -145,12 +155,12 @@ export async function POST(req: Request) {
   try {
     const row = await prisma.swapEvent.create({
       data: {
-        wallet: body.wallet.toLowerCase(),
+        wallet: canonAddr(body.wallet),
         presetId: (body.presetId as string | undefined) ?? null,
         srcChain: body.srcChain,
         dstChain: body.dstChain,
-        srcToken: body.srcToken.toLowerCase(),
-        dstToken: body.dstToken.toLowerCase(),
+        srcToken: canonAddr(body.srcToken),
+        dstToken: canonAddr(body.dstToken),
         srcSymbol: body.srcSymbol,
         dstSymbol: body.dstSymbol,
         srcAmountRaw: body.srcAmountRaw,

@@ -119,23 +119,39 @@ Until now it shipped with eight hand-picked preset pairs — enough to demo, not
 enough to use. That's gone. Swap.exe now has a proper **chain → token** picker
 on both sides, with a flip button between them.
 
-Every network SODAX supports is now in the dropdown — all eighteen. The twelve
-EVM chains (Sonic, Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain,
-Avalanche, HyperEVM, LightLink, Redbelly, Kaia) are fully swappable. The six
-non-EVM ones (Solana, Sui, Injective, ICON, Stellar, NEAR) show up too, but
-disabled — because this build's wallet layer is EVM-only and a swap settles to
-the connected EVM address. Showing them greyed-out is the honest move: it tells
-you the full reach of the protocol and exactly where this particular dapp stops.
-Adding those wallets later lights them up.
+Every network SODAX supports is now in the dropdown — all eighteen, and all of
+them swappable. The twelve EVM chains (Sonic, Ethereum, Arbitrum, Base,
+Optimism, Polygon, BNB Chain, Avalanche, HyperEVM, LightLink, Redbelly, Kaia)
+and the six non-EVM ones (Solana, Sui, Injective, ICON, Stellar, NEAR).
 
-The token list — about eighty EVM tokens — comes straight from the SODAX
-Builders MCP (`sodax_get_swap_tokens`), and the per-chain RPC defaults were
-lifted from the SDK's own source rather than guessed. Native gas tokens swap
-without an approval step; the points pricing map grew to cover the new majors so
-your swap value (and the points it earns) stays real.
+I'll be honest about how this landed, because building in public means showing
+the turns: I first shipped it EVM-only and greyed out the non-EVM chains,
+figuring the other ecosystems were a big lift. Then I actually looked — and
+every adapter (Solana's wallet-adapter, Mysten's dapp-kit for Sui, the Injective
+stack, Stellar, NEAR, ICON) already ships *bundled* inside the SODAX wallet SDK.
+Nothing to install. So the same day, I lit them all up.
+
+What that took: mounting every ecosystem's provider in the wallet config (the
+scary part — six more wallet stacks mounting alongside EVM, on an app that's
+already had one SSR crash; it booted clean), rebuilding the connect menu to
+connect **one wallet per ecosystem**, and teaching the swap to resolve the
+source and destination accounts by *their own* ecosystem. A Solana→Sonic swap
+now signs with Phantom on the source and settles to your EVM address on the
+destination — both wallets connected, the SDK handles the bridge between them.
+
+The token registry — about 115 tokens across all 18 chains — comes straight from
+the SODAX Builders MCP (`sodax_get_swap_tokens`); per-chain RPC defaults were
+lifted from the SDK's own source rather than guessed. The points API even
+learned to stop lowercasing non-EVM addresses, because base58 and Sui type tags
+are case-sensitive and folding them corrupts the address.
 
 This is the difference between a demo and something you'd actually route money
-through — and now every route through it pays the charity fee.
+through — every chain SODAX reaches, every route paying the charity fee.
+
+**One honest caveat:** the EVM paths I can stand behind; the non-EVM swap flows
+are wired to the SDK but I can't connect a Phantom or Sui wallet in this build
+environment to test them end-to-end. They build, they render, the addresses
+validate — but the first real Solana or Sui swap is the true test.
 
 ### Next
 
