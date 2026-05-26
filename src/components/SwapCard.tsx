@@ -97,6 +97,19 @@ export function SwapCard() {
 
   const quotedOut = quoteResult?.ok ? BigInt(quoteResult.value.quoted_amount) : 0n;
 
+  // Surface why a quote came back empty. The solver returns "No path…" for
+  // pairs it can't route (e.g. selling SODA today) and an incompatibility
+  // message for tokens it doesn't quote — show that instead of a bare "—".
+  const quoteFailed =
+    parsedAmount > 0n && !samePair && !isQuoting && !!quoteResult && !quoteResult.ok;
+  const quoteHint = (() => {
+    if (!quoteFailed) return null;
+    const raw = JSON.stringify((quoteResult as { error?: unknown }).error ?? "");
+    if (/no path/i.test(raw)) return "No route for this pair right now.";
+    if (/not compatible/i.test(raw)) return "This token isn't quotable yet.";
+    return "Quote unavailable for this pair.";
+  })();
+
   const intentParams: CreateIntentParams | undefined =
     srcAccount.address && dstAccount.address && quotedOut > 0n
       ? {
@@ -317,6 +330,9 @@ export function SwapCard() {
                   : <span className="text-[#999]">—</span>}
             </span>
           </div>
+          {quoteHint && (
+            <div className="mt-1 text-[10px] text-[#7a0a0a]">{quoteHint}</div>
+          )}
           <div className="mt-2 flex items-center justify-between text-[10px] text-[#555]">
             <span>Slippage: <strong>0.50%</strong></span>
             <span>Solver: <strong>any</strong></span>

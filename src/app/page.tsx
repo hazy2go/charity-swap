@@ -206,7 +206,7 @@ STATUS THIS COMMIT (Day 9)
   [x] EVM wallet connect (Hana / MetaMask / Rabby)
   [x] Live quotes via useQuote
   [x] Approve + Swap path via useSwap
-  [x] 8 preset pairs (★ SODA buy/sell/bridge first)
+  [x] All 18 SODAX networks · chain→token picker
   [x] Name: Swaps without Borders (community vote)
   [x] Points ledger schema (Prisma + Supabase)
   [x] Points preview in SwapCard

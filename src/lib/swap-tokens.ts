@@ -7,13 +7,13 @@ export type ChainKey = (typeof ChainKeys)[keyof typeof ChainKeys];
 // ── SODAX swap registry ───────────────────────────────────────────────
 // Full network + token list, sourced from the SODAX Builders MCP
 // (https://builders.sodax.com/mcp · sodax_get_swap_tokens +
-// sodax_get_supported_chains). 18 networks, EVM tokens enumerated below.
+// sodax_get_supported_chains). All 18 networks, ~115 tokens.
 //
-// This dapp's wallet layer is EVM-only, and a swap settles the output to
-// the connected EVM address — so only EVM↔EVM pairs are swappable today.
-// Non-EVM networks (Solana, Sui, Injective, ICON, Stellar, NEAR) are
-// listed so the full SODAX reach is visible, but flagged not-yet-swappable
-// until we add those wallet adapters.
+// Every network is swappable: the 12 EVM chains and the 6 non-EVM
+// ecosystems (Solana, Sui, Injective, ICON, Stellar, NEAR), whose wallet
+// adapters all ship bundled in @sodax/wallet-sdk. A swap signs on the
+// source chain and settles to the connected address on the destination
+// chain, so a cross-ecosystem route needs a wallet connected on both.
 
 export type ChainType =
   | "EVM" | "SOLANA" | "SUI" | "INJECTIVE" | "ICON" | "STELLAR" | "NEAR";
@@ -65,8 +65,8 @@ export function xChainTypeOf(chainKey: ChainKey): ChainType {
   return chainInfo(chainKey)?.type ?? "EVM";
 }
 
-// EVM tokens per chain (the only swappable set today). Addresses verbatim
-// from sodax_get_swap_tokens.
+// Tokens per chain. Addresses verbatim from sodax_get_swap_tokens.
+// EVM chains first, then the non-EVM ecosystems further below.
 export const TOKENS: TokenInfo[] = [
   // ── Sonic (hub) ──
   { chain: ChainKeys.SONIC_MAINNET, symbol: "SODA",  name: "SODAX",          address: "0x7c7d53EEcda37a87ce0D5bf8E0b24512A48dC963", decimals: 18 },
@@ -206,8 +206,6 @@ export const TOKENS: TokenInfo[] = [
   { chain: ChainKeys.NEAR_MAINNET, symbol: "SODA",  name: "SODAX",      address: "soda.sodax.near", decimals: 24 },
   { chain: ChainKeys.NEAR_MAINNET, symbol: "bnUSD", name: "bnUSD",      address: "bnusd.sodax.near", decimals: 24 },
 ];
-
-export const SWAPPABLE_CHAINS = CHAINS.filter((c) => c.swappable);
 
 export function chainInfo(key: ChainKey): ChainInfo | undefined {
   return CHAINS.find((c) => c.key === key);

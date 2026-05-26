@@ -33,13 +33,12 @@
 
 ## How it works
 
-1. **You connect a wallet** (EVM today; more chains landing as the SDK
-   adapters get wired up).
+1. **You connect a wallet** — EVM, Solana, Sui, Injective, ICON, Stellar, or NEAR.
 2. **You execute a cross-chain swap** through the SODAX intent solver.
-3. **A small partner fee** (default 0.3%, community-tunable) is deducted by
-   the SDK and accrues to a **public multisig on Sonic** — the address is
+3. **A 0.1% partner fee** (community-tunable) is deducted by the SDK and
+   accrues to a **public wallet on Sonic** (`0x95A8…721AD`) — the address is
    shared, the balance is verifiable on the Sonic explorer, the math
-   reconciles in this repo.
+   reconciles in this repo. Interim single-key wallet today; multisig to follow.
 4. **You earn governance points** proportional to your swap volume.
 5. **When the wallet hits a community-decided threshold**, a points-weighted
    vote opens to pick which charity from a curated shortlist receives the
@@ -122,12 +121,12 @@ flow, allowance handling, the EVM connect button — fell out in an afternoon.
 | 1   | Mon 2026-05-18 | Announcement | — |
 | 2   | Tue 2026-05-19 | Name vote opens | Skeleton swap working locally |
 | 3   | Wed 2026-05-20 | Build Log #1 | Working EVM connect + real `useSwap` ✅ |
-| **4** | **Thu 2026-05-21** | **Name vote closes ✅ · points-system poll opens** | **Points ledger schema (Prisma + Supabase) ✅** ← *we are here* |
-| 5   | Fri 2026-05-22 | Discord stage #1 | Points tracking live, leaderboard endpoint |
-| 6   | Sat 2026-05-23 | Week 1 recap | Bug triage |
+| 4   | Thu 2026-05-21 | Name vote closes ✅ · points-system poll opens | Points ledger schema (Prisma + Supabase) ✅ |
+| 5   | Fri 2026-05-22 | Discord stage #1 | Points tracking live, leaderboard endpoint ✅ |
+| 6   | Sat 2026-05-23 | Week 1 recap | Audits + security hardening ✅ |
 | 7   | Sun 2026-05-24 | — | Rest |
-| 8   | Mon 2026-05-25 | Charity shortlist poll | Charity data model + seed |
-| **9** | **Tue 2026-05-26** | **Build Log #2 — charity wallet goes LIVE** | **Multisig deployed on Sonic, partner fee enabled** |
+| 8   | Mon 2026-05-25 | Charity shortlist poll | Charity shortlist seeded ✅ |
+| **9** | **Tue 2026-05-26** | **Build Log #2 — charity wallet goes LIVE** | **0.1% fee enabled · all 18 networks swappable ✅** ← *we are here* |
 | 10  | Wed 2026-05-27 | Three winning charities announced | Voting UI shell |
 | 11  | Thu 2026-05-28 | Threshold + vote-duration polls | Voting backend (`votes`, `vote_ballots`) |
 | 12  | Fri 2026-05-29 | Discord stage #2 — v1 demo | Everything live for mainnet demo |
@@ -138,28 +137,24 @@ flow, allowance handling, the EVM connect button — fell out in an afternoon.
 
 ## What's live right now
 
-**Day 4.** What works in this commit:
+**Day 9.** What works in this commit:
 
 - ✅ Name: **Swaps without Borders** (community vote, Day 4)
-- ✅ EVM wallet connect via `@sodax/wallet-sdk-react` (Hana, MetaMask, Rabby, plus any EIP-6963 wallet)
-- ✅ 8 preset swap pairs, default ★ **Arbitrum USDC → Sonic SODA**
-- ✅ Live quotes via `useQuote` (auto-refreshes every 3s)
-- ✅ Allowance + approve flow via `useSwapAllowance` / `useSwapApprove`
+- ✅ Multi-VM wallet connect via `@sodax/wallet-sdk-react` — EVM (Hana, MetaMask, Rabby, any EIP-6963) **plus** Solana, Sui, Injective, ICON, Stellar, NEAR
+- ✅ **All 18 SODAX networks swappable** via a chain → token picker (~115 tokens); default ★ **Arbitrum USDC → Sonic SODA**
+- ✅ Live quotes via `useQuote`; cross-ecosystem routing handled by the solver
+- ✅ Allowance + approve flow via `useSwapAllowance` / `useSwapApprove` (native tokens skip approval)
 - ✅ Real `useSwap` execution on mainnet
-- ✅ 0.5% slippage tolerance (community-tunable later)
-- ✅ **Points-ledger schema** (Prisma + Supabase) — committed to `prisma/schema.prisma`
-- ✅ **Points preview** in the SwapCard ("+X pts" beside every quote)
-- ✅ **`/leaderboard`** route with a live empty state — activates Day 5
-- ✅ Windows XP Luna Silver UI (taskbar, windows, functional desktop icons)
-- ✅ Mobile-aware layout (taskbar collapses, chip nav replaces icons)
+- ✅ **0.1% charity fee LIVE** → public Sonic wallet `0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD` (interim EOA; 100% to charity)
+- ✅ **Points ledger live** (Prisma + Supabase) — CoinGecko-priced, logged on every confirmed swap
+- ✅ **`/leaderboard`** reading from Supabase · **`/charities`** 5-candidate shortlist
+- ✅ Windows XP Luna Silver UI (taskbar, windows, functional desktop icons, mobile-aware)
 
 What's intentionally **not** live yet:
 
-- ❌ **Partner fee** — lands Day 9, after the charity multisig is deployed and disclosed
-- ❌ **Live points persistence** — schema is ready; wired to Supabase on Day 5
-- ❌ **Token picker** — presets carry us through Day 5
-- ❌ **Voting** — Day 10-11 once the community picks the rules
-- ❌ **Non-EVM chains** — added as time and demand allow
+- ❌ **Charity multisig** — interim single-key wallet today; migration is a one-line address change
+- ❌ **Voting** — Day 10-11 once the community picks the rules (runs in Discord)
+- ⚠️ **Non-EVM swap signing** — wired per the SDK and routes verified live, but not yet exercised with a real Solana/Sui/etc. wallet
 
 ---
 
@@ -189,13 +184,14 @@ swaps-without-borders/
 │   │   ├── providers.tsx       SodaxProvider > QueryClient > SodaxWalletProvider
 │   │   └── page.tsx            Header + SwapCard + footer
 │   ├── components/
-│   │   ├── ConnectButton.tsx   EVM connect button
-│   │   └── SwapCard.tsx        Preset pair + amount + quote + approve+swap
+│   │   ├── ConnectButton.tsx   Per-ecosystem wallet connect (EVM + 6 non-EVM)
+│   │   └── SwapCard.tsx        Chain→token picker + amount + quote + approve+swap
 │   └── lib/
-│       ├── sodax.ts            SodaxConfig (NO partner fee yet — Day 9)
-│       ├── wallet-config.ts    EVM chains: Sonic, Eth, Arb, Base, BSC, Polygon
-│       ├── swap-presets.ts     Hardcoded pairs (replaced by token picker D4-5)
-│       └── stub-empty.ts       Placeholder for future per-chain stubs
+│       ├── sodax.ts            SodaxConfig + 0.1% charity partnerFee (LIVE, Day 9)
+│       ├── wallet-config.ts    All 12 EVM chains + 6 non-EVM ecosystem slots
+│       ├── swap-tokens.ts      Full registry: 18 networks, ~115 tokens (from MCP)
+│       ├── pricing.ts          CoinGecko USD pricing for the points ledger
+│       └── points.ts           Points formula + preview
 ├── next.config.ts              webpack IgnorePlugin for injective ledger UMD
 ├── .env.example                All env vars annotated with the day they're needed
 └── BUILD-LOG.md                Day-by-day public build log
