@@ -10,41 +10,77 @@ import {
 } from "@sodax/dapp-kit";
 import { useWalletProvider, useXAccount } from "@sodax/wallet-sdk-react";
 import type { CreateIntentParams } from "@sodax/sdk";
-import { SWAP_PRESETS } from "@/lib/swap-presets";
+import {
+  CHAINS,
+  tokensForChain,
+  findToken,
+  chainInfo,
+  isNativeToken,
+  DEFAULT_SRC,
+  DEFAULT_DST,
+  type TokenInfo,
+  type ChainKey,
+} from "@/lib/swap-tokens";
 import { previewPoints, formatPoints, DEFAULT_POINTS_PER_USD } from "@/lib/points";
 
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000" as const;
 
+const SWAPPABLE = CHAINS.filter((c) => c.swappable);
+const NON_SWAPPABLE = CHAINS.filter((c) => !c.swappable);
+
 export function SwapCard() {
-  const [presetId, setPresetId] = useState(SWAP_PRESETS[0].id);
+  const [srcChain, setSrcChain] = useState<ChainKey>(DEFAULT_SRC.chain);
+  const [srcAddr, setSrcAddr] = useState(DEFAULT_SRC.address);
+  const [dstChain, setDstChain] = useState<ChainKey>(DEFAULT_DST.chain);
+  const [dstAddr, setDstAddr] = useState(DEFAULT_DST.address);
   const [amount, setAmount] = useState("");
 
-  const preset = useMemo(
-    () => SWAP_PRESETS.find((p) => p.id === presetId) ?? SWAP_PRESETS[0],
-    [presetId],
-  );
+  const src: TokenInfo =
+    findToken(srcChain, srcAddr) ?? tokensForChain(srcChain)[0];
+  const dst: TokenInfo =
+    findToken(dstChain, dstAddr) ?? tokensForChain(dstChain)[0];
 
   const account = useXAccount({ xChainType: "EVM" });
-  const walletProvider = useWalletProvider({ xChainId: preset.src.chain });
+  const walletProvider = useWalletProvider({ xChainId: src.chain });
+
+  function pickChain(side: "src" | "dst", key: ChainKey) {
+    const first = tokensForChain(key)[0];
+    if (side === "src") {
+      setSrcChain(key);
+      setSrcAddr(first?.address ?? "");
+    } else {
+      setDstChain(key);
+      setDstAddr(first?.address ?? "");
+    }
+  }
+
+  function flip() {
+    setSrcChain(dst.chain);
+    setSrcAddr(dst.address);
+    setDstChain(src.chain);
+    setDstAddr(src.address);
+  }
+
+  const samePair = src.chain === dst.chain && src.address === dst.address;
 
   const parsedAmount = useMemo(() => {
     if (!amount) return 0n;
     try {
-      return parseUnits(amount, preset.src.decimals);
+      return parseUnits(amount, src.decimals);
     } catch {
       return 0n;
     }
-  }, [amount, preset.src.decimals]);
+  }, [amount, src.decimals]);
 
   const { data: quoteResult, isFetching: isQuoting } = useQuote({
     params: {
       payload:
-        parsedAmount > 0n
+        parsedAmount > 0n && !samePair
           ? {
-              token_src: preset.src.address,
-              token_dst: preset.dst.address,
-              token_src_blockchain_id: preset.src.chain,
-              token_dst_blockchain_id: preset.dst.chain,
+              token_src: src.address,
+              token_dst: dst.address,
+              token_src_blockchain_id: src.chain,
+              token_dst_blockchain_id: dst.chain,
               amount: parsedAmount,
               quote_type: "exact_input",
             }
@@ -57,14 +93,14 @@ export function SwapCard() {
   const intentParams: CreateIntentParams | undefined =
     account.address && quotedOut > 0n
       ? {
-          inputToken: preset.src.address,
-          outputToken: preset.dst.address,
+          inputToken: src.address,
+          outputToken: dst.address,
           inputAmount: parsedAmount,
           minOutputAmount: (quotedOut * 995n) / 1000n,
           deadline: 0n,
           allowPartialFill: false,
-          srcChainKey: preset.src.chain,
-          dstChainKey: preset.dst.chain,
+          srcChainKey: src.chain,
+          dstChainKey: dst.chain,
           srcAddress: account.address,
           dstAddress: account.address,
           solver: ADDRESS_ZERO,
@@ -72,10 +108,14 @@ export function SwapCard() {
         }
       : undefined;
 
+  // Native tokens (address(0)) need no ERC-20 approval.
+  const srcIsNative = isNativeToken(src.address);
+
   const { data: isApproved } = useSwapAllowance({
-    params: intentParams
-      ? { payload: intentParams, srcChainKey: preset.src.chain, walletProvider }
-      : undefined,
+    params:
+      intentParams && !srcIsNative
+        ? { payload: intentParams, srcChainKey: src.chain, walletProvider }
+        : undefined,
   });
 
   const { mutateAsync: approve, isPending: isApproving } = useSwapApprove();
@@ -87,11 +127,13 @@ export function SwapCard() {
     | { kind: "err"; message: string }
   >({ kind: "idle" });
 
+  const needsApprove = !srcIsNative && isApproved === false;
+
   const handleSwap = async () => {
     if (!intentParams || !walletProvider) return;
     setStatus({ kind: "idle" });
     try {
-      if (!isApproved) {
+      if (needsApprove) {
         await approve({ params: intentParams, walletProvider });
       }
       const { solverExecutionResponse, intent } = await swap({
@@ -99,12 +141,14 @@ export function SwapCard() {
         walletProvider,
       });
 
-      // Fire-and-forget log to /api/swap-events. Don't block UX on it —
-      // a points-ledger write failure should never break the swap report.
       const txHash =
         (intent && typeof intent === "object" && "txHash" in intent
           ? (intent as { txHash?: string }).txHash
           : undefined) ?? undefined;
+
+      const routeId = `${src.chain}.${src.symbol}__${dst.chain}.${dst.symbol}`
+        .replace(/[^A-Za-z0-9._-]/g, "-")
+        .slice(0, 64);
 
       let pointsAwarded: number | null = null;
       try {
@@ -113,17 +157,17 @@ export function SwapCard() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             wallet: intentParams.srcAddress,
-            presetId: preset.id,
-            srcChain: preset.src.chain,
-            dstChain: preset.dst.chain,
-            srcToken: preset.src.address,
-            dstToken: preset.dst.address,
-            srcSymbol: preset.src.symbol,
-            dstSymbol: preset.dst.symbol,
+            presetId: routeId,
+            srcChain: src.chain,
+            dstChain: dst.chain,
+            srcToken: src.address,
+            dstToken: dst.address,
+            srcSymbol: src.symbol,
+            dstSymbol: dst.symbol,
             srcAmountRaw: parsedAmount.toString(),
-            srcDecimals: preset.src.decimals,
+            srcDecimals: src.decimals,
             dstQuotedRaw: quotedOut.toString(),
-            dstDecimals: preset.dst.decimals,
+            dstDecimals: dst.decimals,
             txHash,
           }),
         });
@@ -151,24 +195,25 @@ export function SwapCard() {
   };
 
   const canSwap =
-    !!intentParams && !!walletProvider && !isSwapping && !isApproving;
+    !!intentParams && !!walletProvider && !isSwapping && !isApproving && !samePair;
 
   const buttonLabel = !account.address
     ? "Connect wallet to swap"
-    : isApproving
-      ? "Approving…"
-      : isSwapping
-        ? "Swapping…"
-        : isApproved === false
-          ? `Approve ${preset.src.symbol} & Swap`
-          : "Execute Swap";
+    : samePair
+      ? "Pick two different tokens"
+      : isApproving
+        ? "Approving…"
+        : isSwapping
+          ? "Swapping…"
+          : needsApprove
+            ? `Approve ${src.symbol} & Swap`
+            : "Execute Swap";
 
   return (
-    <div className="xp-window w-[420px] max-w-[95vw]">
+    <div className="xp-window w-[440px] max-w-[95vw]">
       {/* Title bar */}
       <div className="xp-titlebar">
         <span className="xp-titlebar__icon" aria-hidden>
-          {/* tiny pixel icon */}
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
             <rect x="1" y="1" width="12" height="12" fill="#cfdef3" stroke="#003c74" />
             <path d="M3 5h6l-2-2M11 9H5l2 2" stroke="#003c74" strokeWidth="1.2" fill="none" strokeLinecap="square" />
@@ -195,43 +240,26 @@ export function SwapCard() {
         <span className="xp-menubar__item"><u>V</u>iew</span>
         <span className="xp-menubar__item"><u>H</u>elp</span>
         <span className="ml-auto self-center pr-1">
-          <span className="xp-pill">MAINNET · 0% fee (until Day 9)</span>
+          <span className="xp-pill xp-pill--ok">MAINNET · 0.1% → charity</span>
         </span>
       </div>
 
       {/* Window body */}
       <div className="bg-[var(--xp-face)] px-3 pb-3 pt-2">
+        {/* FROM */}
         <fieldset className="xp-fieldset">
-          <legend>Cross-chain pair</legend>
-          <select
-            value={presetId}
-            onChange={(e) => setPresetId(e.target.value)}
-            className="xp-select"
-          >
-            {SWAP_PRESETS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-
-          <div className="grid grid-cols-2 gap-2 mt-2 text-[10px] text-[#3a3a3a]">
-            <div className="xp-readout !min-h-[24px] !py-[2px] !text-[11px]">
-              <span className="text-[#666]">From:</span>
-              <span>{preset.src.symbol}</span>
+          <legend>From</legend>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="xp-label">Network</label>
+              <ChainSelect value={src.chain} onChange={(k) => pickChain("src", k)} />
             </div>
-            <div className="xp-readout !min-h-[24px] !py-[2px] !text-[11px]">
-              <span className="text-[#666]">To:</span>
-              <span>{preset.dst.symbol}</span>
+            <div>
+              <label className="xp-label">Token</label>
+              <TokenSelect chain={src.chain} value={src.address} onChange={setSrcAddr} />
             </div>
           </div>
-        </fieldset>
-
-        <fieldset className="xp-fieldset mt-3">
-          <legend>Amount</legend>
-          <label className="xp-label">
-            Send ({preset.src.symbol})
-          </label>
+          <label className="xp-label mt-2">Send ({src.symbol})</label>
           <input
             inputMode="decimal"
             placeholder="0.00000000"
@@ -239,44 +267,63 @@ export function SwapCard() {
             onChange={(e) => setAmount(e.target.value)}
             className="xp-input xp-input--big"
           />
+        </fieldset>
 
-          <label className="xp-label mt-3">
-            You receive ({preset.dst.symbol})
-          </label>
+        {/* Flip */}
+        <div className="flex justify-center -my-1.5 relative z-10">
+          <button
+            type="button"
+            className="xp-button !px-2 !py-0.5 !min-w-0"
+            onClick={flip}
+            aria-label="Swap direction"
+            title="Flip From / To"
+          >
+            ⇅
+          </button>
+        </div>
+
+        {/* TO */}
+        <fieldset className="xp-fieldset">
+          <legend>To</legend>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="xp-label">Network</label>
+              <ChainSelect value={dst.chain} onChange={(k) => pickChain("dst", k)} />
+            </div>
+            <div>
+              <label className="xp-label">Token</label>
+              <TokenSelect chain={dst.chain} value={dst.address} onChange={setDstAddr} />
+            </div>
+          </div>
+          <label className="xp-label mt-2">You receive ({dst.symbol})</label>
           <div className="xp-readout">
             <span className="text-[#888]">≈</span>
             <span>
               {isQuoting && parsedAmount > 0n
                 ? <span className="text-[#666] italic xp-cursor">fetching quote</span>
                 : quotedOut > 0n
-                  ? formatUnits(quotedOut, preset.dst.decimals)
+                  ? formatUnits(quotedOut, dst.decimals)
                   : <span className="text-[#999]">—</span>}
             </span>
           </div>
-
           <div className="mt-2 flex items-center justify-between text-[10px] text-[#555]">
-            <span>Slippage tolerance: <strong>0.50%</strong></span>
+            <span>Slippage: <strong>0.50%</strong></span>
             <span>Solver: <strong>any</strong></span>
           </div>
         </fieldset>
 
-        {/* Charity Rewards GroupBox — points preview + fee notice */}
+        {/* Charity Rewards GroupBox */}
         <fieldset className="xp-fieldset mt-3">
           <legend>Charity rewards</legend>
-          <PointsPreview
-            amountRaw={parsedAmount}
-            decimals={preset.src.decimals}
-            symbol={preset.src.symbol}
-          />
+          <PointsPreview amountRaw={parsedAmount} decimals={src.decimals} symbol={src.symbol} />
           <p className="mt-2 text-[10px] leading-snug text-[#444]">
-            <span className="xp-pill xp-pill--info">Today: 0% fee</span>{" "}
-            From <strong>Day 9 (Tue 2026-05-26)</strong> a 0.3% charity fee
-            (community-tunable) accrues to a public multisig on Sonic.{" "}
-            <strong>100% of fees go to charity.</strong>
+            <span className="xp-pill xp-pill--ok">LIVE: 0.1% fee</span>{" "}
+            Every swap routes a <strong>0.1%</strong> fee to a public charity
+            wallet on Sonic. <strong>100% of fees go to charity.</strong>
           </p>
         </fieldset>
 
-        {/* Dialog buttons row */}
+        {/* Buttons */}
         <div className="mt-4 flex items-center justify-end gap-2">
           <button
             className="xp-button"
@@ -306,7 +353,6 @@ export function SwapCard() {
             <strong>Error:</strong> {status.message}
           </div>
         )}
-
       </div>
 
       {/* Status bar */}
@@ -316,14 +362,66 @@ export function SwapCard() {
             ? <>Connected · <span className="font-mono">{account.address.slice(0,6)}…{account.address.slice(-4)}</span></>
             : "Wallet: disconnected"}
         </span>
+        <span className="xp-statusbar__cell xp-statusbar__cell--fixed">SODAX V2</span>
         <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
-          SODAX V2
-        </span>
-        <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
-          {preset.src.chain.split(".").pop()} → {preset.dst.chain.split(".").pop()}
+          {chainInfo(src.chain)?.label} → {chainInfo(dst.chain)?.label}
         </span>
       </div>
     </div>
+  );
+}
+
+function ChainSelect({
+  value,
+  onChange,
+}: {
+  value: ChainKey;
+  onChange: (key: ChainKey) => void;
+}) {
+  return (
+    <select
+      className="xp-select w-full"
+      value={value}
+      onChange={(e) => onChange(e.target.value as ChainKey)}
+    >
+      <optgroup label="EVM — swappable">
+        {SWAPPABLE.map((c) => (
+          <option key={c.key} value={c.key}>{c.label}</option>
+        ))}
+      </optgroup>
+      <optgroup label="Other networks — wallet coming">
+        {NON_SWAPPABLE.map((c) => (
+          <option key={c.key} value={c.key} disabled>
+            {c.label} (soon)
+          </option>
+        ))}
+      </optgroup>
+    </select>
+  );
+}
+
+function TokenSelect({
+  chain,
+  value,
+  onChange,
+}: {
+  chain: ChainKey;
+  value: string;
+  onChange: (address: string) => void;
+}) {
+  const tokens = tokensForChain(chain);
+  return (
+    <select
+      className="xp-select w-full"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      {tokens.map((t) => (
+        <option key={t.address} value={t.address}>
+          {t.symbol}
+        </option>
+      ))}
+    </select>
   );
 }
 

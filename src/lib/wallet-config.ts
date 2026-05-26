@@ -9,6 +9,8 @@ export const walletConfig: SodaxWalletConfig = {
     // When the project id is missing the connector is silently skipped
     // (EIP-6963 wallets keep working) — local dev without the env stays sane.
     ...(wcProjectId ? { walletConnect: { projectId: wcProjectId } } : {}),
+    // All 12 EVM spoke chains SODAX supports. RPC defaults taken from the
+    // @sodax/sdk source; each overridable via env.
     chains: {
       [ChainKeys.SONIC_MAINNET]: {
         rpcUrl: process.env.NEXT_PUBLIC_SONIC_RPC_URL ?? "https://rpc.soniclabs.com",
@@ -22,11 +24,29 @@ export const walletConfig: SodaxWalletConfig = {
       [ChainKeys.BASE_MAINNET]: {
         rpcUrl: process.env.NEXT_PUBLIC_BASE_RPC_URL ?? "https://mainnet.base.org",
       },
-      [ChainKeys.BSC_MAINNET]: {
-        rpcUrl: process.env.NEXT_PUBLIC_BSC_RPC_URL ?? "https://bsc-dataseed.binance.org",
+      [ChainKeys.OPTIMISM_MAINNET]: {
+        rpcUrl: process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL ?? "https://mainnet.optimism.io",
       },
       [ChainKeys.POLYGON_MAINNET]: {
         rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC_URL ?? "https://polygon-rpc.com",
+      },
+      [ChainKeys.BSC_MAINNET]: {
+        rpcUrl: process.env.NEXT_PUBLIC_BSC_RPC_URL ?? "https://bsc-dataseed.binance.org",
+      },
+      [ChainKeys.AVALANCHE_MAINNET]: {
+        rpcUrl: process.env.NEXT_PUBLIC_AVAX_RPC_URL ?? "https://api.avax.network/ext/bc/C/rpc",
+      },
+      [ChainKeys.HYPEREVM_MAINNET]: {
+        rpcUrl: process.env.NEXT_PUBLIC_HYPEREVM_RPC_URL ?? "https://rpc.hyperliquid.xyz/evm",
+      },
+      [ChainKeys.LIGHTLINK_MAINNET]: {
+        rpcUrl: process.env.NEXT_PUBLIC_LIGHTLINK_RPC_URL ?? "https://replicator.phoenix.lightlink.io/rpc/v1",
+      },
+      [ChainKeys.REDBELLY_MAINNET]: {
+        rpcUrl: process.env.NEXT_PUBLIC_REDBELLY_RPC_URL ?? "https://governors.mainnet.redbelly.network",
+      },
+      [ChainKeys.KAIA_MAINNET]: {
+        rpcUrl: process.env.NEXT_PUBLIC_KAIA_RPC_URL ?? "https://public-en.node.kaia.io",
       },
     },
   },

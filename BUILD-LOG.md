@@ -112,11 +112,37 @@ dapp. The dapp's job is the swap and the transparent leaderboard; the vote is a
 community ritual that lives where the community already is. Net-zero code, but
 the commits stay in history — that's what building in public means.
 
+### And then we opened the doors: every network, every token
+
+The fee going live was the headline, but the same day the swap itself grew up.
+Until now it shipped with eight hand-picked preset pairs — enough to demo, not
+enough to use. That's gone. Swap.exe now has a proper **chain → token** picker
+on both sides, with a flip button between them.
+
+Every network SODAX supports is now in the dropdown — all eighteen. The twelve
+EVM chains (Sonic, Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain,
+Avalanche, HyperEVM, LightLink, Redbelly, Kaia) are fully swappable. The six
+non-EVM ones (Solana, Sui, Injective, ICON, Stellar, NEAR) show up too, but
+disabled — because this build's wallet layer is EVM-only and a swap settles to
+the connected EVM address. Showing them greyed-out is the honest move: it tells
+you the full reach of the protocol and exactly where this particular dapp stops.
+Adding those wallets later lights them up.
+
+The token list — about eighty EVM tokens — comes straight from the SODAX
+Builders MCP (`sodax_get_swap_tokens`), and the per-chain RPC defaults were
+lifted from the SDK's own source rather than guessed. Native gas tokens swap
+without an approval step; the points pricing map grew to cover the new majors so
+your swap value (and the points it earns) stays real.
+
+This is the difference between a demo and something you'd actually route money
+through — and now every route through it pays the charity fee.
+
 ### Next
 
-Tomorrow (Day 9) is the big one — **Build Log #2, the wallet goes live**: the
-Sonic multisig gets deployed and `partnerFee` turns on. That's the money-gate
-day. Nothing about it ships without an explicit go on the diff.
+The wallet fills from here. Day 11 the community sets the payout threshold and
+vote duration; when the balance crosses it, the first charity payout vote opens
+in Discord. The multisig migration (off the interim single-key wallet) is still
+on the board — a one-line change when the signers are ready.
 
 ---
 

@@ -28,6 +28,15 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 - Status block: `Partner fee → 0.1% LIVE`, `Charity wallet → interim EOA`
 - Watermark `build 0.0.5 · Day 8` → `build 0.0.6 · Day 9`
 
+### 🌐 All networks + full token picker
+- Swap.exe rebuilt: the 8 hardcoded presets are gone, replaced by a **chain → token** picker on both the From and To sides, plus a ⇅ flip button
+- **All 18 SODAX networks** surfaced. The **12 EVM chains** (Sonic, Ethereum, Arbitrum, Base, Optimism, Polygon, BNB Chain, Avalanche, HyperEVM, LightLink, Redbelly, Kaia) are fully swappable; the 6 non-EVM networks (Solana, Sui, Injective, ICON, Stellar, NEAR) are shown but disabled — honest about the EVM-only wallet, more adapters to come
+- New `src/lib/swap-tokens.ts` registry (sourced from MCP `sodax_get_swap_tokens`); ~80 EVM tokens incl. native gas tokens, USDC/USDT/bnUSD, SODA on every chain, WBTC/cbBTC/tBTC, weETH/wstETH, and the LightLink/Redbelly wrappers
+- Wallet config + SDK config expanded from 6 → all 12 EVM chains (RPC defaults lifted from `@sodax/sdk` source, each env-overridable)
+- Native tokens (`address(0)`) skip the ERC-20 approval step; same-token guard disables nonsense pairs
+- Pricing map extended (BNB, AVAX, POL, HYPE, KAIA, WBTC, weETH, wstETH, tBTC, cbBTC, bnUSD…) so points reflect real USD value; exotic wrappers left unpriced rather than mispriced
+- Fee notice in the card corrected: `0% (until Day 9)` / `0.3%` → **`LIVE: 0.1% → charity`**
+
 ---
 
 ## Day 8 — Mon 2026-05-25 — Charity shortlist poll goes live

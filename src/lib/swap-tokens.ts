@@ -1,0 +1,184 @@
+import { ChainKeys } from "@sodax/sdk";
+
+// The ChainKey literal union (e.g. "sonic" | "0xa4b1.arbitrum" | …) that the
+// SDK hooks expect, derived straight from the ChainKeys map.
+export type ChainKey = (typeof ChainKeys)[keyof typeof ChainKeys];
+
+// ── SODAX swap registry ───────────────────────────────────────────────
+// Full network + token list, sourced from the SODAX Builders MCP
+// (https://builders.sodax.com/mcp · sodax_get_swap_tokens +
+// sodax_get_supported_chains). 18 networks, EVM tokens enumerated below.
+//
+// This dapp's wallet layer is EVM-only, and a swap settles the output to
+// the connected EVM address — so only EVM↔EVM pairs are swappable today.
+// Non-EVM networks (Solana, Sui, Injective, ICON, Stellar, NEAR) are
+// listed so the full SODAX reach is visible, but flagged not-yet-swappable
+// until we add those wallet adapters.
+
+export type ChainType =
+  | "EVM" | "SOLANA" | "SUI" | "INJECTIVE" | "ICON" | "STELLAR" | "NEAR";
+
+export type ChainInfo = {
+  key: ChainKey;
+  label: string;
+  type: ChainType;
+  swappable: boolean; // EVM today
+};
+
+export type TokenInfo = {
+  chain: ChainKey;
+  symbol: string;
+  name: string;
+  address: string;
+  decimals: number;
+};
+
+const NATIVE = "0x0000000000000000000000000000000000000000";
+
+// Order: Sonic (hub) first, then EVM chains by familiarity, then non-EVM.
+export const CHAINS: ChainInfo[] = [
+  { key: ChainKeys.SONIC_MAINNET,     label: "Sonic",      type: "EVM", swappable: true },
+  { key: ChainKeys.ETHEREUM_MAINNET,  label: "Ethereum",   type: "EVM", swappable: true },
+  { key: ChainKeys.ARBITRUM_MAINNET,  label: "Arbitrum",   type: "EVM", swappable: true },
+  { key: ChainKeys.BASE_MAINNET,      label: "Base",       type: "EVM", swappable: true },
+  { key: ChainKeys.OPTIMISM_MAINNET,  label: "Optimism",   type: "EVM", swappable: true },
+  { key: ChainKeys.POLYGON_MAINNET,   label: "Polygon",    type: "EVM", swappable: true },
+  { key: ChainKeys.BSC_MAINNET,       label: "BNB Chain",  type: "EVM", swappable: true },
+  { key: ChainKeys.AVALANCHE_MAINNET, label: "Avalanche",  type: "EVM", swappable: true },
+  { key: ChainKeys.HYPEREVM_MAINNET,  label: "HyperEVM",   type: "EVM", swappable: true },
+  { key: ChainKeys.LIGHTLINK_MAINNET, label: "LightLink",  type: "EVM", swappable: true },
+  { key: ChainKeys.REDBELLY_MAINNET,  label: "Redbelly",   type: "EVM", swappable: true },
+  { key: ChainKeys.KAIA_MAINNET,      label: "Kaia",       type: "EVM", swappable: true },
+  // Non-EVM — visible, not yet swappable from this build.
+  { key: ChainKeys.SOLANA_MAINNET,    label: "Solana",     type: "SOLANA",    swappable: false },
+  { key: ChainKeys.SUI_MAINNET,       label: "Sui",        type: "SUI",       swappable: false },
+  { key: ChainKeys.INJECTIVE_MAINNET, label: "Injective",  type: "INJECTIVE", swappable: false },
+  { key: ChainKeys.ICON_MAINNET,      label: "ICON",       type: "ICON",      swappable: false },
+  { key: ChainKeys.STELLAR_MAINNET,   label: "Stellar",    type: "STELLAR",   swappable: false },
+  { key: ChainKeys.NEAR_MAINNET,      label: "NEAR",       type: "NEAR",      swappable: false },
+];
+
+// EVM tokens per chain (the only swappable set today). Addresses verbatim
+// from sodax_get_swap_tokens.
+export const TOKENS: TokenInfo[] = [
+  // ── Sonic (hub) ──
+  { chain: ChainKeys.SONIC_MAINNET, symbol: "SODA",  name: "SODAX",          address: "0x7c7d53EEcda37a87ce0D5bf8E0b24512A48dC963", decimals: 18 },
+  { chain: ChainKeys.SONIC_MAINNET, symbol: "S",     name: "Sonic",          address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.SONIC_MAINNET, symbol: "wS",    name: "Wrapped Sonic",  address: "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38", decimals: 18 },
+  { chain: ChainKeys.SONIC_MAINNET, symbol: "WETH",  name: "Wrapped Ether",  address: "0x50c42dEAcD8Fc9773493ED674b675bE577f2634b", decimals: 18 },
+  { chain: ChainKeys.SONIC_MAINNET, symbol: "USDC",  name: "USD Coin",       address: "0x29219dd400f2Bf60E5a23d13Be72B486D4038894", decimals: 6 },
+  { chain: ChainKeys.SONIC_MAINNET, symbol: "USDT",  name: "Tether USD",     address: "0x6047828dc181963ba44974801FF68e538dA5eaF9", decimals: 6 },
+  { chain: ChainKeys.SONIC_MAINNET, symbol: "bnUSD", name: "Balanced Dollar", address: "0xE801CA34E19aBCbFeA12025378D19c4FBE250131", decimals: 18 },
+
+  // ── Ethereum ──
+  { chain: ChainKeys.ETHEREUM_MAINNET, symbol: "ETH",   name: "Ethereum",   address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.ETHEREUM_MAINNET, symbol: "USDC",  name: "USD Coin",   address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", decimals: 6 },
+  { chain: ChainKeys.ETHEREUM_MAINNET, symbol: "USDT",  name: "Tether USD", address: "0xdAC17F958D2ee523a2206206994597C13D831ec7", decimals: 6 },
+  { chain: ChainKeys.ETHEREUM_MAINNET, symbol: "SODA",  name: "SODAX",      address: "0x4A1C82744cDDeE675A255fB289Cb0917A482e7C7", decimals: 18 },
+  { chain: ChainKeys.ETHEREUM_MAINNET, symbol: "bnUSD", name: "bnUSD",      address: "0x1f22279C89B213944b7Ea41daCB0a868DdCDFd13", decimals: 18 },
+  { chain: ChainKeys.ETHEREUM_MAINNET, symbol: "LL",    name: "LightLink",  address: "0x0921799CB1d702148131024d18fCdE022129Dc73", decimals: 18 },
+
+  // ── Arbitrum ──
+  { chain: ChainKeys.ARBITRUM_MAINNET, symbol: "ETH",    name: "Ethereum",      address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.ARBITRUM_MAINNET, symbol: "USDC",   name: "USD Coin",      address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6 },
+  { chain: ChainKeys.ARBITRUM_MAINNET, symbol: "USDT",   name: "Tether USD",    address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", decimals: 6 },
+  { chain: ChainKeys.ARBITRUM_MAINNET, symbol: "SODA",   name: "SODAX",         address: "0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F", decimals: 18 },
+  { chain: ChainKeys.ARBITRUM_MAINNET, symbol: "bnUSD",  name: "bnUSD",         address: "0xA256dd181C3f6E5eC68C6869f5D50a712d47212e", decimals: 18 },
+  { chain: ChainKeys.ARBITRUM_MAINNET, symbol: "WBTC",   name: "Wrapped BTC",   address: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", decimals: 8 },
+  { chain: ChainKeys.ARBITRUM_MAINNET, symbol: "weETH",  name: "Wrapped eETH",  address: "0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe", decimals: 18 },
+  { chain: ChainKeys.ARBITRUM_MAINNET, symbol: "wstETH", name: "Wrapped stETH", address: "0x5979D7b546E38E414F7E9822514be443A4800529", decimals: 18 },
+  { chain: ChainKeys.ARBITRUM_MAINNET, symbol: "tBTC",   name: "tBTC v2",       address: "0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40", decimals: 18 },
+
+  // ── Base ──
+  { chain: ChainKeys.BASE_MAINNET, symbol: "ETH",    name: "Ethereum",          address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.BASE_MAINNET, symbol: "USDC",   name: "USD Coin",          address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6 },
+  { chain: ChainKeys.BASE_MAINNET, symbol: "SODA",   name: "SODAX",             address: "0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3", decimals: 18 },
+  { chain: ChainKeys.BASE_MAINNET, symbol: "bnUSD",  name: "bnUSD",             address: "0xAcfab3F31C0a18559D78556BBf297EC29c6cf8aa", decimals: 18 },
+  { chain: ChainKeys.BASE_MAINNET, symbol: "weETH",  name: "Wrapped eETH",      address: "0x04c0599ae5a44757c0af6f9ec3b93da8976c150a", decimals: 18 },
+  { chain: ChainKeys.BASE_MAINNET, symbol: "wstETH", name: "Wrapped stETH",     address: "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452", decimals: 18 },
+  { chain: ChainKeys.BASE_MAINNET, symbol: "cbBTC",  name: "Coinbase Wrapped BTC", address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf", decimals: 8 },
+
+  // ── Optimism ──
+  { chain: ChainKeys.OPTIMISM_MAINNET, symbol: "ETH",    name: "Ethereum",      address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.OPTIMISM_MAINNET, symbol: "USDC",   name: "USD Coin",      address: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", decimals: 6 },
+  { chain: ChainKeys.OPTIMISM_MAINNET, symbol: "USDT",   name: "Tether USD",    address: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58", decimals: 6 },
+  { chain: ChainKeys.OPTIMISM_MAINNET, symbol: "SODA",   name: "SODAX",         address: "0x1f22279C89B213944b7Ea41daCB0a868DdCDFd13", decimals: 18 },
+  { chain: ChainKeys.OPTIMISM_MAINNET, symbol: "bnUSD",  name: "bnUSD",         address: "0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8", decimals: 18 },
+  { chain: ChainKeys.OPTIMISM_MAINNET, symbol: "wstETH", name: "Wrapped stETH", address: "0x1F32b1c2345538c0c6f582fCB022739c4A194Ebb", decimals: 18 },
+
+  // ── Polygon ──
+  { chain: ChainKeys.POLYGON_MAINNET, symbol: "POL",   name: "Polygon",   address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.POLYGON_MAINNET, symbol: "USDC",  name: "USD Coin",  address: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", decimals: 6 },
+  { chain: ChainKeys.POLYGON_MAINNET, symbol: "SODA",  name: "SODAX",     address: "0xDDF645F33eDAD18fC23E01416eD0267A1bF59D45", decimals: 18 },
+  { chain: ChainKeys.POLYGON_MAINNET, symbol: "bnUSD", name: "bnUSD",     address: "0x39E77f86C1B1f3fbAb362A82b49D2E86C09659B4", decimals: 18 },
+
+  // ── BNB Chain ──
+  { chain: ChainKeys.BSC_MAINNET, symbol: "BNB",   name: "BNB",          address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.BSC_MAINNET, symbol: "USDT",  name: "Tether USD",   address: "0x55d398326f99059ff775485246999027b3197955", decimals: 18 },
+  { chain: ChainKeys.BSC_MAINNET, symbol: "USDC",  name: "USD Coin",     address: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", decimals: 18 },
+  { chain: ChainKeys.BSC_MAINNET, symbol: "SODA",  name: "SODAX",        address: "0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3", decimals: 18 },
+  { chain: ChainKeys.BSC_MAINNET, symbol: "bnUSD", name: "bnUSD",        address: "0x8428FedC020737a5A2291F46cB1B80613eD71638", decimals: 18 },
+  { chain: ChainKeys.BSC_MAINNET, symbol: "ETHB",  name: "Ethereum BSC", address: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", decimals: 18 },
+  { chain: ChainKeys.BSC_MAINNET, symbol: "BTCB",  name: "Bitcoin BSC",  address: "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c", decimals: 18 },
+
+  // ── Avalanche ──
+  { chain: ChainKeys.AVALANCHE_MAINNET, symbol: "AVAX",  name: "Avalanche",  address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.AVALANCHE_MAINNET, symbol: "USDC",  name: "USD Coin",   address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", decimals: 6 },
+  { chain: ChainKeys.AVALANCHE_MAINNET, symbol: "USDT",  name: "Tether USD", address: "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", decimals: 6 },
+  { chain: ChainKeys.AVALANCHE_MAINNET, symbol: "SODA",  name: "SODAX",      address: "0x390ceed555905ec225Da330A188EA04e85570f00", decimals: 18 },
+  { chain: ChainKeys.AVALANCHE_MAINNET, symbol: "bnUSD", name: "bnUSD",      address: "0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F", decimals: 18 },
+
+  // ── HyperEVM ──
+  { chain: ChainKeys.HYPEREVM_MAINNET, symbol: "HYPE",  name: "HYPE",      address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.HYPEREVM_MAINNET, symbol: "USDC",  name: "USD Coin",  address: "0xb88339CB7199b77E23DB6E890353E22632Ba630f", decimals: 6 },
+  { chain: ChainKeys.HYPEREVM_MAINNET, symbol: "SODA",  name: "SODAX",     address: "0xA28C70F92a1B2513edCdDD29c2E5195a4B785aB2", decimals: 18 },
+  { chain: ChainKeys.HYPEREVM_MAINNET, symbol: "bnUSD", name: "bnUSD",     address: "0x506Ba7C8d91dAdf7a91eE677a205D9687b751579", decimals: 18 },
+
+  // ── LightLink ──
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "ETH",     name: "ETH",                address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "USDC",    name: "USD Coin",           address: "0xbCF8C1B03bBDDA88D579330BDF236B58F8bb2cFd", decimals: 6 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "SODA",    name: "SODAX",              address: "0x6BC8C37cba91F76E68C9e6d689A9C21E4d32079B", decimals: 18 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "bnUSD",   name: "bnUSD",              address: "0x36134A03dcD03Bbe858B8F7ED28a71AAC608F9E7", decimals: 18 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "BTC.LL",  name: "Bitcoin LightLink",  address: "0x5E921D8B7709b409132628258A53449D1fD82341", decimals: 18 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "AVAX.LL", name: "Avalanche LightLink", address: "0x373d9c5390535e9e30185E52826d45b76df09aBb", decimals: 18 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "BNB.LL",  name: "BNB LightLink",      address: "0xe80c2B7674dCdF47b199697E2c61730231b8da89", decimals: 18 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "SOL.LL",  name: "Solana LightLink",   address: "0xba9af7029Ae5c1054Fc367d5D6a47Dc3D5c0D6bA", decimals: 18 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "S.LL",    name: "Sonic LightLink",    address: "0xb3A47798CB6585Ea0d31a7986f2a04b25C60247f", decimals: 18 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "POL.LL",  name: "Polygon LightLink",  address: "0xE963bfb4757fC8Ae66BC68E11e636f8fbafAfCb4", decimals: 18 },
+  { chain: ChainKeys.LIGHTLINK_MAINNET, symbol: "HYPE.LL", name: "HyperEVM LightLink", address: "0x127b64fb645279F8aca786c507b94dde81F02d16", decimals: 18 },
+
+  // ── Redbelly ──
+  { chain: ChainKeys.REDBELLY_MAINNET, symbol: "RBNT",  name: "RBNT",          address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.REDBELLY_MAINNET, symbol: "USDC",  name: "USD Coin",      address: "0x8201c02d4AB2214471E8C3AD6475C8b0CD9F2D06", decimals: 6 },
+  { chain: ChainKeys.REDBELLY_MAINNET, symbol: "USDT",  name: "Tether USD",    address: "0x8C4aCd74Ff4385f3B7911432FA6787Aa14406f8B", decimals: 6 },
+  { chain: ChainKeys.REDBELLY_MAINNET, symbol: "SODA",  name: "SODAX",         address: "0x5034479da62Ec95360165BB45ead266A48519E85", decimals: 18 },
+  { chain: ChainKeys.REDBELLY_MAINNET, symbol: "bnUSD", name: "bnUSD",         address: "0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8", decimals: 18 },
+
+  // ── Kaia ──
+  { chain: ChainKeys.KAIA_MAINNET, symbol: "KAIA",  name: "Kaia",       address: NATIVE, decimals: 18 },
+  { chain: ChainKeys.KAIA_MAINNET, symbol: "USDT",  name: "Tether USD", address: "0xd077a400968890eacc75cdc901f0356c943e4fdb", decimals: 6 },
+  { chain: ChainKeys.KAIA_MAINNET, symbol: "SODA",  name: "SODAX",      address: "0x772ffe538e45b2cddfb5823041ec26c44815b9ab", decimals: 18 },
+  { chain: ChainKeys.KAIA_MAINNET, symbol: "bnUSD", name: "bnUSD",      address: "0xF8D13cAcb8E2B6BA8396DbA35a7365EF6b603cd6", decimals: 18 },
+];
+
+export const SWAPPABLE_CHAINS = CHAINS.filter((c) => c.swappable);
+
+export function chainInfo(key: ChainKey): ChainInfo | undefined {
+  return CHAINS.find((c) => c.key === key);
+}
+
+export function tokensForChain(chainKey: ChainKey): TokenInfo[] {
+  return TOKENS.filter((t) => t.chain === chainKey);
+}
+
+export function findToken(chainKey: ChainKey, address: string): TokenInfo | undefined {
+  return TOKENS.find((t) => t.chain === chainKey && t.address === address);
+}
+
+export function isNativeToken(address: string): boolean {
+  return address.toLowerCase() === NATIVE;
+}
+
+// Default pair: Arbitrum USDC → Sonic SODA (the headline "buy SODA" route).
+export const DEFAULT_SRC = { chain: ChainKeys.ARBITRUM_MAINNET, address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" };
+export const DEFAULT_DST = { chain: ChainKeys.SONIC_MAINNET, address: "0x7c7d53EEcda37a87ce0D5bf8E0b24512A48dC963" };

@@ -11,15 +11,31 @@ import { formatUnits } from "viem";
 const COINGECKO_BASE = "https://api.coingecko.com/api/v3";
 const CACHE_TTL_MS = 60_000;
 
-// Token symbol → CoinGecko coin id. Add to this as we add presets.
+// Token symbol → CoinGecko coin id. Exotic LightLink (.LL) and Redbelly
+// (r*) wrappers are intentionally omitted — better unpriced (0 pts) than
+// mispriced. Stable-ish dollar tokens also covered by the $1 fallback below.
+// Keys are UPPERCASE — priceOf() uppercases the symbol before lookup.
 const COIN_ID_BY_SYMBOL: Record<string, string> = {
   USDC: "usd-coin",
   USDT: "tether",
   DAI: "dai",
+  BNUSD: "balanced-dollar",
   SODA: "sodax", // CoinGecko id for SODAX governance token
   ETH: "ethereum",
   WETH: "weth",
+  ETHB: "ethereum", // ETH on BNB Chain
   SOL: "solana",
+  BNB: "binancecoin",
+  AVAX: "avalanche-2",
+  POL: "polygon-ecosystem-token",
+  HYPE: "hyperliquid",
+  KAIA: "kaia",
+  WBTC: "wrapped-bitcoin",
+  BTCB: "bitcoin", // BTC on BNB Chain
+  WEETH: "wrapped-eeth",
+  WSTETH: "wrapped-steth",
+  TBTC: "tbtc",
+  CBBTC: "coinbase-wrapped-btc",
 };
 
 type CacheEntry = { usd: number; fetchedAt: number };
@@ -63,8 +79,8 @@ export async function priceOf(symbol: string): Promise<PriceLookup | null> {
     if (cached) {
       return { usdPerToken: cached.usd, source: "cached" };
     }
-    // Final fallback — stables we still pin to $1, anything else null.
-    if (upper === "USDC" || upper === "USDT" || upper === "DAI") {
+    // Final fallback — dollar stables we still pin to $1, anything else null.
+    if (upper === "USDC" || upper === "USDT" || upper === "DAI" || upper === "BNUSD") {
       return { usdPerToken: 1, source: "fallback" };
     }
     return null;
