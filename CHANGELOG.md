@@ -5,6 +5,31 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 9 — Tue 2026-05-26 — 🚨 the fee is LIVE (Build Log #2)
+
+### 💸 Partner fee turned on
+- `src/lib/sodax.ts` now configures a `PartnerFee` across **all features** — `swaps`, `bridge`, `moneyMarket`
+- **0.1%** per swap (`percentage: 10` — basis points; SDK `FEE_PERCENTAGE_SCALE = 10_000`)
+- Deducted from the input amount before the intent is created, routed to the charity wallet on Sonic
+- **100% of the fee → charity. No skim, no ops cut.**
+
+### 🏦 Charity wallet live (interim)
+- Recipient: **`0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD`** on Sonic (chain 146)
+- Dedicated wallet — only fees in, only payouts out, so the audit trail is clean: [sonicscan.org](https://sonicscan.org/address/0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD)
+- **Disclosed honestly as an interim single-key EOA, not yet a multisig.** Multisig migration = a one-line address change + re-announce. Overridable via `NEXT_PUBLIC_CHARITY_FEE_ADDRESS`.
+
+### 🛡️ Safety rails on the money config
+- `percentage` encoding verified against the **installed `@sodax/sdk` source** (not the docs, which contradict themselves) — `calculatePercentageFeeAmount = amount * percentage / 10_000n`
+- Runtime guard: a malformed/zero address **throws at load** rather than silently burning fees
+- Money-gate discipline held — diff reviewed before commit
+
+### 🪟 Public copy
+- ReadMe.txt: "THE FEE IS LIVE", 0.1% explained, charity wallet address shown for self-audit
+- Status block: `Partner fee → 0.1% LIVE`, `Charity wallet → interim EOA`
+- Watermark `build 0.0.5 · Day 8` → `build 0.0.6 · Day 9`
+
+---
+
 ## Day 8 — Mon 2026-05-25 — Charity shortlist poll goes live
 
 ### 🎗 5-candidate shortlist seeded

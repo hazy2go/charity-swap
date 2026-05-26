@@ -9,6 +9,67 @@ A day-by-day public log of building Swaps without Borders on the
 
 ---
 
+## Day 9 — Tue 2026-05-26 — Build Log #2: the fee is live
+
+This is the day the project stops being a demo. Until now, every swap was
+real but free — zero fee, nothing routed anywhere. Today the fee turned on,
+and a cross-chain swap through this app moves real money toward charity for
+the first time.
+
+### What turned on
+
+One file changed: `src/lib/sodax.ts`. A `PartnerFee` of **0.1%** now sits on
+every feature the dapp exposes — swaps, bridge, money market. The SDK deducts
+it from the input amount before building the intent and routes it to a wallet
+on Sonic. **100% of that fee is charity-bound. No skim, no ops cut** — the
+only number between the swapper and the charity is the 0.1% itself.
+
+### The address, and the honesty about it
+
+    0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD
+
+That's the charity wallet, on Sonic. Watch it on sonicscan and you'll see
+exactly one kind of inflow (fees) and, eventually, one kind of outflow
+(payouts). Nothing else touches it.
+
+It is **not a multisig** — not yet. It's a single dedicated wallet, and we're
+saying so out loud rather than implying more decentralization than exists. The
+multisig was the original Day 9 plan; deploying a Safe with real signers is its
+own ceremony, and we'd rather ship the fee live today behind an honest interim
+wallet than stall the whole thing. Migrating is a one-line change to the
+recipient address plus a public re-announce. That's the whole cost of the
+upgrade, and it's logged here so nobody can claim it was hidden.
+
+### The bug that didn't happen
+
+The SODAX docs contradict themselves on how the fee percentage is encoded — most
+pages say basis points (`100 = 1%`), one says `0.1` means 10%. On a money
+config, a 100× misread is the difference between a 0.1% fee and a 10% fee. So
+instead of trusting the docs, I read the installed SDK source:
+
+    calculatePercentageFeeAmount(amount, percentage) =
+        amount * BigInt(percentage) / 10_000n   // FEE_PERCENTAGE_SCALE
+
+Basis points, unambiguously. `0.1%` is `percentage: 10`. (And `percentage: 0.1`
+would have thrown outright — `BigInt(0.1)` is a runtime error — which is its own
+small mercy.) There's now a runtime guard too: a malformed or zero recipient
+address throws at load instead of silently burning every fee.
+
+### How it shipped
+
+Diff reviewed before commit, per the rule we've held since Day 1: anything that
+moves money is a gate. Hazy provided the address, the rate, and the go. The fee
+is live on mainnet from this commit forward.
+
+### Next
+
+The wallet starts filling now, one swap at a time. The community sets the payout
+threshold and vote duration on Day 11; when the balance crosses that threshold,
+the first charity payout vote opens — in Discord, where the community already
+is.
+
+---
+
 ## Day 8 — Mon 2026-05-25 — the charity shortlist goes live
 
 Week 2 opens with the part that gives this whole thing its name: the charities.

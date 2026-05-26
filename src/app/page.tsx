@@ -113,7 +113,7 @@ export default function Home() {
             Swaps without Borders
           </div>
           <div className="text-[11px] tracking-wider uppercase opacity-80">
-            Silver Edition · build 0.0.5 · Day 8
+            Silver Edition · build 0.0.6 · Day 9
           </div>
           <div className="text-[10px] opacity-70 mt-1">
             For evaluation purposes only. Mainnet.
@@ -176,17 +176,23 @@ function NotepadWindow() {
         <pre className="xp-notepad text-[11px] sm:text-[12px] overflow-x-auto">{`SWAPS WITHOUT BORDERS — README.TXT
 ====================================
 
-Day 8 of a 2-week public build on the SODAX SDK V2.
-Week 1 done. The charity shortlist poll is live —
-5 candidates seeded. The community picks the points
-system, the charities, the threshold, the vote.
+Day 9 of a 2-week public build on the SODAX SDK V2.
+THE FEE IS LIVE. Every swap now routes a 0.1% fee to
+the public charity wallet on Sonic. 100% of it goes to
+the community-voted charity — no skim, no ops cut.
 
 WHAT THIS DOES
-  Cross-chain swap. Fees route to a public charity
-  wallet on Sonic. Community votes which charity gets
-  the payout when the wallet hits a chosen threshold.
+  Cross-chain swap. A 0.1% fee on every swap routes to
+  a public charity wallet on Sonic. Community votes
+  which charity gets the payout when the wallet hits a
+  chosen threshold.
 
   100% of fees go to charity. No skim. No ops cut.
+
+CHARITY WALLET (audit it yourself)
+  0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD
+  sonicscan.org → that address. Interim single-key
+  wallet; multisig migration to follow.
 
 SCAFFOLDED WITH
   >> https://builders.sodax.com/mcp
@@ -196,7 +202,7 @@ SCAFFOLDED WITH
   place in an afternoon. If you're evaluating SODAX
   as a build target — start there.
 
-STATUS THIS COMMIT (Day 8)
+STATUS THIS COMMIT (Day 9)
   [x] EVM wallet connect (Hana / MetaMask / Rabby)
   [x] Live quotes via useQuote
   [x] Approve + Swap path via useSwap
@@ -209,8 +215,8 @@ STATUS THIS COMMIT (Day 8)
   [x] /leaderboard reads from DB · medals + totals
   [x] Functionality audit + bug-fix pass
   [x] /charities — 5-candidate shortlist seeded
-  [ ] Partner fee  ............ Day 9
-  [ ] Charity multisig  ....... Day 9
+  [x] Partner fee  ... 0.1% LIVE → charity wallet
+  [~] Charity wallet . interim EOA (multisig TBD)
   [ ] Charity vote  ........... Day 11
 
 REPO   github.com/hazy2go/swaps-without-borders   MIT
