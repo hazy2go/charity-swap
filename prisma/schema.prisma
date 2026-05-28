@@ -125,3 +125,39 @@ enum PayoutKind {
   wallet
   offramp
 }
+
+/// Threshold-based payout vote (Day 11 spec — admin opens a round with
+/// 3 candidate charities; people vote via connected wallet, weighted by
+/// their points balance at vote-cast time. 1 ballot per wallet per round.
+/// Winner gets the full balance, cycle restarts.)
+model VoteRound {
+  id            String   @id @default(cuid())
+  thresholdUsd  Decimal  @db.Decimal(20, 6)
+  candidateIds  String[] // 3 charity cuid() refs (kept as denormalized array for simplicity)
+  status        String   @default("open") // open | closed
+  openedBy      String   // admin wallet that opened the round
+  openedAt      DateTime @default(now())
+  closedAt      DateTime?
+  closedBy      String?
+  winnerId      String?
+  ballots       VoteBallot[]
+
+  @@index([status, openedAt])
+  @@map("vote_rounds")
+}
+
+/// One wallet's vote in a round. Points snapshot is captured at cast time
+/// from the leaderboard (sum of pointsAwarded across that wallet's swaps).
+model VoteBallot {
+  id             String   @id @default(cuid())
+  roundId        String
+  round          VoteRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  wallet         String   // lowercased EVM address
+  candidateId    String
+  pointsSnapshot Int      @default(0)
+  castAt         DateTime @default(now())
+
+  @@unique([roundId, wallet])
+  @@index([roundId, candidateId])
+  @@map("vote_ballots")
+}

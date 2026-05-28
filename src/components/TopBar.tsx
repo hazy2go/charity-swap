@@ -5,7 +5,7 @@ import { ConnectButton } from "@/components/ConnectButton";
 export function TopBar({
   active,
 }: {
-  active: "swap" | "leaderboard" | "charities" | "about";
+  active: "swap" | "leaderboard" | "charities" | "vote" | "about";
 }) {
   return (
     <header className="vh-topbar">
@@ -19,6 +19,12 @@ export function TopBar({
         <nav className="vh-nav" aria-label="Primary">
           <Link href="/" className={active === "swap" ? "is-active" : ""}>
             Swap
+          </Link>
+          <Link
+            href="/vote"
+            className={active === "vote" ? "is-active" : ""}
+          >
+            Vote
           </Link>
           <Link
             href="/charities"
