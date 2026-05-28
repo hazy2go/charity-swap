@@ -5,6 +5,51 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 11 — Thu 2026-05-28 (close) — voting on-site · /about extracted · slim shell
+
+The end-of-Day-11 cleanup that turns the dapp into something demo-ready.
+
+### Voting moved on-site (was: "happens in Discord")
+- Spec corrected: payout vote runs on the website, not Discord. Threshold-based (event-driven, not calendar). 1 vote per wallet per round. Vote weight = your points balance at cast-time.
+- New Prisma models (Day 4 `PayoutVote`/`Ballot` left intact for legacy):
+  - `VoteRound { id, thresholdUsd, candidateIds[3], status, openedBy/At, closedBy/At, winnerId }`
+  - `VoteBallot { id, roundId, wallet, candidateId, pointsSnapshot, castAt }` with `@@unique([roundId, wallet])`
+- Pushed to Supabase live
+- API:
+  - `GET  /api/rounds/current` — public, returns open round + resolved 3 candidates + live tallies
+  - `POST /api/rounds` — admin opens round (signed `OPEN_ROUND::{nonce}::{ids}::{threshold}`)
+  - `POST /api/rounds/close` — admin declares winner (signed `CLOSE_ROUND::{nonce}::{roundId}::{winnerId}`)
+  - `POST /api/ballots` — wallet casts vote; server snapshots their points from the leaderboard; unique constraint blocks double-voting
+  - `GET  /api/charities` — list active candidates (used by admin UI)
+- Admin auth: `src/lib/admin.ts` uses viem `recoverMessageAddress`; admin wallet hardcoded `0x9aA8…839B` (Hazy), env-overridable via `NEXT_PUBLIC_ADMIN_WALLET`
+- UI:
+  - `/vote` — public, polls every 12s. 3 candidate cards with live magenta→cyan tally bars, per-candidate vote button. Empty state when no round.
+  - `/vote/admin` — gated by `connected wallet === ADMIN_WALLET`. Pick 3 charities + threshold + sign with wallet + open. Per-candidate "Declare winner & close" controls with confirm.
+- Topbar gains `Vote` nav item
+- Vercel `NEXT_PUBLIC_ADMIN_WALLET` env var also set (redundant — hardcoded default works, env is rotation-friendly)
+
+### Narrative moved to /about
+- New `/about` page absorbs the 3-pillar "system" explanation + the build-in-public band + colophon (source / build log / changelog links / type system credits)
+- Home page is now: hero + swap card + live wallet panel. Period.
+- New `SiteFooter` (privacy-link style strip) on every page — only SODAX V2 + SODAX Builders MCP + About links
+
+### Shell tightened
+- `ConnectButton` moved into the topbar (replaces the Mainnet pill). Compact ghost state when connected, primary cyan when not.
+- `ConnectButton` removed from the swap section (it was duplicated)
+- SwapCard compacted to fit mobile viewport without scrolling:
+  - amount input 64→52 px (font 28→22 mobile)
+  - inputs/pickers 48→42
+  - readout min-height 56→48
+  - section gaps 16→10
+  - charity rewards collapsed to one horizontal strip
+  - card head padding tightened
+
+### Docs
+- README "What's live" synced — voting routes added, balance panel mentioned, Vectorheart v3 description updated, stale "Voting runs in Discord" removed
+- Memory: new `project_admin_wallet.md` saved (hardcoded `0x9aA8…839B`, distinguished from the fee wallet `0x95A8…721AD`); `project_status.md` corrected on the vote-flow (was wrong about Discord)
+
+---
+
 ## Day 11 — Thu 2026-05-28 (cont. ×4) — VECTORHEART v.3 — done with intent
 
 Open Ledger retired. The community voted **Vectorheart** and Vectorheart they
