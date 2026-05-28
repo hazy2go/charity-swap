@@ -5,6 +5,33 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 11 — Thu 2026-05-28 (final) — full SDK catalog parity · every token earns points
+
+End-of-day SDK audit caught 13 missing tokens we hadn't added since Day 9,
+plus a stale price map that wasn't keeping up with the wrapped/synthetic
+families. Fixed both — now the dapp has parity with the SODAX MCP catalog
+and every supported swap earns the correct USD-snapshotted points.
+
+### Tokens added (was 103 → now 116)
+- **LightLink wrappers (3 new):** XLM.LL, INJ.LL, SUI.LL — fills out the 10-token L1-bridged set on LightLink
+- **Redbelly synthetics (10 new):** rETH, rBTC, rSOL, rBNB, rHYPE, rAVAX, rXLM, rSUI, rS, rPOL — the full Redbelly r* family
+
+No new chains — all 18 SODAX-supported networks were already wired. **Note:** SODAX has no native Bitcoin spoke chain; BTC is represented via six wrapped/synthetic variants we now fully cover (WBTC, BTCB, cbBTC, tBTC, BTC.LL, rBTC).
+
+### Prices wired for every token
+`src/lib/pricing.ts` `COIN_ID_BY_SYMBOL` was only mapping ~22 majors; everything else was silently logging $0/0 points to the leaderboard. Extended to cover the full 116-token catalog:
+- All 10 **LightLink wrappers** price as the underlying (BTC.LL → bitcoin, AVAX.LL → avalanche-2, etc.)
+- All 10 **Redbelly synthetics** price as the underlying (rBTC → bitcoin, rETH → ethereum, etc.)
+- All 6 **Sui liquid-staked variants** (afSUI/mSUI/haSUI/vSUI/yapSUI/trevinSUI) price as SUI — 1:1 approximation, peg drift acceptable for the points formula
+- Bare natives that were missing: SUI, XLM, INJ (`injective-protocol`), NEAR, ICX/wICX (→ `icon`), LL (→ `lightlink`)
+- Only **RBNT** intentionally omitted — no reliable CoinGecko id; logs 0 points (rare swap)
+
+### Other
+- `/api/price` symbol regex widened from `[A-Za-z0-9]{1,12}` to `[A-Za-z0-9.]{1,16}` so dotted symbols (BTC.LL etc.) aren't rejected
+- Verified live: `BTC.LL` → $73,234, `rBTC` → $73,234, `INJ` → $5.45 — all from CoinGecko
+
+---
+
 ## Day 11 — Thu 2026-05-28 (close) — voting on-site · /about extracted · slim shell
 
 The end-of-Day-11 cleanup that turns the dapp into something demo-ready.
