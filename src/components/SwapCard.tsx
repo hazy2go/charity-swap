@@ -33,7 +33,6 @@ import { formatPoints, DEFAULT_POINTS_PER_USD } from "@/lib/points";
 import { Picker, type PickerGroup } from "@/components/Picker";
 import { Bracketed, Arrow } from "@/components/hud";
 
-const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000" as const;
 const BTC_DUST_LIMIT_SATS = 546n; // minOutputAmount floor when dest is BTC
 
 const EVM_CHAINS = CHAINS.filter((c) => c.type === "EVM");
@@ -201,7 +200,7 @@ export function SwapCard() {
           dstChainKey: dst.chain,
           srcAddress: srcAccount.address,
           dstAddress: dstAddressForIntent,
-          solver: ADDRESS_ZERO,
+          // solver is optional in rc.8 — omit to use the default ("any solver")
           data: "0x",
         }
       : undefined;

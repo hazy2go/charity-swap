@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { SwapCard } from "@/components/SwapCard";
-import { WalletBalancePanel } from "@/components/WalletBalancePanel";
 import { TopBar } from "@/components/TopBar";
 import { SiteFooter } from "@/components/SiteFooter";
-import { RegMark, Slash, Arrow } from "@/components/hud";
+import { RegMark, Slash } from "@/components/hud";
 
 export default function Home() {
   return (
@@ -23,12 +21,6 @@ export default function Home() {
                 <SwapCard />
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className="vh-section--tight" style={{ paddingTop: 0 }}>
-          <div className="vh-container">
-            <WalletBalancePanel />
           </div>
         </section>
       </main>
@@ -66,15 +58,6 @@ function Hero() {
         </strong>{" "}
         No skim. No ops cut.
       </p>
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 24 }}>
-        <a href="#swap" className="vh-btn vh-btn--primary">
-          Open swap <Arrow size={12} />
-        </a>
-        <Link href="/charities" className="vh-btn vh-btn--ghost">
-          See charity wallet
-        </Link>
-      </div>
 
       <div className="vh-data-band" style={{ marginTop: 28 }}>
         <DataCell label="Fee per swap" value="0.1%" />

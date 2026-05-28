@@ -10,8 +10,15 @@ const NEXT_PAYOUT_THRESHOLD_USD = 1000;
 type BalanceResponse = {
   wallet: string;
   chain?: string;
+  model?: "partner-accrual" | "native";
   balance?: { raw: string; symbol: string; formatted: number };
   usd?: { value: number | null; price: number | null; source: string | null };
+  assets?: Array<{
+    symbol: string;
+    formatted: number;
+    usd: number | null;
+    originalChain: string;
+  }>;
   error?: string;
   ts?: number;
 };
@@ -110,10 +117,9 @@ export function WalletBalancePanel() {
               letterSpacing: "0.06em",
             }}
           >
-            {balanceS.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}{" S native · "}
-            {data?.usd?.price != null
-              ? `$${data.usd.price.toFixed(4)}/S`
-              : "price unavailable"}
+            {data?.model === "partner-accrual"
+              ? `accrued across ${data.assets?.filter((a) => a.formatted > 0).length ?? 0} token${(data.assets?.filter((a) => a.formatted > 0).length ?? 0) === 1 ? "" : "s"} · partner registry on Sonic hub`
+              : `${balanceS.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} S native`}
           </div>
 
           <div
