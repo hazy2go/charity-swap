@@ -6,7 +6,8 @@ import { priceOf } from "@/lib/pricing";
 // confirmed swap to the points ledger — so the SwapCard preview matches
 // what hits the leaderboard.
 
-const SYMBOL_RX = /^[A-Za-z0-9]{1,12}$/;
+// Accept letters, digits, and `.` (e.g. BTC.LL LightLink wrappers)
+const SYMBOL_RX = /^[A-Za-z0-9.]{1,16}$/;
 
 export const dynamic = "force-dynamic";
 

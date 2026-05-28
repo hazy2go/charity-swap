@@ -15,29 +15,76 @@ const CACHE_TTL_MS = 60_000;
 // (r*) wrappers are intentionally omitted — better unpriced (0 pts) than
 // mispriced. Stable-ish dollar tokens also covered by the $1 fallback below.
 // Keys are UPPERCASE — priceOf() uppercases the symbol before lookup.
+// Map covers the full SODAX swap-token catalog so the points ledger
+// captures USD value for every supported asset. Wrapped/pegged variants
+// (BTC.LL, rBTC, ETHB, etc.) price as their underlying asset; liquid-staked
+// SUI variants price as SUI (approximation — minor peg drift is acceptable
+// for the points formula).
 const COIN_ID_BY_SYMBOL: Record<string, string> = {
+  // ── Stables ──
   USDC: "usd-coin",
   USDT: "tether",
-  DAI: "dai",
+  DAI:  "dai",
   BNUSD: "balanced-dollar",
-  SODA: "sodax", // CoinGecko id for SODAX governance token
-  S:    "sonic-3", // Sonic native token (rebrand of Fantom FTM)
-  WS:   "sonic-3", // wrapped S
-  ETH: "ethereum",
-  WETH: "weth",
-  ETHB: "ethereum", // ETH on BNB Chain
-  SOL: "solana",
-  BNB: "binancecoin",
-  AVAX: "avalanche-2",
-  POL: "polygon-ecosystem-token",
-  HYPE: "hyperliquid",
-  KAIA: "kaia",
-  WBTC: "wrapped-bitcoin",
-  BTCB: "bitcoin", // BTC on BNB Chain
+  // ── SODAX gov ──
+  SODA: "sodax",
+  // ── Native L1/L2s ──
+  S:     "sonic-3", // Sonic native (rebrand of Fantom FTM)
+  WS:    "sonic-3",
+  ETH:   "ethereum",
+  WETH:  "weth",
+  ETHB:  "ethereum", // ETH on BNB Chain
+  SOL:   "solana",
+  BNB:   "binancecoin",
+  AVAX:  "avalanche-2",
+  POL:   "polygon-ecosystem-token",
+  HYPE:  "hyperliquid",
+  KAIA:  "kaia",
+  ICX:   "icon",
+  WICX:  "icon",
+  INJ:   "injective-protocol",
+  XLM:   "stellar",
+  NEAR:  "near",
+  SUI:   "sui",
+  LL:    "lightlink",
+  // ── BTC family ──
+  WBTC:  "wrapped-bitcoin",
+  BTCB:  "bitcoin",   // BTC on BNB Chain
   WEETH: "wrapped-eeth",
   WSTETH: "wrapped-steth",
-  TBTC: "tbtc",
+  TBTC:  "tbtc",
   CBBTC: "coinbase-wrapped-btc",
+  // ── Sui liquid-staked variants (price-as-SUI approximation) ──
+  AFSUI:     "sui",
+  MSUI:      "sui",
+  HASUI:     "sui",
+  VSUI:      "sui",
+  YAPSUI:    "sui",
+  TREVINSUI: "sui",
+  // ── LightLink wrappers (1:1 to underlying) ──
+  "BTC.LL":  "bitcoin",
+  "AVAX.LL": "avalanche-2",
+  "BNB.LL":  "binancecoin",
+  "SOL.LL":  "solana",
+  "XLM.LL":  "stellar",
+  "INJ.LL":  "injective-protocol",
+  "SUI.LL":  "sui",
+  "S.LL":    "sonic-3",
+  "POL.LL":  "polygon-ecosystem-token",
+  "HYPE.LL": "hyperliquid",
+  // ── Redbelly synthetic wrappers (1:1 to underlying) ──
+  RBTC:  "bitcoin",
+  RETH:  "ethereum",
+  RSOL:  "solana",
+  RBNB:  "binancecoin",
+  RHYPE: "hyperliquid",
+  RAVAX: "avalanche-2",
+  RXLM:  "stellar",
+  RSUI:  "sui",
+  RS:    "sonic-3",
+  RPOL:  "polygon-ecosystem-token",
+  // RBNT (Redbelly native gas token) intentionally omitted — no reliable
+  // CoinGecko id; falls through to null and logs 0 points (rare swap).
 };
 
 type CacheEntry = { usd: number; fetchedAt: number };
