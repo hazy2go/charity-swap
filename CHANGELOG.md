@@ -5,6 +5,50 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 11 — Thu 2026-05-28 (cont. ×3) — OPEN LEDGER · full ground-up redesign
+
+Vectorheart retired. The neon WipEout aesthetic was tonally wrong for a
+charity-funding product — felt cold and edgelord. Replaced with **Open Ledger**:
+editorial dark, warm, philanthropic, considered.
+
+### Why this aesthetic fits the topic
+- Charity-funding requires gravitas + warmth, not cyberpunk neon
+- Real-time on-chain data still needs mono precision + big legible numbers
+- Build in public wants editorial calm, like an annual report
+
+### Type system (every pick justified)
+- Display: **Fraunces** (Google) — characterful contemporary serif, opsz axis
+- UI/body: **Mona Sans** (GitHub) — characterful grotesque, deliberately NOT Inter/Geist
+- Data/mono: **JetBrains Mono** — best slashed zero, tight tnum
+
+### Palette (WCAG AA verified)
+- Surfaces: warm-ink ramp `#15110D` → `#36302A` (R>G>B undertone, feels paper-at-night)
+- Cream text on dark `#F4ECDD` = **15:1 contrast**; secondary `#C2B59C` = 7.2:1; muted `#8A7E68` = 4.5:1
+- **Persimmon `#E8643C`** — charity / CTA (warm, generous, signals giving)
+- **Jade `#5BA89A`** — trust / data / links
+- Honey + Sage — warning + success only
+- No dark text on dark anywhere
+
+### Components rebuilt from scratch
+- **`src/app/globals.css`** — full design system: spacing scale, type, buttons (`ol-btn` + variants), card (`ol-card` + header/body/footer), inputs, picker, table, progress, pill, eyebrow, data-band, animations
+- **`src/components/TopBar.tsx`** — moved out of page.tsx (Next 16 disallows named exports from pages), shared by all 3 routes
+- **`src/components/Picker.tsx`** — desktop dropdown / **mobile bottom sheet** via portal. Keyboard nav, searchable, click-outside, body-scroll-lock on mobile
+- **`src/components/ConnectButton.tsx`** — same dropdown↔sheet pattern, numbered ecosystem groups
+- **`src/components/SwapCard.tsx`** — clean editorial form, jade primary "Swap" button, persimmon charity rewards subpanel, mobile-tightened
+- **`src/components/WalletBalancePanel.tsx`** — Fraunces big-number live counter (rAF count-up), persimmon→honey gradient progress to threshold, sonicscan link
+- **`src/app/page.tsx`** — editorial hero (eyebrow + serif headline + lede + dual CTAs + data band), then swap section, then live wallet, then 3-pillar "how it works", then build-in-public band, then footer
+- **`src/app/leaderboard/page.tsx`** — editorial table, mobile card list, rank colors
+- **`src/app/charities/page.tsx`** — wallet panel front-and-center, candidate cards with serif names + body
+- **`src/app/opengraph-image.tsx`** — warm dark OG card with persimmon italic accent (no more clip-path)
+- **`src/app/layout.tsx`** — Fraunces (variable, opsz/SOFT/WONK axes) + Mona Sans + JetBrains Mono via next/font, viewport meta wired (`width=device-width, initial-scale=1`)
+- **`src/app/providers.tsx`** — boot skeleton in Open Ledger system
+
+### Honest open issues
+- **Mobile (375px) verification via headless Chrome was unreliable** — some chip + headline overflow at 375 in screenshots, may be a Chrome rendering artifact rather than a real bug. Needs a real iOS Safari check.
+- Vectorheart `vc-*` classes removed entirely from CSS but a few stale references may still exist in copy/docs.
+
+---
+
 ## Day 11 — Thu 2026-05-28 (cont. ×2) — VECTORHEART v.0.8 // design-department pass
 
 ### Color science upgrade

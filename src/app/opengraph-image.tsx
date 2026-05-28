@@ -2,12 +2,17 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 export const alt =
-  "Swaps without Borders — cross-chain swaps where 100% of fees go to charity";
+  "Swaps without Borders — a public ledger that quietly funds charity";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Pure-CSS Vectorheart OG card. Edge-runtime safe.
-// next/og requires every div with > 1 child to have an explicit `display`.
+const BG = "#15110D";
+const CREAM = "#F4ECDD";
+const CREAM_MUTE = "#C2B59C";
+const PERSIMMON = "#E8643C";
+const JADE = "#5BA89A";
+const LINE = "#3A332C";
+
 export default async function OpengraphImage() {
   return new ImageResponse(
     (
@@ -17,159 +22,167 @@ export default async function OpengraphImage() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          background: "#08090B",
+          background: BG,
           backgroundImage:
-            "radial-gradient(circle at 18% 8%, rgba(255,46,136,0.22) 0%, transparent 42%), radial-gradient(circle at 92% 98%, rgba(0,229,255,0.18) 0%, transparent 46%)",
-          position: "relative",
-          padding: 56,
-          fontFamily: "system-ui, sans-serif",
-          color: "#F2F4F7",
+            "radial-gradient(900px 600px at 0% 0%, rgba(232,100,60,0.12), transparent 70%), radial-gradient(800px 600px at 100% 100%, rgba(91,168,154,0.10), transparent 70%)",
+          padding: "64px 72px",
+          color: CREAM,
+          fontFamily: "ui-serif, Georgia, serif",
         }}
       >
-        {/* Diagonal corner cut — magenta + cyan stripes */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: 360,
-            height: 360,
-            display: "flex",
-            background:
-              "linear-gradient(135deg, transparent 0%, transparent 56%, #FF2E88 56%, #FF2E88 60%, transparent 60%, transparent 70%, #00E5FF 70%, #00E5FF 72%, transparent 72%)",
-          }}
-        />
-        {/* Halftone dots — top right */}
-        <div
-          style={{
-            position: "absolute",
-            top: 24,
-            right: 24,
-            width: 220,
-            height: 220,
-            display: "flex",
-            opacity: 0.5,
-            backgroundImage:
-              "radial-gradient(circle, rgba(0,229,255,0.45) 1.2px, transparent 1.5px)",
-            backgroundSize: "16px 16px",
-          }}
-        />
-
         {/* Brand row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div
             style={{
-              width: 60,
-              height: 60,
-              background: "#FF2E88",
-              color: "#fff",
-              fontWeight: 900,
-              fontSize: 40,
+              width: 44,
+              height: 44,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              clipPath: "polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%)",
+              background: PERSIMMON,
+              color: "#fff",
+              fontSize: 26,
+              fontWeight: 700,
+              borderRadius: 4,
             }}
           >
-            ◢
+            S
           </div>
           <div
             style={{
               display: "flex",
-              fontFamily: "monospace",
-              fontSize: 22,
-              letterSpacing: "0.22em",
-              color: "#7A8294",
+              fontFamily: "ui-sans-serif, system-ui, sans-serif",
+              fontSize: 18,
+              letterSpacing: "0.14em",
               textTransform: "uppercase",
+              color: CREAM_MUTE,
             }}
           >
-            <span>TYPE-WB.01</span>
-            <span style={{ color: "#FFE600", margin: "0 8px" }}>//</span>
-            <span>SODAX V2</span>
+            <span>Swaps without Borders</span>
+            <span style={{ margin: "0 12px", color: LINE }}>·</span>
+            <span style={{ color: JADE }}>Mainnet</span>
           </div>
         </div>
 
-        {/* Massive headline */}
+        {/* Headline */}
         <div
           style={{
-            marginTop: 32,
             display: "flex",
             flexDirection: "column",
-            fontSize: 128,
-            fontWeight: 900,
-            lineHeight: 0.92,
+            marginTop: 56,
+            fontSize: 96,
+            lineHeight: 0.98,
             letterSpacing: "-0.025em",
+            fontWeight: 500,
+            color: CREAM,
           }}
         >
-          <div style={{ display: "flex" }}>
-            <span>SWAPS</span>
-            <span style={{ color: "#FF2E88", marginLeft: 12 }}>//</span>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            <span>Swaps that&nbsp;</span>
+            <span
+              style={{
+                color: PERSIMMON,
+                fontStyle: "italic",
+                fontWeight: 500,
+              }}
+            >
+              quietly
+            </span>
           </div>
-          <div style={{ display: "flex" }}>
-            <span>WITHOUT</span>
-            <span style={{ color: "#00E5FF" }}>.</span>
-          </div>
-          <div style={{ display: "flex", color: "#EFEAE0" }}>BORDERS</div>
+          <div style={{ display: "flex" }}>fund charity.</div>
+        </div>
+
+        {/* Subhead */}
+        <div
+          style={{
+            display: "flex",
+            marginTop: 32,
+            fontFamily: "ui-sans-serif, system-ui, sans-serif",
+            fontSize: 26,
+            lineHeight: 1.35,
+            color: CREAM_MUTE,
+            maxWidth: 880,
+          }}
+        >
+          A public-ledger swap dapp built on SODAX V2. Every fee — a single
+          tenth of a percent — routes to charity.
         </div>
 
         {/* Bottom strip */}
         <div
           style={{
-            marginTop: "auto",
             display: "flex",
             alignItems: "center",
-            gap: 24,
+            marginTop: "auto",
             paddingTop: 28,
-            borderTop: "1px solid #2E3542",
+            borderTop: `1px solid ${LINE}`,
+            gap: 32,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              padding: "12px 20px",
-              background: "#FFE600",
-              color: "#08090B",
-              fontFamily: "monospace",
-              fontWeight: 700,
-              fontSize: 24,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              boxShadow: "0 0 0 2px #FFE600, 4px 4px 0 0 #FF2E88",
-            }}
-          >
-            0.1% → CHARITY
-          </div>
-          <div
-            style={{
-              display: "flex",
-              fontFamily: "monospace",
-              fontSize: 22,
-              color: "#7A8294",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
-          >
-            <span>CROSS-CHAIN</span>
-            <span style={{ margin: "0 12px" }}>·</span>
-            <span>18 NETWORKS</span>
-            <span style={{ margin: "0 12px" }}>·</span>
-            <span>100% TO CHARITY</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              marginLeft: "auto",
-              fontFamily: "monospace",
-              fontSize: 18,
-              color: "#00E5FF",
-              letterSpacing: "0.12em",
-            }}
-          >
-            swaps-without-borders
+          <DataCell label="Fee per swap" value="0.1%" />
+          <Sep />
+          <DataCell label="Networks" value="18" />
+          <Sep />
+          <DataCell label="To charity" value="100%" accent={PERSIMMON} />
+          <div style={{ marginLeft: "auto", display: "flex" }}>
+            <span
+              style={{
+                fontFamily: "ui-monospace, monospace",
+                fontSize: 14,
+                color: CREAM_MUTE,
+                letterSpacing: "0.04em",
+              }}
+            >
+              swaps-without-borders
+            </span>
           </div>
         </div>
       </div>
     ),
     { ...size },
+  );
+}
+
+function DataCell({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: string;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <span
+        style={{
+          fontFamily: "ui-sans-serif, system-ui, sans-serif",
+          fontSize: 13,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: CREAM_MUTE,
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontFamily: "ui-serif, Georgia, serif",
+          fontSize: 36,
+          letterSpacing: "-0.015em",
+          color: accent ?? CREAM,
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function Sep() {
+  return (
+    <div
+      style={{ display: "flex", width: 1, height: 40, background: LINE }}
+    />
   );
 }

@@ -1,15 +1,25 @@
-import type { Metadata } from "next";
-import { Orbitron, JetBrains_Mono, Barlow_Condensed } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Fraunces, Mona_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const orbitron = Orbitron({
+// Fraunces — characterful contemporary serif, variable weights for headlines.
+// Using variable mode so we get full 100-900 weight axis without static cuts.
+const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-orbitron",
+  axes: ["opsz", "SOFT", "WONK"],
+  variable: "--font-fraunces",
   display: "swap",
 });
 
+// Mona Sans — GitHub's variable grotesque, characterful but legible. Not Inter.
+const monaSans = Mona_Sans({
+  subsets: ["latin"],
+  variable: "--font-mona",
+  display: "swap",
+});
+
+// JetBrains Mono — best slashed zero, tnum, reads as credible data.
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
@@ -17,37 +27,35 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const barlow = Barlow_Condensed({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-barlow",
-  display: "swap",
-});
-
 // SODAX wallet store reads persisted Zustand state at module load; that
-// trips Next's SSG of `/_not-found` (and any other static route) with
-// "Cannot read properties of undefined (reading 'hasHydrated')". Forcing
-// dynamic rendering skips static prerender — the app is a dapp anyway,
-// nothing to gain from SSG.
+// trips Next's SSG of `/_not-found` with hydration errors. Forcing dynamic
+// rendering skips static prerender — the app is a dapp anyway.
 export const dynamic = "force-dynamic";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#15110D",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://swaps-without-borders.vercel.app"),
-  title: "SWAPS // WITHOUT BORDERS — built in public on SODAX",
+  title: "Swaps without Borders — a public ledger that quietly funds charity",
   description:
-    "A cross-chain swap app where every fee goes to charity. Community votes the payouts. Built in public over two weeks on the SODAX SDK V2.",
+    "A cross-chain swap dapp built in public on SODAX. Every fee — 0.1% — routes to a public charity wallet on Sonic. 100% to the community-voted cause. Mainnet from day one.",
   openGraph: {
-    title: "SWAPS // WITHOUT BORDERS",
+    title: "Swaps without Borders",
     description:
-      "Cross-chain swaps · 0.1% partner fee · 100% to community-voted charity · mainnet on SODAX V2.",
+      "Every cross-chain swap routes 0.1% to a public charity wallet. 100% to charity. Mainnet on SODAX V2.",
     siteName: "Swaps without Borders",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SWAPS // WITHOUT BORDERS",
+    title: "Swaps without Borders",
     description:
-      "Cross-chain swaps · 0.1% fee · 100% to charity · mainnet on SODAX V2.",
+      "Every cross-chain swap routes 0.1% to a public charity wallet. 100% to charity. Mainnet on SODAX V2.",
   },
 };
 
@@ -59,7 +67,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${orbitron.variable} ${jetbrainsMono.variable} ${barlow.variable}`}
+      className={`${fraunces.variable} ${monaSans.variable} ${jetbrainsMono.variable}`}
     >
       <body>
         <Providers>{children}</Providers>

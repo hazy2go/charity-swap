@@ -31,6 +31,33 @@ const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000" as const;
 const EVM_CHAINS = CHAINS.filter((c) => c.type === "EVM");
 const ALT_CHAINS = CHAINS.filter((c) => c.type !== "EVM");
 
+const CHAIN_GROUPS: PickerGroup[] = [
+  {
+    label: "EVM networks",
+    items: EVM_CHAINS.map((c) => ({
+      id: c.key,
+      label: c.label,
+      search: `${c.label} EVM`,
+      badge: "EVM",
+    })),
+  },
+  {
+    label: "Other ecosystems",
+    items: ALT_CHAINS.map((c) => ({
+      id: c.key,
+      label: c.label,
+      search: `${c.label} ${c.type}`,
+      badge: c.type.toLowerCase(),
+    })),
+  },
+];
+
+type PreviewPrice = {
+  symbol: string;
+  usd: number | null;
+  source: "coingecko" | "cached" | "fallback" | null;
+};
+
 export function SwapCard() {
   const [srcChain, setSrcChain] = useState<ChainKey>(DEFAULT_SRC.chain);
   const [srcAddr, setSrcAddr] = useState(DEFAULT_SRC.address);
@@ -191,7 +218,7 @@ export function SwapCard() {
           pointsAwarded = j.pointsAwarded ?? null;
         }
       } catch {
-        // swallow — logging failure is logged-only.
+        // swallow
       }
 
       setStatus({
@@ -217,7 +244,7 @@ export function SwapCard() {
   const buttonLabel = !srcAccount.address
     ? `Connect ${srcLabel} wallet`
     : !dstAccount.address
-      ? `Connect ${dstLabel} wallet (receive)`
+      ? `Connect ${dstLabel} wallet`
       : samePair
         ? "Pick two different tokens"
         : isApproving
@@ -225,290 +252,246 @@ export function SwapCard() {
           : isSwapping
             ? "Swapping…"
             : needsApprove
-              ? `Approve ${src.symbol} & Swap`
-              : "Execute Swap";
+              ? `Approve & swap`
+              : "Swap";
 
   return (
-    <div className="w-full sm:max-w-[460px] vc-rise-3">
-      <div className="vc-panel vc-scan">
-        {/* Header strip */}
-        <div className="vc-panel__strip">
-          <span
-            className="vc-mono vc-caps"
-            style={{ fontSize: 11, color: "var(--vc-cyan)" }}
-          >
-            SWAP.CORE // SODAX-V2
-          </span>
-          <span className="ml-auto flex items-center gap-1.5">
-            <span className="vc-chip vc-chip--live">
-              <span className="vc-chip__dot" />
-              MAINNET
-            </span>
-            <span className="vc-chip vc-chip--mag">0.1% → CHARITY</span>
-          </span>
-        </div>
-
-        <div className="px-4 sm:px-5 py-5 space-y-4">
-          {/* FROM */}
-          <div className="vc-field">
-            <div className="flex items-center justify-between">
-              <span className="vc-bracket">FROM</span>
-              <span
-                className="vc-mono"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: "0.16em",
-                  color: "var(--vc-text-mute)",
-                }}
-              >
-                SEND // {src.symbol}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <ChainSelect
-                value={src.chain}
-                onChange={(k) => pickChain("src", k)}
-              />
-              <TokenSelect chain={src.chain} value={src.address} onChange={setSrcAddr} />
-            </div>
-            <input
-              inputMode="decimal"
-              placeholder="0.000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="vc-input vc-input-amount vc-input-big"
-            />
-          </div>
-
-          {/* Flip */}
-          <div className="flex items-center gap-3">
-            <hr className="vc-rule flex-1" />
-            <button
-              type="button"
-              onClick={flip}
-              aria-label="Swap direction"
-              title="Flip From / To"
-              className="vc-btn vc-btn--ghost vc-btn--xs"
-            >
-              ⇅ Flip
-            </button>
-            <hr className="vc-rule flex-1" />
-          </div>
-
-          {/* TO */}
-          <div className="vc-field">
-            <div className="flex items-center justify-between">
-              <span className="vc-bracket" style={{ color: "var(--vc-magenta)" }}>
-                TO
-              </span>
-              <span
-                className="vc-mono"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: "0.16em",
-                  color: "var(--vc-text-mute)",
-                }}
-              >
-                RECEIVE // {dst.symbol}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <ChainSelect
-                value={dst.chain}
-                onChange={(k) => pickChain("dst", k)}
-              />
-              <TokenSelect chain={dst.chain} value={dst.address} onChange={setDstAddr} />
-            </div>
-            <div
-              className="vc-readout"
-              style={{ borderColor: "var(--vc-line-hi)" }}
-            >
-              <span style={{ color: "var(--vc-text-mute)" }}>≈</span>
-              <span className="vc-readout-big">
-                {isQuoting && parsedAmount > 0n ? (
-                  <span
-                    className="vc-mono vc-blink"
-                    style={{ color: "var(--vc-cyan)", fontSize: 14 }}
-                  >
-                    QUOTING…
-                  </span>
-                ) : quotedOut > 0n ? (
-                  formatUnits(quotedOut, dst.decimals)
-                ) : (
-                  <span style={{ color: "var(--vc-text-faint)" }}>—</span>
-                )}
-              </span>
-            </div>
-            {quoteHint && (
-              <div
-                className="vc-mono"
-                style={{
-                  fontSize: 11,
-                  color: "var(--vc-amber)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                ⚠ {quoteHint}
-              </div>
-            )}
-            <div
-              className="vc-mono flex items-center justify-between"
-              style={{
-                fontSize: 10,
-                color: "var(--vc-text-mute)",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-              }}
-            >
-              <span>SLIPPAGE: <b style={{ color: "var(--vc-text)" }}>0.50%</b></span>
-              <span>SOLVER: <b style={{ color: "var(--vc-text)" }}>ANY</b></span>
-            </div>
-          </div>
-
-          {/* Charity rewards */}
-          <div className="vc-panel" style={{ background: "var(--vc-ink)" }}>
-            <div
-              className="px-3 py-2 flex items-center justify-between"
-              style={{ borderBottom: "1px solid var(--vc-line-hi)" }}
-            >
-              <span
-                className="vc-mono vc-caps"
-                style={{ fontSize: 10, color: "var(--vc-magenta)", letterSpacing: "0.22em" }}
-              >
-                CHARITY // REWARDS
-              </span>
-              <span className="vc-chip vc-chip--live">
-                <span className="vc-chip__dot" />
-                FEE LIVE
-              </span>
-            </div>
-            <div className="px-3 py-3">
-              <PointsPreview
-                amountRaw={parsedAmount}
-                decimals={src.decimals}
-                symbol={src.symbol}
-              />
-              <p
-                className="vc-mono mt-3"
-                style={{
-                  fontSize: 10,
-                  color: "var(--vc-text-mute)",
-                  letterSpacing: "0.08em",
-                  lineHeight: 1.5,
-                }}
-              >
-                Every swap routes a <b style={{ color: "var(--vc-text)" }}>0.1%</b> fee to a public charity wallet on Sonic.{" "}
-                <b style={{ color: "var(--vc-yellow)" }}>100%</b> of fees go to charity.
-              </p>
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row items-stretch gap-2">
-            <button
-              className="vc-btn vc-btn--ghost"
-              type="button"
-              onClick={() => setAmount("")}
-              disabled={!amount}
-            >
-              ✕ Clear
-            </button>
-            <button
-              className="vc-btn vc-btn--primary flex-1 justify-center"
-              type="button"
-              onClick={handleSwap}
-              disabled={!canSwap}
-            >
-              ▶ {buttonLabel}
-            </button>
-          </div>
-
-          {status.kind === "ok" && (
-            <div
-              className="vc-readout"
-              style={{
-                borderColor: "var(--vc-green)",
-                color: "var(--vc-green)",
-                fontSize: 13,
-                display: "block",
-              }}
-            >
-              <b className="vc-mono">OK //</b> {status.message}
-            </div>
-          )}
-          {status.kind === "err" && (
-            <div
-              className="vc-readout"
-              style={{
-                borderColor: "var(--vc-magenta)",
-                color: "var(--vc-magenta)",
-                fontSize: 13,
-                display: "block",
-              }}
-            >
-              <b className="vc-mono">ERR //</b> {status.message}
-            </div>
-          )}
-        </div>
-
-        {/* Footer status strip */}
-        <div
-          className="flex items-center gap-3 px-4 py-2 vc-mono"
+    <div className="ol-card w-full">
+      <div
+        className="ol-card__header"
+        style={{ flexWrap: "wrap", rowGap: 8 }}
+      >
+        <span className="ol-eyebrow">Swap</span>
+        <span
           style={{
-            borderTop: "1px solid var(--vc-line-hi)",
-            background: "var(--vc-ink)",
-            fontSize: 10,
-            letterSpacing: "0.14em",
-            color: "var(--vc-text-mute)",
-            textTransform: "uppercase",
+            marginLeft: "auto",
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+            justifyContent: "flex-end",
           }}
         >
-          <span>
-            {srcAccount.address ? (
-              <>
-                {srcLabel} <span style={{ color: "var(--vc-green)" }}>●</span>{" "}
-                {srcAccount.address.slice(0, 6)}…{srcAccount.address.slice(-4)}
-              </>
-            ) : (
-              <>{srcLabel} <span style={{ color: "var(--vc-text-faint)" }}>○ DISCONNECTED</span></>
-            )}
+          <span className="ol-pill ol-pill--live">
+            <span className="ol-pill__dot ol-pulse" />
+            Mainnet
           </span>
-          <span className="ml-auto" style={{ color: "var(--vc-cyan)" }}>
-            {chainInfo(src.chain)?.label} → {chainInfo(dst.chain)?.label}
-          </span>
+          <span className="ol-pill ol-pill--giving">0.1% to charity</span>
+        </span>
+      </div>
+
+      <div className="ol-card__body space-y-4">
+        {/* FROM */}
+        <div className="ol-field">
+          <div className="ol-field__label">
+            <span>From</span>
+            <span className="ol-mono" style={{ color: "var(--ol-text-3)" }}>
+              {srcLabel} · {src.symbol}
+            </span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 8 }}>
+            <ChainPicker value={src.chain} onChange={(k) => pickChain("src", k)} side="From" />
+            <TokenPicker chain={src.chain} value={src.address} onChange={setSrcAddr} side="From" />
+          </div>
+          <input
+            inputMode="decimal"
+            placeholder="0.00"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="ol-input ol-input-amount ol-input-big"
+          />
         </div>
+
+        {/* Flip */}
+        <div className="flex items-center gap-3">
+          <hr className="ol-rule flex-1" />
+          <button
+            type="button"
+            onClick={flip}
+            aria-label="Flip"
+            title="Flip From / To"
+            className="ol-btn ol-btn--ghost ol-btn--sm"
+            style={{ height: 32, padding: "0 12px", fontSize: 12 }}
+          >
+            ↑↓ Flip
+          </button>
+          <hr className="ol-rule flex-1" />
+        </div>
+
+        {/* TO */}
+        <div className="ol-field">
+          <div className="ol-field__label">
+            <span>To</span>
+            <span className="ol-mono" style={{ color: "var(--ol-text-3)" }}>
+              {dstLabel} · {dst.symbol}
+            </span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 8 }}>
+            <ChainPicker value={dst.chain} onChange={(k) => pickChain("dst", k)} side="To" />
+            <TokenPicker chain={dst.chain} value={dst.address} onChange={setDstAddr} side="To" />
+          </div>
+          <div
+            className="ol-input"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              height: 64,
+              padding: "0 16px",
+            }}
+          >
+            <span style={{ color: "var(--ol-text-3)" }}>≈</span>
+            <span
+              className="ol-serif"
+              style={{
+                fontSize: 26,
+                color: "var(--ol-text)",
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {isQuoting && parsedAmount > 0n ? (
+                <span
+                  className="ol-mono"
+                  style={{ color: "var(--ol-text-3)", fontSize: 13 }}
+                >
+                  Pricing…
+                </span>
+              ) : quotedOut > 0n ? (
+                Number(formatUnits(quotedOut, dst.decimals)).toLocaleString("en-US", {
+                  maximumFractionDigits: 8,
+                })
+              ) : (
+                <span style={{ color: "var(--ol-text-4)" }}>—</span>
+              )}
+            </span>
+          </div>
+          {quoteHint && (
+            <div
+              style={{
+                fontSize: 13,
+                color: "var(--ol-honey)",
+                padding: "4px 2px",
+              }}
+            >
+              {quoteHint}
+            </div>
+          )}
+          <div
+            className="ol-mono flex items-center justify-between"
+            style={{
+              fontSize: 12,
+              color: "var(--ol-text-3)",
+              paddingTop: 2,
+            }}
+          >
+            <span>Slippage 0.50%</span>
+            <span>Solver: any</span>
+          </div>
+        </div>
+
+        {/* Charity rewards readout */}
+        <div
+          style={{
+            background: "var(--ol-persimmon-soft)",
+            border: "1px solid rgba(232, 100, 60, 0.22)",
+            borderRadius: "var(--ol-r-lg)",
+            padding: 14,
+          }}
+        >
+          <div className="ol-eyebrow" style={{ color: "var(--ol-persimmon)" }}>
+            Charity rewards
+          </div>
+          <PointsPreview
+            amountRaw={parsedAmount}
+            decimals={src.decimals}
+            symbol={src.symbol}
+          />
+          <p
+            className="ol-body"
+            style={{
+              fontSize: 12,
+              marginTop: 8,
+              color: "var(--ol-text-2)",
+            }}
+          >
+            Every swap routes <strong style={{ color: "var(--ol-persimmon)" }}>0.1%</strong> to a
+            public charity wallet on Sonic.{" "}
+            <strong style={{ color: "var(--ol-text)" }}>100% of fees go to charity.</strong>
+          </p>
+        </div>
+
+        {/* Action */}
+        <button
+          className="ol-btn ol-btn--primary ol-btn--block"
+          type="button"
+          onClick={handleSwap}
+          disabled={!canSwap}
+          style={{ height: 52, fontSize: 15 }}
+        >
+          {buttonLabel}
+        </button>
+
+        {status.kind === "ok" && (
+          <div
+            role="status"
+            style={{
+              padding: 12,
+              border: "1px solid rgba(168, 201, 122, 0.4)",
+              background: "var(--ol-sage-soft)",
+              color: "var(--ol-sage)",
+              borderRadius: "var(--ol-r)",
+              fontSize: 13,
+            }}
+          >
+            <strong>OK ·</strong> {status.message}
+          </div>
+        )}
+        {status.kind === "err" && (
+          <div
+            role="status"
+            style={{
+              padding: 12,
+              border: "1px solid rgba(232, 100, 60, 0.4)",
+              background: "var(--ol-persimmon-soft)",
+              color: "var(--ol-persimmon)",
+              borderRadius: "var(--ol-r)",
+              fontSize: 13,
+            }}
+          >
+            <strong>Error ·</strong> {status.message}
+          </div>
+        )}
+      </div>
+
+      <div className="ol-card__footer">
+        <span>
+          {srcAccount.address ? (
+            <>
+              <span style={{ color: "var(--ol-sage)" }}>●</span>{" "}
+              {srcLabel} · {srcAccount.address.slice(0, 6)}…{srcAccount.address.slice(-4)}
+            </>
+          ) : (
+            <>
+              <span style={{ color: "var(--ol-text-4)" }}>○</span> {srcLabel} disconnected
+            </>
+          )}
+        </span>
+        <span style={{ marginLeft: "auto", color: "var(--ol-jade)" }}>
+          {srcLabel} → {dstLabel}
+        </span>
       </div>
     </div>
   );
 }
 
-const CHAIN_GROUPS: PickerGroup[] = [
-  {
-    label: "EVM",
-    items: EVM_CHAINS.map((c) => ({
-      id: c.key,
-      label: c.label,
-      search: `${c.label} ${c.type}`,
-      badge: "EVM",
-    })),
-  },
-  {
-    label: "OTHER ECOSYSTEMS",
-    items: ALT_CHAINS.map((c) => ({
-      id: c.key,
-      label: c.label,
-      search: `${c.label} ${c.type}`,
-      badge: c.type,
-    })),
-  },
-];
-
-function ChainSelect({
+function ChainPicker({
   value,
   onChange,
+  side,
 }: {
   value: ChainKey;
-  onChange: (key: ChainKey) => void;
+  onChange: (k: ChainKey) => void;
+  side: string;
 }) {
   const label = chainInfo(value)?.label ?? value;
   return (
@@ -516,18 +499,20 @@ function ChainSelect({
       value={value}
       groups={CHAIN_GROUPS}
       ariaLabel="Network"
+      sheetTitle={`${side} · Network`}
       triggerLabel={
-        <span className="flex items-center gap-2">
+        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span
+            aria-hidden
             style={{
-              width: 8,
-              height: 8,
-              background: "var(--vc-cyan-500)",
-              boxShadow: "0 0 6px var(--vc-cyan-glow)",
-              display: "inline-block",
+              width: 6,
+              height: 6,
+              borderRadius: 999,
+              background: "var(--ol-jade)",
+              flexShrink: 0,
             }}
           />
-          {label}
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
         </span>
       }
       onChange={(k) => onChange(k as ChainKey)}
@@ -535,14 +520,16 @@ function ChainSelect({
   );
 }
 
-function TokenSelect({
+function TokenPicker({
   chain,
   value,
   onChange,
+  side,
 }: {
   chain: ChainKey;
   value: string;
   onChange: (address: string) => void;
+  side: string;
 }) {
   const tokens = tokensForChain(chain);
   const selected = tokens.find((t) => t.address === value);
@@ -555,31 +542,23 @@ function TokenSelect({
         search: t.symbol,
       }))}
       ariaLabel="Token"
+      sheetTitle={`${side} · Token`}
       triggerLabel={
-        <span className="flex items-center gap-2">
-          <span
-            className="vc-display"
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "var(--vc-magenta-500)",
-              letterSpacing: "0.02em",
-            }}
-          >
-            {selected?.symbol ?? "—"}
-          </span>
+        <span
+          className="ol-serif"
+          style={{
+            fontSize: 16,
+            color: "var(--ol-persimmon)",
+            fontWeight: 600,
+          }}
+        >
+          {selected?.symbol ?? "—"}
         </span>
       }
-      onChange={(addr) => onChange(addr)}
+      onChange={onChange}
     />
   );
 }
-
-type PreviewPrice = {
-  symbol: string;
-  usd: number | null;
-  source: "coingecko" | "cached" | "fallback" | null;
-};
 
 function PointsPreview({
   amountRaw,
@@ -590,8 +569,6 @@ function PointsPreview({
   decimals: number;
   symbol: string;
 }) {
-  // Pulls the same CoinGecko price the API route uses when logging a
-  // confirmed swap, so the preview matches what hits the leaderboard.
   const { data: priceData, isFetching } = useQuery<PreviewPrice>({
     queryKey: ["preview-price", symbol.toUpperCase()],
     queryFn: async () => {
@@ -609,75 +586,61 @@ function PointsPreview({
     const amount = Number(formatUnits(amountRaw, decimals));
     if (!Number.isFinite(amount)) return null;
     const usd = amount * priceData.usd;
-    return {
-      usd,
-      points: Math.round(usd * DEFAULT_POINTS_PER_USD),
-    };
+    return { usd, points: Math.round(usd * DEFAULT_POINTS_PER_USD) };
   })();
 
   const noPrice =
     amountRaw > 0n && !isFetching && priceData && priceData.usd == null;
 
   return (
-    <div>
-      <div className="flex items-baseline justify-between gap-3">
-        <span
-          className="vc-mono"
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.2em",
-            color: "var(--vc-text-mute)",
-            textTransform: "uppercase",
-          }}
-        >
-          YOU WOULD EARN
-        </span>
-        <span
-          className="vc-display"
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: "var(--vc-cyan)",
-            letterSpacing: "-0.01em",
-            lineHeight: 1,
-          }}
-        >
-          {preview ? `+${formatPoints(preview.points)}` : "—"}
-          <span
-            className="vc-mono"
-            style={{
-              fontSize: 11,
-              marginLeft: 6,
-              color: "var(--vc-text-mute)",
-              letterSpacing: "0.2em",
-            }}
-          >
-            PTS
-          </span>
-        </span>
-      </div>
-      <div
-        className="vc-mono mt-2 flex items-center justify-between gap-3"
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        justifyContent: "space-between",
+        gap: 12,
+        marginTop: 6,
+      }}
+    >
+      <span
+        className="ol-serif"
         style={{
-          fontSize: 10,
-          color: "var(--vc-text-mute)",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
+          fontSize: 30,
+          fontWeight: 600,
+          color: "var(--ol-persimmon)",
+          fontVariantNumeric: "tabular-nums",
         }}
       >
-        <span>
-          {preview ? (
-            <>≈ <b style={{ color: "var(--vc-text)" }}>${preview.usd.toFixed(2)}</b> swapped</>
-          ) : isFetching && amountRaw > 0n ? (
-            "Pricing…"
-          ) : noPrice ? (
-            <>{symbol} not priced — points off</>
-          ) : (
-            "Points unlock once a quote is in"
-          )}
+        {preview ? `+${formatPoints(preview.points)}` : "—"}
+        <span
+          className="ol-mono"
+          style={{
+            fontSize: 12,
+            marginLeft: 8,
+            color: "var(--ol-text-3)",
+          }}
+        >
+          pts
         </span>
-        <span>{DEFAULT_POINTS_PER_USD} PT / $1</span>
-      </div>
+      </span>
+      <span
+        className="ol-mono"
+        style={{
+          fontSize: 12,
+          color: "var(--ol-text-3)",
+          textAlign: "right",
+        }}
+      >
+        {preview ? (
+          <>≈ <strong style={{ color: "var(--ol-text)" }}>${preview.usd.toFixed(2)}</strong></>
+        ) : isFetching && amountRaw > 0n ? (
+          "Pricing…"
+        ) : noPrice ? (
+          `${symbol} not priced`
+        ) : (
+          "—"
+        )}
+      </span>
     </div>
   );
 }

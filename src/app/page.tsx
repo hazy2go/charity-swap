@@ -1,337 +1,318 @@
+import Link from "next/link";
 import { ConnectButton } from "@/components/ConnectButton";
 import { SwapCard } from "@/components/SwapCard";
+import { WalletBalancePanel } from "@/components/WalletBalancePanel";
+import { TopBar } from "@/components/TopBar";
 
 const CHARITY_WALLET = "0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD";
 
-const TICKER = [
-  "0.1% PARTNER FEE",
-  "100% TO CHARITY",
-  "18 NETWORKS LIVE",
-  "MAINNET SINCE DAY 3",
-  "OPEN SOURCE — MIT",
-  "BUILT WITH SODAX BUILDERS MCP",
-  "COMMUNITY-VOTED PAYOUTS",
-  "SDK V2 // SOLVER ROUTED",
-];
-
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <TopBar />
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <TopBar active="swap" />
 
-      <main className="flex-1 relative">
-        <DiagonalDecor />
+      <main style={{ flex: 1 }}>
+        {/* HERO + SWAP — single column < lg, side-by-side ≥ lg */}
+        <section className="ol-section">
+          <div className="ol-container">
+            <div className="ol-hero-grid">
+              <Hero />
 
-        <div className="relative max-w-[1280px] mx-auto px-4 sm:px-8 pt-6 sm:pt-14 md:pt-20 pb-10 sm:pb-16 grid lg:grid-cols-[1.05fr_minmax(440px,1fr)] gap-8 lg:gap-16 items-start">
-          <Hero />
-
-          <div id="swap" className="scroll-mt-12 flex justify-center lg:justify-end vc-rise-2 w-full">
-            <div className="w-full sm:max-w-[460px] flex flex-col items-stretch lg:items-end gap-4">
-              <ConnectButton />
-              <SwapCard />
+              <div
+                id="swap"
+                className="ol-rise-2 ol-hero-grid__swap scroll-mt-24"
+              >
+                <ConnectButton block />
+                <SwapCard />
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="relative max-w-[1280px] mx-auto px-4 sm:px-8 pb-16">
-          <HeroDetails />
-        </div>
+        {/* DATA BAND — the live "see fees move" moment */}
+        <section className="ol-section--tight" style={{ paddingTop: 0 }}>
+          <div className="ol-container">
+            <WalletBalancePanel />
+          </div>
+        </section>
 
-        <Ticker />
+        {/* HOW IT WORKS — three editorial paragraphs */}
+        <section className="ol-section">
+          <div className="ol-container">
+            <div className="grid gap-12 lg:grid-cols-3">
+              <Pillar
+                eyebrow="01 · how it works"
+                title="You swap. The dapp keeps 0.1%."
+              >
+                Pick any two tokens across <strong>18 networks</strong>. The
+                SODAX solver routes the swap. A 0.1% partner fee is deducted
+                in the input token and forwarded to a public wallet on Sonic.
+              </Pillar>
+              <Pillar
+                eyebrow="02 · transparency"
+                title="The wallet is public. The balance is verifiable."
+              >
+                It&apos;s the address above. Watch fees stack in real time on{" "}
+                <a
+                  href={`https://sonicscan.org/address/${CHARITY_WALLET}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  sonicscan
+                </a>
+                . When it crosses a community-set threshold, the next charity
+                vote opens.
+              </Pillar>
+              <Pillar
+                eyebrow="03 · community vote"
+                title="The community picks where it goes."
+              >
+                A shortlist of charities is{" "}
+                <Link href="/charities">curated and voted on</Link>. The
+                winner of each cycle receives the full balance.{" "}
+                <strong>100% to charity.</strong> No skim, no ops cut.
+              </Pillar>
+            </div>
+          </div>
+        </section>
+
+        {/* BUILD IN PUBLIC */}
+        <section
+          className="ol-section--tight"
+          style={{
+            borderTop: "1px solid var(--ol-line)",
+            borderBottom: "1px solid var(--ol-line)",
+            background: "var(--ol-s1)",
+          }}
+        >
+          <div className="ol-container">
+            <div className="grid gap-8 md:grid-cols-[1fr_auto] items-center">
+              <div>
+                <div className="ol-eyebrow" style={{ marginBottom: 6 }}>
+                  Built in public on the SODAX SDK V2
+                </div>
+                <p
+                  className="ol-serif"
+                  style={{
+                    fontSize: "clamp(20px, 2.4vw, 26px)",
+                    color: "var(--ol-text)",
+                    lineHeight: 1.25,
+                    margin: 0,
+                  }}
+                >
+                  Two weeks. Mainnet from day one. Every milestone is a commit.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href="https://github.com/hazy2go/swaps-without-borders"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ol-btn ol-btn--ghost"
+                >
+                  Source on GitHub
+                </a>
+                <a
+                  href="https://github.com/hazy2go/swaps-without-borders/blob/main/BUILD-LOG.md"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ol-btn ol-btn--ghost"
+                >
+                  Build log
+                </a>
+                <a
+                  href="https://builders.sodax.com/mcp"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ol-btn ol-btn--jade"
+                >
+                  SODAX Builders MCP
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <Footer />
       </main>
     </div>
   );
 }
 
-function TopBar() {
-  return (
-    <header className="vc-topbar">
-      <div className="vc-topbar__brand">
-        <span className="vc-topbar__brand-mark">◢</span>
-        <span className="vc-topbar__title hidden sm:inline">
-          Swaps <span style={{ color: "var(--vc-yellow)" }}>{"//"}</span> Without Borders
-        </span>
-        <span className="vc-topbar__title sm:hidden">
-          <span style={{ color: "var(--vc-yellow)" }}>{"//"}</span> SWB
-        </span>
-      </div>
-      <nav className="vc-topbar__nav flex">
-        <a href="#swap" className="is-active">
-          <span className="md:hidden">[01]</span>
-          <span className="hidden md:inline">[01] Swap</span>
-        </a>
-        <a href="/leaderboard">
-          <span className="md:hidden">[02]</span>
-          <span className="hidden md:inline">[02] Leaderboard</span>
-        </a>
-        <a href="/charities">
-          <span className="md:hidden">[03]</span>
-          <span className="hidden md:inline">[03] Charities</span>
-        </a>
-      </nav>
-      <div className="vc-topbar__tail">
-        <span className="vc-chip vc-chip--live">
-          <span className="vc-chip__dot vc-blink" />
-          MAINNET
-        </span>
-        <a
-          href="https://builders.sodax.com/mcp"
-          target="_blank"
-          rel="noreferrer"
-          className="hidden sm:inline vc-mono"
-          style={{ color: "var(--vc-text-mute)" }}
-          title="SODAX Builders MCP"
-        >
-          builders.sodax.com/mcp ↗
-        </a>
-      </div>
-    </header>
-  );
-}
-
-function DiagonalDecor() {
-  return (
-    <>
-      <div
-        aria-hidden
-        className="absolute top-0 right-0 w-[320px] h-[320px] pointer-events-none opacity-90 hidden md:block"
-        style={{
-          background:
-            "linear-gradient(135deg, transparent 0%, transparent 56%, var(--vc-magenta) 56%, var(--vc-magenta) 58%, transparent 58%, transparent 66%, var(--vc-cyan) 66%, var(--vc-cyan) 67%, transparent 67%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="absolute top-[420px] left-0 w-[180px] h-[180px] pointer-events-none opacity-80 hidden md:block"
-        style={{
-          background:
-            "linear-gradient(315deg, transparent 0%, transparent 70%, var(--vc-yellow) 70%, var(--vc-yellow) 72%, transparent 72%)",
-        }}
-      />
-    </>
-  );
-}
-
 function Hero() {
   return (
-    <section className="vc-rise">
-      <div className="flex flex-wrap items-center gap-3 mb-5">
-        <span className="vc-numplate">TYPE-WB.01 // SODAX V2</span>
-        <span className="vc-chip vc-chip--cyan">DAY 11 // BUILD 0.0.7</span>
-      </div>
-
-      <h1
-        className="vc-display"
-        style={{
-          fontWeight: 800,
-          fontSize: "clamp(40px, 11vw, 112px)",
-          lineHeight: 0.9,
-          letterSpacing: "-0.025em",
-          color: "var(--vc-text)",
-        }}
-      >
-        SWAPS<span style={{ color: "var(--vc-magenta)" }}>{"//"}</span>
-        <br />
-        WITHOUT<span style={{ color: "var(--vc-cyan)" }}>.</span>
-        <br />
-        <span style={{ color: "var(--vc-paper)" }}>BORDERS</span>
-      </h1>
-
-      <p
-        className="mt-5 sm:mt-8 max-w-[520px]"
-        style={{
-          fontFamily: "var(--font-body)",
-          fontSize: "clamp(15px, 1.45vw, 20px)",
-          lineHeight: 1.45,
-          color: "var(--vc-text-mute)",
-          letterSpacing: "0.01em",
-        }}
-      >
-        Cross-chain swaps where every fee routes to charity.
-        <span style={{ color: "var(--vc-text)" }}>
-          {" "}0.1% per swap. 100% to the community-voted cause.
-        </span>{" "}
-        Two weeks. Built in public. Mainnet from day one.
+    <section className="ol-rise">
+      <p className="ol-eyebrow" style={{ marginBottom: 14 }}>
+        <span
+          style={{
+            display: "inline-block",
+            width: 24,
+            height: 1,
+            background: "var(--ol-persimmon)",
+            marginRight: 10,
+            verticalAlign: "middle",
+          }}
+        />
+        Day 11 · build in public · mainnet
       </p>
+      <h1 className="ol-h1">
+        Swaps that{" "}
+        <span
+          className="ol-serif-it"
+          style={{ color: "var(--ol-persimmon)" }}
+        >
+          quietly
+        </span>{" "}
+        fund charity.
+      </h1>
+      <p className="ol-lede" style={{ marginTop: 20, maxWidth: 560 }}>
+        A cross-chain swap dapp on the SODAX SDK V2. Every fee — a single
+        tenth of a percent — routes to a public charity wallet on Sonic.
+        <strong style={{ color: "var(--ol-text)" }}>
+          {" "}100% goes to the community-voted cause.
+        </strong>{" "}
+        No skim. No ops cut.
+      </p>
+      <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
+        <a href="#swap" className="ol-btn ol-btn--primary">
+          Open swap
+        </a>
+        <Link href="/charities" className="ol-btn ol-btn--ghost">
+          See charity wallet
+        </Link>
+      </div>
 
-      <div className="mt-7 flex flex-wrap gap-2">
-        <a
-          href="https://github.com/hazy2go/swaps-without-borders"
-          target="_blank"
-          rel="noreferrer"
-          className="vc-btn vc-btn--ghost"
-        >
-          ◇ Source
-        </a>
-        <a
-          href="https://github.com/hazy2go/swaps-without-borders/blob/main/BUILD-LOG.md"
-          target="_blank"
-          rel="noreferrer"
-          className="vc-btn vc-btn--ghost"
-        >
-          ◐ Build Log
-        </a>
-        <a
-          href="https://builders.sodax.com/mcp"
-          target="_blank"
-          rel="noreferrer"
-          className="vc-btn vc-btn--magenta"
-        >
-          ⌬ SODAX Builders MCP
-        </a>
+      <div
+        className="ol-data-band"
+        style={{ marginTop: 36, maxWidth: 560 }}
+      >
+        <DataCell label="Fee per swap" value="0.1%" />
+        <DataCell label="Networks live" value="18" />
+        <DataCell label="To charity" value="100%" highlight />
       </div>
     </section>
   );
 }
 
-function HeroDetails() {
-  return (
-    <section className="vc-rise-3">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatBlock
-          label="[ CHARITY WALLET ]"
-          big="0x95A8…721AD"
-          sub="SONIC // INTERIM EOA — multisig to follow"
-          tone="cyan"
-          href={`https://sonicscan.org/address/${CHARITY_WALLET}`}
-        />
-        <StatBlock
-          label="[ FEE // FLOWS TO ]"
-          big="0.1% → CHARITY"
-          sub="100% — no skim, no ops cut"
-          tone="magenta"
-        />
-        <StatBlock
-          label="[ NETWORKS // LIVE ]"
-          big="18 CHAINS"
-          sub="12 EVM + Solana, Sui, Injective, ICON, Stellar, NEAR"
-          tone="ink"
-        />
-        <StatBlock
-          label="[ SCHEDULE ]"
-          big="DAY 11 / 14"
-          sub="Mainnet · open-source · MIT"
-          tone="ink"
-        />
-      </div>
-
-      <div className="mt-8 vc-panel">
-        <div className="vc-panel__strip">
-          <span className="vc-mono vc-caps" style={{ fontSize: 11, color: "var(--vc-cyan)" }}>
-            README // SYS-LOG
-          </span>
-          <span className="ml-auto vc-chip vc-chip--mag">⊕ ÆSTHETIC: VECTORHEART</span>
-        </div>
-        <div
-          className="px-5 py-5 text-[15px] leading-[1.55]"
-          style={{ color: "var(--vc-text-mute)" }}
-        >
-          <p>
-            <span className="vc-slash" />
-            Connect a wallet on either side. Pick chain, pick token, quote,
-            approve, swap. The solver routes cross-chain. The fee settles to a
-            public Sonic wallet — audit it any time.
-          </p>
-          <p className="mt-3">
-            <span className="vc-slash" style={{ color: "var(--vc-yellow)" }} />
-            The community picks the charity. The repo picks nothing for them.
-            Votes run in Discord when the wallet crosses threshold.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function StatBlock({
+function DataCell({
   label,
-  big,
-  sub,
-  tone,
-  href,
+  value,
+  highlight,
 }: {
   label: string;
-  big: string;
-  sub: string;
-  tone: "cyan" | "magenta" | "ink";
-  href?: string;
+  value: string;
+  highlight?: boolean;
 }) {
-  const accent =
-    tone === "cyan"
-      ? "var(--vc-cyan)"
-      : tone === "magenta"
-        ? "var(--vc-magenta)"
-        : "var(--vc-text)";
-  const Wrap: React.ElementType = href ? "a" : "div";
   return (
-    <Wrap
-      {...(href ? { href, target: "_blank", rel: "noreferrer" } : {})}
-      className="vc-panel vc-panel--cut block"
-      style={{ textDecoration: "none" }}
-    >
-      <div className="vc-panel__strip">
-        <span
-          className="vc-mono"
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.22em",
-            color: "var(--vc-text-mute)",
-          }}
-        >
-          {label}
-        </span>
+    <div className="ol-data-band__cell">
+      <div className="ol-data-band__label">{label}</div>
+      <div
+        className="ol-data-band__value"
+        style={highlight ? { color: "var(--ol-persimmon)" } : undefined}
+      >
+        {value}
       </div>
-      <div className="px-4 py-4">
-        <div
-          className="vc-display"
-          style={{
-            fontSize: 22,
-            letterSpacing: "0.02em",
-            fontWeight: 700,
-            color: accent,
-            wordBreak: "break-word",
-          }}
-        >
-          {big}
-        </div>
-        <div
-          className="mt-1 vc-mono"
-          style={{ fontSize: 11, color: "var(--vc-text-mute)" }}
-        >
-          {sub}
-        </div>
-      </div>
-    </Wrap>
+    </div>
   );
 }
 
-function Ticker() {
+function Pillar({
+  eyebrow,
+  title,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div
-      aria-hidden
-      className="border-y overflow-hidden vc-hazard"
-      style={{ borderColor: "var(--vc-ink)" }}
-    >
-      <div className="vc-marquee-track py-2">
-        {Array.from({ length: 2 }).map((_, dup) => (
-          <span key={dup} className="flex">
-            {TICKER.map((t, i) => (
-              <span
-                key={`${dup}-${i}`}
-                className="vc-display vc-caps-tight px-6"
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "var(--vc-ink)",
-                  letterSpacing: "0.16em",
-                }}
-              >
-                ⊕ {t}
-              </span>
-            ))}
-          </span>
-        ))}
+    <article>
+      <div className="ol-eyebrow" style={{ marginBottom: 12 }}>
+        {eyebrow}
       </div>
-    </div>
+      <h3
+        className="ol-serif"
+        style={{
+          fontSize: "clamp(20px, 2.4vw, 26px)",
+          color: "var(--ol-text)",
+          lineHeight: 1.2,
+          letterSpacing: "-0.012em",
+          marginBottom: 10,
+        }}
+      >
+        {title}
+      </h3>
+      <p
+        className="ol-body"
+        style={{ color: "var(--ol-text-2)", fontSize: 15 }}
+      >
+        {children}
+      </p>
+    </article>
+  );
+}
+
+function Footer() {
+  return (
+    <footer
+      style={{
+        padding: "32px 0 56px",
+        borderTop: "1px solid var(--ol-line)",
+      }}
+    >
+      <div className="ol-container">
+        <div className="grid gap-6 md:grid-cols-[1fr_auto] items-end">
+          <div>
+            <div
+              className="ol-serif"
+              style={{
+                fontSize: 18,
+                color: "var(--ol-text)",
+                marginBottom: 4,
+              }}
+            >
+              Swaps without Borders
+            </div>
+            <p className="ol-body" style={{ fontSize: 13, maxWidth: 480 }}>
+              Built by{" "}
+              <a
+                href="https://sodaxpay.vercel.app"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Hazy
+              </a>{" "}
+              with the{" "}
+              <a
+                href="https://builders.sodax.com/mcp"
+                target="_blank"
+                rel="noreferrer"
+              >
+                SODAX Builders MCP
+              </a>
+              . Open source · MIT · audited and verified on Sonicscan.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="https://github.com/hazy2go/swaps-without-borders"
+              target="_blank"
+              rel="noreferrer"
+              className="ol-btn ol-btn--ghost ol-btn--sm"
+            >
+              Source
+            </a>
+            <a
+              href="https://github.com/hazy2go/swaps-without-borders/blob/main/CHANGELOG.md"
+              target="_blank"
+              rel="noreferrer"
+              className="ol-btn ol-btn--ghost ol-btn--sm"
+            >
+              Changelog
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 }

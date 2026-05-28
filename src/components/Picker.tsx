@@ -8,60 +8,58 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 
 export type PickerItem = {
-  /** Unique key */
   id: string;
-  /** Main label (displayed) */
   label: string;
-  /** Searchable text (extends label) */
   search?: string;
-  /** Optional right-aligned badge / suffix */
   badge?: string;
-  /** Optional leading icon node */
   icon?: ReactNode;
-  /** Arbitrary payload returned to onChange */
   payload?: unknown;
 };
 
 export type PickerGroup = {
-  /** Group heading shown above items (e.g. "EVM", "OTHER ECOSYSTEMS") */
   label: string;
   items: PickerItem[];
 };
 
 export interface PickerProps {
-  /** Currently selected id (controlled) */
   value: string;
-  /** Groups to render (or pass `items` for ungrouped) */
   groups?: PickerGroup[];
   items?: PickerItem[];
-  /** Trigger label override (defaults to selected item label) */
   triggerLabel?: ReactNode;
-  /** Aria label / tooltip */
   ariaLabel?: string;
-  /** Placeholder when no selection */
+  /** Heading shown in the mobile bottom sheet */
+  sheetTitle?: string;
   placeholder?: string;
-  /** Show search box (default true if >8 items) */
   searchable?: boolean;
-  /** Selected handler */
   onChange: (id: string, payload?: unknown) => void;
-  /** Class on trigger button */
   className?: string;
-  /** Popup width override (px). Default = match trigger. */
-  popupMinWidth?: number;
-  /** Disabled */
   disabled?: boolean;
 }
 
+const ChevronIcon = () => (
+  <svg
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+    className="ol-picker-btn__chev"
+  >
+    <path d="m4 6 4 4 4-4" />
+  </svg>
+);
+
 /**
- * Vectorheart-themed combobox/select.
- * - Click trigger → popup below
- * - Type to filter (when searchable)
- * - ↑/↓ navigates, Enter selects, Esc closes
- * - Click-outside closes
+ * A picker that behaves like a dropdown on desktop and a bottom sheet
+ * on mobile. Searchable when > 8 items. Keyboard navigation on desktop.
  *
- * Styled via the `.vc-picker-*` primitives in globals.css.
+ * Mobile sheet is rendered into a portal on document.body so it isn't
+ * trapped inside the trigger's overflow container.
  */
 export function Picker({
   value,
@@ -69,19 +67,30 @@ export function Picker({
   items,
   triggerLabel,
   ariaLabel,
+  sheetTitle = "Select",
   placeholder = "Select…",
   searchable,
   onChange,
   className = "",
-  popupMinWidth,
   disabled,
 }: PickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
   const wrapperRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // Detect mobile via CSS matchMedia — single source of truth
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 639px)");
+    const sync = () => setIsMobile(mql.matches);
+    sync();
+    mql.addEventListener("change", sync);
+    return () => mql.removeEventListener("change", sync);
+  }, []);
 
   const normalizedGroups: PickerGroup[] = useMemo(() => {
     if (groups && groups.length > 0) return groups;
@@ -96,7 +105,6 @@ export function Picker({
   const selected = allItems.find((i) => i.id === value) ?? null;
   const autoSearchable = searchable ?? allItems.length > 8;
 
-  // Filter once per query
   const filteredGroups = useMemo(() => {
     if (!query.trim()) return normalizedGroups;
     const q = query.trim().toLowerCase();
@@ -117,18 +125,13 @@ export function Picker({
     [filteredGroups],
   );
 
-  // Reset highlight when filter changes
-  useEffect(() => {
-    setActiveIdx(0);
-  }, [query, open]);
+  useEffect(() => { setActiveIdx(0); }, [query, open]);
 
-  // Click-outside + Esc
+  // Click-outside + Esc (desktop dropdown)
   useEffect(() => {
-    if (!open) return;
+    if (!open || isMobile) return;
     let armed = false;
-    const arm = setTimeout(() => {
-      armed = true;
-    }, 0);
+    const arm = setTimeout(() => { armed = true; }, 0);
     const onDown = (e: MouseEvent) => {
       if (!armed) return;
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -136,9 +139,7 @@ export function Picker({
       }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-      }
+      if (e.key === "Escape") setOpen(false);
     };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -147,17 +148,32 @@ export function Picker({
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, isMobile]);
+
+  // Lock body scroll while mobile sheet open
+  useEffect(() => {
+    if (!(open && isMobile)) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, isMobile]);
 
   // Focus search on open
   useEffect(() => {
     if (open && autoSearchable) {
-      const t = setTimeout(() => searchRef.current?.focus(), 30);
+      const t = setTimeout(() => searchRef.current?.focus(), 60);
       return () => clearTimeout(t);
     }
   }, [open, autoSearchable]);
 
-  // Scroll active item into view
+  // Scroll active item into view (desktop)
   useEffect(() => {
     if (!open) return;
     const el = listRef.current?.querySelector<HTMLButtonElement>(
@@ -190,123 +206,119 @@ export function Picker({
     }
   };
 
+  const Popover = (
+    <>
+      {isMobile && (
+        <div
+          className="ol-picker-pop__backdrop"
+          onClick={() => setOpen(false)}
+          aria-hidden
+        />
+      )}
+      <div
+        className="ol-picker-pop"
+        role="listbox"
+        onKeyDown={onListKey}
+        tabIndex={-1}
+      >
+        <div className="ol-picker-pop__handle" aria-hidden />
+        {isMobile && (
+          <div
+            style={{
+              padding: "4px 16px 8px",
+              fontFamily: "var(--font-sans)",
+              fontSize: 12,
+              fontWeight: 600,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--ol-text-3)",
+            }}
+          >
+            {sheetTitle}
+          </div>
+        )}
+        {autoSearchable && (
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder="Search…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onListKey}
+            className="ol-picker-pop__search"
+            autoComplete="off"
+            spellCheck={false}
+          />
+        )}
+        <div ref={listRef} className="ol-picker-pop__list">
+          {filteredGroups.length === 0 && (
+            <div
+              style={{
+                padding: "16px 14px",
+                fontSize: 13,
+                color: "var(--ol-text-3)",
+              }}
+            >
+              No matches.
+            </div>
+          )}
+          {filteredGroups.map((g) => (
+            <div key={g.label || "g"}>
+              {g.label && (
+                <div className="ol-picker-pop__group">{g.label}</div>
+              )}
+              {g.items.map((it) => {
+                const gIdx = flatFiltered.indexOf(it);
+                return (
+                  <button
+                    key={it.id}
+                    type="button"
+                    data-idx={gIdx}
+                    data-active={gIdx === activeIdx}
+                    data-selected={it.id === value}
+                    className="ol-picker-pop__item"
+                    onMouseEnter={() => setActiveIdx(gIdx)}
+                    onClick={() => commit(gIdx)}
+                  >
+                    {it.icon && <span aria-hidden>{it.icon}</span>}
+                    <span className="ol-picker-pop__item__label">{it.label}</span>
+                    {it.badge && (
+                      <span className="ol-picker-pop__item__badge">
+                        {it.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
       <button
         type="button"
-        className="vc-picker-btn"
+        className="ol-picker-btn"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="truncate">
+        <span className="ol-picker-btn__label">
           {triggerLabel ?? selected?.label ?? (
-            <span style={{ color: "var(--vc-text-faint)" }}>{placeholder}</span>
+            <span style={{ color: "var(--ol-text-4)" }}>{placeholder}</span>
           )}
         </span>
-        <span className="vc-picker-btn__chev" aria-hidden>▼</span>
+        <ChevronIcon />
       </button>
 
-      {open && (
-        <div
-          className="vc-picker-pop"
-          style={{
-            top: "calc(100% + 4px)",
-            left: 0,
-            right: 0,
-            minWidth: popupMinWidth,
-          }}
-          role="listbox"
-          onKeyDown={onListKey}
-          tabIndex={-1}
-        >
-          {autoSearchable && (
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="// SEARCH"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={onListKey}
-              className="vc-picker-pop__search"
-              autoComplete="off"
-              spellCheck={false}
-            />
-          )}
-          <div ref={listRef} className="vc-picker-pop__list">
-            {filteredGroups.length === 0 && (
-              <div
-                className="vc-mono"
-                style={{
-                  padding: "16px 14px",
-                  fontSize: 11,
-                  color: "var(--vc-text-mute)",
-                  letterSpacing: "0.16em",
-                  textTransform: "uppercase",
-                }}
-              >
-                No matches.
-              </div>
-            )}
-            {filteredGroups.map((g) => {
-              let groupStart = 0;
-              // compute the global index offset for each item
-              return (
-                <div key={g.label || "g"}>
-                  {g.label && (
-                    <div className="vc-picker-pop__group">{g.label}</div>
-                  )}
-                  {g.items.map((it) => {
-                    const gIdx = flatFiltered.indexOf(it);
-                    groupStart = gIdx;
-                    return (
-                      <button
-                        key={it.id}
-                        type="button"
-                        data-idx={gIdx}
-                        data-active={gIdx === activeIdx}
-                        data-selected={it.id === value}
-                        className="vc-picker-pop__item"
-                        onMouseEnter={() => setActiveIdx(gIdx)}
-                        onClick={() => commit(gIdx)}
-                      >
-                        {it.icon && <span aria-hidden>{it.icon}</span>}
-                        <span className="truncate">{it.label}</span>
-                        {it.badge && (
-                          <span className="vc-picker-pop__item__badge">
-                            {it.badge}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                  {/* swallow unused var */}
-                  <span hidden>{groupStart}</span>
-                </div>
-              );
-            })}
-          </div>
-          <div
-            className="vc-mono"
-            style={{
-              padding: "6px 12px",
-              fontSize: 9,
-              letterSpacing: "0.18em",
-              color: "var(--vc-text-faint)",
-              textTransform: "uppercase",
-              borderTop: "1px solid var(--vc-line)",
-              background: "var(--vc-ink-1)",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
-            <span>↑↓ navigate · ↵ select</span>
-            <span>esc</span>
-          </div>
-        </div>
-      )}
+      {open && !isMobile && Popover}
+      {open && isMobile && typeof document !== "undefined" &&
+        createPortal(Popover, document.body)}
     </div>
   );
 }

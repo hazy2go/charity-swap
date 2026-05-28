@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 const CHARITY_WALLET = "0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD";
-
-// Community-set later; placeholder threshold for the next payout.
 const NEXT_PAYOUT_THRESHOLD_USD = 1000;
 
 type BalanceResponse = {
@@ -17,10 +15,6 @@ type BalanceResponse = {
   ts?: number;
 };
 
-/**
- * Smoothly tween from `prev` to `target` over `duration` ms.
- * Returns the current display value; updates each animation frame.
- */
 function useCountUp(target: number, duration = 900) {
   const [display, setDisplay] = useState(target);
   const startRef = useRef<number | null>(null);
@@ -33,7 +27,6 @@ function useCountUp(target: number, duration = 900) {
     const tick = (now: number) => {
       if (startRef.current == null) startRef.current = now;
       const t = Math.min(1, (now - startRef.current) / duration);
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - t, 3);
       setDisplay(fromRef.current + (target - fromRef.current) * eased);
       if (t < 1) raf = requestAnimationFrame(tick);
@@ -46,11 +39,7 @@ function useCountUp(target: number, duration = 900) {
   return display;
 }
 
-export function WalletBalancePanel({
-  variant = "panel",
-}: {
-  variant?: "panel" | "tile";
-}) {
+export function WalletBalancePanel() {
   const { data, isFetching } = useQuery<BalanceResponse>({
     queryKey: ["wallet-balance"],
     queryFn: async () => {
@@ -64,163 +53,124 @@ export function WalletBalancePanel({
 
   const balanceS = data?.balance?.formatted ?? 0;
   const usd = data?.usd?.value ?? 0;
-  const animS = useCountUp(balanceS);
   const animUsd = useCountUp(usd);
   const progress = Math.min(1, (usd || 0) / NEXT_PAYOUT_THRESHOLD_USD);
   const remaining = Math.max(0, NEXT_PAYOUT_THRESHOLD_USD - (usd || 0));
 
-  const isTile = variant === "tile";
-
   return (
-    <div className={`vc-panel ${isTile ? "" : "vc-scan"} vc-rise-2`}>
-      <div className="vc-panel__strip vc-panel__strip--mag">
-        <span
-          className="vc-mono vc-caps"
-          style={{ fontSize: 11, color: "var(--vc-magenta-500)" }}
-        >
-          CHARITY WALLET // LIVE
+    <div className="ol-card">
+      <div className="ol-card__header">
+        <span className="ol-eyebrow" style={{ color: "var(--ol-persimmon)" }}>
+          Charity wallet · live
         </span>
-        <span className="ml-auto vc-chip vc-chip--live">
-          <span className="vc-chip__dot vc-blink" />
-          {isFetching ? "SYNCING" : "ONLINE"}
+        <span style={{ marginLeft: "auto" }}>
+          <span className="ol-pill ol-pill--live">
+            <span className={`ol-pill__dot ${isFetching ? "ol-pulse" : ""}`} />
+            {isFetching ? "Syncing" : "Online"}
+          </span>
         </span>
       </div>
 
-      <div className="px-5 py-5">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <div>
-            <div
-              className="vc-mono"
-              style={{
-                fontSize: 10,
-                letterSpacing: "0.22em",
-                color: "var(--vc-text-mute)",
-                textTransform: "uppercase",
-              }}
-            >
-              FEES ACCRUED
-            </div>
-            <div
-              className="vc-numbig"
-              style={{
-                fontSize: "clamp(36px, 6vw, 56px)",
-                color: "var(--vc-cyan-500)",
-                textShadow: "0 0 24px var(--vc-cyan-glow)",
-                lineHeight: 1,
-              }}
-            >
-              ${animUsd.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </div>
-          </div>
-          <div className="ml-auto text-right">
-            <div
-              className="vc-mono"
-              style={{
-                fontSize: 10,
-                letterSpacing: "0.22em",
-                color: "var(--vc-text-mute)",
-                textTransform: "uppercase",
-              }}
-            >
-              NATIVE S
-            </div>
-            <div
-              className="vc-numbig"
-              style={{
-                fontSize: 22,
-                color: "var(--vc-magenta-500)",
-                lineHeight: 1,
-              }}
-            >
-              {animS.toLocaleString("en-US", {
-                minimumFractionDigits: 4,
-                maximumFractionDigits: 4,
-              })}
-            </div>
-          </div>
+      <div className="ol-card__body">
+        <div className="ol-eyebrow" style={{ marginBottom: 4 }}>
+          Fees accrued · this cycle
+        </div>
+        <div
+          className="ol-serif ol-numbig"
+          style={{
+            fontSize: "clamp(40px, 9vw, 72px)",
+            color: "var(--ol-text)",
+            lineHeight: 0.95,
+          }}
+        >
+          $
+          {animUsd.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </div>
+        <div
+          className="ol-mono"
+          style={{
+            marginTop: 8,
+            fontSize: 13,
+            color: "var(--ol-text-3)",
+          }}
+        >
+          {balanceS.toLocaleString("en-US", {
+            minimumFractionDigits: 4,
+            maximumFractionDigits: 4,
+          })}{" "}
+          S native ·{" "}
+          {data?.usd?.price != null
+            ? `$${data.usd.price.toFixed(4)} / S`
+            : "price unavailable"}
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-5">
+        {/* Progress */}
+        <div style={{ marginTop: 20 }}>
           <div
-            className="vc-mono flex justify-between mb-1.5"
             style={{
-              fontSize: 10,
-              letterSpacing: "0.18em",
-              color: "var(--vc-text-mute)",
-              textTransform: "uppercase",
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 12,
+              color: "var(--ol-text-3)",
+              marginBottom: 8,
             }}
           >
             <span>
-              Progress to next payout
+              <strong style={{ color: "var(--ol-text-2)" }}>
+                {(progress * 100).toFixed(1)}%
+              </strong>{" "}
+              to next community vote
             </span>
-            <span style={{ color: "var(--vc-cyan-500)" }}>
-              {(progress * 100).toFixed(1)}%
+            <span className="ol-mono">
+              ${remaining.toLocaleString("en-US", { maximumFractionDigits: 0 })}{" "}
+              left
             </span>
           </div>
-          <div className="vc-progress">
+          <div className="ol-progress">
             <div
-              className="vc-progress__fill"
+              className="ol-progress__fill"
               style={{ transform: `scaleX(${progress})` }}
             />
           </div>
           <div
-            className="vc-mono mt-2 flex justify-between"
+            className="ol-mono"
             style={{
-              fontSize: 10,
-              color: "var(--vc-text-faint)",
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
+              marginTop: 8,
+              fontSize: 11,
+              color: "var(--ol-text-4)",
             }}
           >
-            <span>
-              ${remaining.toLocaleString("en-US", { maximumFractionDigits: 0 })} to threshold
-            </span>
-            <span>
-              Threshold ${NEXT_PAYOUT_THRESHOLD_USD.toLocaleString()} · provisional
-            </span>
+            Threshold ${NEXT_PAYOUT_THRESHOLD_USD.toLocaleString()} ·
+            provisional, community will set the real number
           </div>
         </div>
+      </div>
 
-        {/* Address + source */}
-        <div
-          className="mt-5 flex flex-wrap items-center gap-2 vc-mono"
-          style={{
-            paddingTop: 14,
-            borderTop: "1px solid var(--vc-line)",
-            fontSize: 10,
-            letterSpacing: "0.14em",
-            color: "var(--vc-text-mute)",
-            textTransform: "uppercase",
-          }}
+      <div className="ol-card__footer">
+        <a
+          href={`https://sonicscan.org/address/${CHARITY_WALLET}`}
+          target="_blank"
+          rel="noreferrer"
+          style={{ color: "var(--ol-jade)" }}
         >
-          <a
-            href={`https://sonicscan.org/address/${CHARITY_WALLET}`}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "var(--vc-cyan-500)" }}
-          >
-            {CHARITY_WALLET.slice(0, 8)}…{CHARITY_WALLET.slice(-6)} ↗
-          </a>
-          <span style={{ color: "var(--vc-text-faint)" }}>·</span>
-          <span>SONIC // CHAIN 146</span>
-          <span style={{ color: "var(--vc-text-faint)" }}>·</span>
-          <span>
-            S @ ${data?.usd?.price?.toFixed(4) ?? "—"}
-            {data?.usd?.source && ` (${data.usd.source})`}
+          {CHARITY_WALLET.slice(0, 10)}…{CHARITY_WALLET.slice(-6)} ↗
+        </a>
+        <span style={{ color: "var(--ol-text-4)" }}>·</span>
+        <span>Sonic · chain 146</span>
+        {data?.usd?.source && (
+          <>
+            <span style={{ color: "var(--ol-text-4)" }}>·</span>
+            <span>price {data.usd.source}</span>
+          </>
+        )}
+        {data?.error && (
+          <span style={{ marginLeft: "auto", color: "var(--ol-honey)" }}>
+            ⚠ {data.error}
           </span>
-          {data?.error && (
-            <span
-              className="ml-auto"
-              style={{ color: "var(--vc-amber-500)" }}
-            >
-              ⚠ {data.error}
-            </span>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

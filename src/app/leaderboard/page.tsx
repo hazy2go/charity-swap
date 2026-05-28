@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatPoints } from "@/lib/points";
+import { TopBar } from "@/components/TopBar";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -59,296 +60,241 @@ function shortAddr(a: string) {
   return `${a.slice(0, 6)}…${a.slice(-4)}`;
 }
 
-function medal(rank: number) {
-  if (rank === 1) return "01 ◆";
-  if (rank === 2) return "02 ◇";
-  if (rank === 3) return "03 ◈";
+function rankPrefix(rank: number) {
   return String(rank).padStart(2, "0");
 }
 
 function rankColor(rank: number) {
-  if (rank === 1) return "var(--vc-yellow)";
-  if (rank === 2) return "var(--vc-cyan)";
-  if (rank === 3) return "var(--vc-magenta)";
-  return "var(--vc-text-mute)";
+  if (rank === 1) return "var(--ol-persimmon)";
+  if (rank === 2) return "var(--ol-jade)";
+  if (rank === 3) return "var(--ol-honey)";
+  return "var(--ol-text-3)";
 }
 
 export default async function LeaderboardPage() {
   const { rows, totals, error } = await loadLeaderboard();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <SubTopBar active="leaderboard" />
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <TopBar active="leaderboard" />
 
-      <main className="flex-1 relative px-4 sm:px-8 py-10">
-        <div className="max-w-[1080px] mx-auto vc-rise">
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span className="vc-numplate">TYPE-LB.02</span>
-            <span className="vc-chip vc-chip--live">
-              <span className="vc-chip__dot vc-blink" />
-              LIVE // READS FROM SUPABASE
-            </span>
-          </div>
-
-          <h1
-            className="vc-display"
-            style={{
-              fontWeight: 800,
-              fontSize: "clamp(40px, 6vw, 72px)",
-              lineHeight: 0.92,
-              letterSpacing: "-0.02em",
-              color: "var(--vc-text)",
-            }}
-          >
-            LEADER<span style={{ color: "var(--vc-cyan)" }}>.</span>
-            <br />
-            <span style={{ color: "var(--vc-magenta)" }}>BOARD</span>
-            <span style={{ color: "var(--vc-text-mute)", fontSize: "0.4em" }}>{" // TOP 100"}</span>
-          </h1>
-
-          {/* Totals strip */}
-          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Stat label="WALLETS" value={totals.walletCount} tone="cyan" />
-            <Stat label="SWAPS"   value={totals.swapCount}   tone="magenta" />
-            <Stat
-              label="VOLUME USD"
-              value={`$${totals.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
-              tone="yellow"
-            />
-            <Stat
-              label="POINTS"
-              value={formatPoints(totals.totalPoints)}
-              tone="green"
-            />
-          </div>
-
-          {/* Body */}
-          <div className="mt-6 vc-panel">
-            <div className="vc-panel__strip">
+      <main style={{ flex: 1 }} className="ol-section">
+        <div className="ol-container">
+          <div className="ol-rise" style={{ maxWidth: 920, marginInline: "auto" }}>
+            <p className="ol-eyebrow" style={{ marginBottom: 14 }}>
               <span
-                className="vc-mono vc-caps"
-                style={{ fontSize: 11, color: "var(--vc-cyan)" }}
-              >
-                LEDGER // RANKED BY POINTS
-              </span>
-              <span
-                className="ml-auto vc-mono"
                 style={{
-                  fontSize: 10,
-                  color: "var(--vc-text-mute)",
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
+                  display: "inline-block",
+                  width: 24,
+                  height: 1,
+                  background: "var(--ol-jade)",
+                  marginRight: 10,
+                  verticalAlign: "middle",
                 }}
-              >
-                {rows.length} entr{rows.length === 1 ? "y" : "ies"}
-              </span>
+              />
+              Top 100 · ranked by points · live from Supabase
+            </p>
+            <h1 className="ol-h1" style={{ marginBottom: 12 }}>
+              Leaderboard.
+            </h1>
+            <p className="ol-lede" style={{ maxWidth: 580 }}>
+              Every confirmed swap earns points proportional to its USD value
+              at submit time. The points-to-USD ratio will be set by community
+              vote — for now, <strong style={{ color: "var(--ol-text)" }}>1 pt = $1 swapped</strong>.
+            </p>
+
+            {/* Totals */}
+            <div
+              className="ol-data-band"
+              style={{
+                marginTop: 28,
+                gridTemplateColumns: "repeat(2, 1fr)",
+              }}
+            >
+              <Stat label="Wallets" value={totals.walletCount} />
+              <Stat label="Swaps" value={totals.swapCount} />
+              <Stat
+                label="Volume USD"
+                value={`$${totals.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              />
+              <Stat label="Points" value={formatPoints(totals.totalPoints)} highlight />
             </div>
 
-            <div className="px-4 sm:px-6 py-4 overflow-x-auto">
+            {/* Body */}
+            <div style={{ marginTop: 36 }}>
               {error ? (
                 <div
-                  className="vc-readout"
                   style={{
-                    display: "block",
-                    color: "var(--vc-magenta)",
-                    borderColor: "var(--vc-magenta)",
+                    padding: 16,
+                    border: "1px solid rgba(232,100,60,0.4)",
+                    background: "var(--ol-persimmon-soft)",
+                    color: "var(--ol-persimmon)",
+                    borderRadius: "var(--ol-r-lg)",
                   }}
                 >
-                  <b className="vc-mono">ERR //</b> {error}
-                  <div
-                    className="vc-mono mt-2"
-                    style={{ fontSize: 11, color: "var(--vc-text-mute)" }}
-                  >
-                    DATABASE_URL likely unset, or Supabase offline.
-                  </div>
+                  <strong>Error · </strong>
+                  {error}
                 </div>
               ) : rows.length === 0 ? (
                 <div
-                  className="vc-readout"
-                  style={{
-                    display: "block",
-                    padding: "32px 16px",
-                    textAlign: "center",
-                  }}
+                  className="ol-card"
+                  style={{ padding: "44px 24px", textAlign: "center" }}
                 >
                   <div
-                    className="vc-display"
+                    className="ol-serif"
                     style={{
-                      fontSize: 32,
-                      color: "var(--vc-text-faint)",
-                      letterSpacing: "0.06em",
+                      fontSize: 24,
+                      color: "var(--ol-text)",
+                      marginBottom: 8,
                     }}
                   >
-                    ◍
+                    No swaps logged yet.
                   </div>
-                  <div
-                    className="vc-display mt-2"
-                    style={{ fontSize: 16, color: "var(--vc-text)" }}
+                  <p
+                    className="ol-body"
+                    style={{ fontSize: 14, color: "var(--ol-text-3)" }}
                   >
-                    NO SWAPS LOGGED YET
-                  </div>
-                  <div
-                    className="vc-mono mt-2"
-                    style={{
-                      fontSize: 11,
-                      color: "var(--vc-text-mute)",
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    Wired and listening. First confirmed swap lands here.
-                  </div>
+                    The ledger is wired up and listening. The first confirmed
+                    swap on the dapp will appear here.
+                  </p>
                 </div>
               ) : (
                 <>
-                  {/* Mobile: card rows */}
-                  <div className="sm:hidden flex flex-col gap-2">
+                  {/* Mobile card list */}
+                  <div className="sm:hidden">
                     {rows.map((r) => (
-                      <div key={r.wallet} className="vc-row-card">
-                        <div className="flex items-baseline justify-between">
+                      <div key={r.wallet} className="ol-row-card">
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "baseline",
+                            justifyContent: "space-between",
+                          }}
+                        >
                           <span
-                            className="vc-display"
+                            className="ol-serif"
                             style={{
+                              fontSize: 22,
+                              fontWeight: 600,
                               color: rankColor(r.rank),
-                              fontWeight: 700,
-                              fontSize: 16,
-                              letterSpacing: "0.04em",
                             }}
                           >
-                            {medal(r.rank)}
+                            {rankPrefix(r.rank)}
                           </span>
                           <span
-                            className="vc-mono"
+                            className="ol-mono"
                             style={{
-                              fontSize: 12,
-                              color: "var(--vc-cyan-500)",
-                              fontWeight: 700,
+                              fontSize: 14,
+                              color: "var(--ol-persimmon)",
                             }}
                           >
-                            {formatPoints(r.totalPoints)} PTS
+                            {formatPoints(r.totalPoints)} pts
                           </span>
                         </div>
                         <div
-                          className="vc-mono"
-                          style={{ fontSize: 13, color: "var(--vc-text)" }}
+                          className="ol-mono"
+                          style={{
+                            fontSize: 13,
+                            color: "var(--ol-text)",
+                          }}
                         >
                           {shortAddr(r.wallet)}
                         </div>
                         <div
-                          className="vc-mono flex items-center justify-between"
                           style={{
-                            fontSize: 11,
-                            color: "var(--vc-text-mute)",
-                            letterSpacing: "0.08em",
-                            textTransform: "uppercase",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            fontSize: 12,
+                            color: "var(--ol-text-3)",
                           }}
                         >
-                          <span>{r.swapCount} swap{r.swapCount === 1 ? "" : "s"}</span>
                           <span>
-                            ${r.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            {r.swapCount} swap{r.swapCount === 1 ? "" : "s"}
+                          </span>
+                          <span>
+                            ${r.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                            volume
                           </span>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Tablet+ : table */}
-                  <table className="vc-table min-w-[640px] hidden sm:table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Wallet</th>
-                      <th className="text-right">Swaps</th>
-                      <th className="text-right">Volume</th>
-                      <th className="text-right">Points</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((r) => (
-                      <tr key={r.wallet}>
-                        <td>
-                          <span
-                            className="vc-mono"
-                            style={{
-                              color: rankColor(r.rank),
-                              letterSpacing: "0.06em",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {medal(r.rank)}
-                          </span>
-                        </td>
-                        <td className="vc-mono">{shortAddr(r.wallet)}</td>
-                        <td className="vc-mono text-right">{r.swapCount}</td>
-                        <td className="vc-mono text-right">
-                          ${r.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        </td>
-                        <td
-                          className="vc-mono text-right"
-                          style={{ color: "var(--vc-cyan)", fontWeight: 700 }}
-                        >
-                          {formatPoints(r.totalPoints)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  {/* Tablet+ table */}
+                  <div
+                    className="ol-card hidden sm:block"
+                    style={{ overflow: "auto" }}
+                  >
+                    <table className="ol-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: 64 }}>#</th>
+                          <th>Wallet</th>
+                          <th style={{ textAlign: "right" }}>Swaps</th>
+                          <th style={{ textAlign: "right" }}>Volume</th>
+                          <th style={{ textAlign: "right" }}>Points</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((r) => (
+                          <tr key={r.wallet}>
+                            <td
+                              className="ol-serif"
+                              style={{
+                                fontSize: 18,
+                                fontWeight: 600,
+                                color: rankColor(r.rank),
+                              }}
+                            >
+                              {rankPrefix(r.rank)}
+                            </td>
+                            <td className="ol-mono" style={{ color: "var(--ol-text)" }}>
+                              {shortAddr(r.wallet)}
+                            </td>
+                            <td className="ol-mono" style={{ textAlign: "right" }}>
+                              {r.swapCount}
+                            </td>
+                            <td className="ol-mono" style={{ textAlign: "right" }}>
+                              ${r.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            </td>
+                            <td
+                              className="ol-mono"
+                              style={{
+                                textAlign: "right",
+                                color: "var(--ol-persimmon)",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {formatPoints(r.totalPoints)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </>
               )}
             </div>
 
             <div
-              className="flex flex-wrap items-center gap-3 px-4 sm:px-6 py-3"
-              style={{
-                borderTop: "1px solid var(--vc-line-hi)",
-                background: "var(--vc-ink)",
-              }}
+              className="flex flex-wrap gap-2"
+              style={{ marginTop: 32, justifyContent: "flex-end" }}
             >
-              <span
-                className="vc-mono"
-                style={{
-                  fontSize: 10,
-                  color: "var(--vc-text-mute)",
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                }}
+              <Link href="/" className="ol-btn ol-btn--ghost ol-btn--sm">
+                Back to swap
+              </Link>
+              <Link href="/charities" className="ol-btn ol-btn--ghost ol-btn--sm">
+                Charities
+              </Link>
+              <a
+                href="https://github.com/hazy2go/swaps-without-borders/blob/main/prisma/schema.prisma"
+                target="_blank"
+                rel="noreferrer"
+                className="ol-btn ol-btn--ghost ol-btn--sm"
               >
-                POINTS FORMULA
-              </span>
-              <span
-                className="vc-mono"
-                style={{ fontSize: 12, color: "var(--vc-text)" }}
-              >
-                1 PT = $1 SWAPPED
-              </span>
-              <span
-                className="ml-auto vc-mono"
-                style={{
-                  fontSize: 10,
-                  color: "var(--vc-text-mute)",
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Final ratio: Day 11 community vote
-              </span>
+                View schema.prisma ↗
+              </a>
             </div>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-2 justify-end">
-            <Link href="/" className="vc-btn vc-btn--ghost">
-              ← Swap
-            </Link>
-            <Link href="/charities" className="vc-btn vc-btn--ghost">
-              ◯ Charities
-            </Link>
-            <a
-              href="https://github.com/hazy2go/swaps-without-borders/blob/main/prisma/schema.prisma"
-              target="_blank"
-              rel="noreferrer"
-              className="vc-btn vc-btn--ghost"
-            >
-              ⌬ schema.prisma ↗
-            </a>
           </div>
         </div>
       </main>
@@ -356,81 +302,23 @@ export default async function LeaderboardPage() {
   );
 }
 
-function SubTopBar({ active }: { active: "leaderboard" | "charities" }) {
-  return (
-    <header className="vc-topbar">
-      <Link href="/" className="vc-topbar__brand" style={{ textDecoration: "none" }}>
-        <span className="vc-topbar__brand-mark">◢</span>
-        <span className="vc-topbar__title">
-          Swaps <span style={{ color: "var(--vc-yellow)" }}>{"//"}</span> Without Borders
-        </span>
-      </Link>
-      <nav className="vc-topbar__nav flex">
-        <Link href="/">
-          <span className="md:hidden">[01]</span>
-          <span className="hidden md:inline">[01] Swap</span>
-        </Link>
-        <Link href="/leaderboard" className={active === "leaderboard" ? "is-active" : ""}>
-          <span className="md:hidden">[02]</span>
-          <span className="hidden md:inline">[02] Leaderboard</span>
-        </Link>
-        <Link href="/charities" className={active === "charities" ? "is-active" : ""}>
-          <span className="md:hidden">[03]</span>
-          <span className="hidden md:inline">[03] Charities</span>
-        </Link>
-      </nav>
-      <div className="vc-topbar__tail">
-        <span className="vc-chip vc-chip--live">
-          <span className="vc-chip__dot vc-blink" />
-          MAINNET
-        </span>
-      </div>
-    </header>
-  );
-}
-
 function Stat({
   label,
   value,
-  tone,
+  highlight,
 }: {
   label: string;
   value: string | number;
-  tone: "cyan" | "magenta" | "yellow" | "green";
+  highlight?: boolean;
 }) {
-  const color =
-    tone === "cyan"
-      ? "var(--vc-cyan)"
-      : tone === "magenta"
-        ? "var(--vc-magenta)"
-        : tone === "yellow"
-          ? "var(--vc-yellow)"
-          : "var(--vc-green)";
   return (
-    <div className="vc-panel vc-panel--cut">
-      <div className="px-4 py-3">
-        <div
-          className="vc-mono"
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.2em",
-            color: "var(--vc-text-mute)",
-            textTransform: "uppercase",
-          }}
-        >
-          [{label}]
-        </div>
-        <div
-          className="vc-display mt-1"
-          style={{
-            fontSize: 24,
-            fontWeight: 700,
-            color,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {value}
-        </div>
+    <div className="ol-data-band__cell">
+      <div className="ol-data-band__label">{label}</div>
+      <div
+        className="ol-data-band__value"
+        style={highlight ? { color: "var(--ol-persimmon)" } : undefined}
+      >
+        {value}
       </div>
     </div>
   );

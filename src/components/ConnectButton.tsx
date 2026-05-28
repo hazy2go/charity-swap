@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   useXAccount,
   useXConnect,
@@ -13,21 +14,27 @@ import type { ChainType } from "@sodax/types";
 
 const PREFERRED = ["hana", "metamask", "rabby"] as const;
 
-const ECOSYSTEMS: { type: ChainType; label: string; code: string }[] = [
-  { type: "EVM",       label: "EVM",       code: "01" },
-  { type: "SOLANA",    label: "Solana",    code: "02" },
-  { type: "SUI",       label: "Sui",       code: "03" },
-  { type: "INJECTIVE", label: "Injective", code: "04" },
-  { type: "ICON",      label: "ICON",      code: "05" },
-  { type: "STELLAR",   label: "Stellar",   code: "06" },
-  { type: "NEAR",      label: "NEAR",      code: "07" },
+const ECOSYSTEMS: { type: ChainType; label: string }[] = [
+  { type: "EVM",       label: "EVM" },
+  { type: "SOLANA",    label: "Solana" },
+  { type: "SUI",       label: "Sui" },
+  { type: "INJECTIVE", label: "Injective" },
+  { type: "ICON",      label: "ICON" },
+  { type: "STELLAR",   label: "Stellar" },
+  { type: "NEAR",      label: "NEAR" },
 ];
 
-export function ConnectButton() {
+export function ConnectButton({
+  block = false,
+}: {
+  /** Force full-width button (used in mobile hero) */
+  block?: boolean;
+}) {
   const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const accounts: (string | undefined)[] = [
+  const accounts = [
     useXAccount({ xChainType: "EVM" }).address,
     useXAccount({ xChainType: "SOLANA" }).address,
     useXAccount({ xChainType: "SUI" }).address,
@@ -37,131 +44,175 @@ export function ConnectButton() {
     useXAccount({ xChainType: "NEAR" }).address,
   ];
   const connectedCount = accounts.filter(Boolean).length;
+  const firstAddr = accounts.find(Boolean);
 
   useEffect(() => {
-    if (!open) return;
+    const mql = window.matchMedia("(max-width: 639px)");
+    const sync = () => setIsMobile(mql.matches);
+    sync();
+    mql.addEventListener("change", sync);
+    return () => mql.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (!open || isMobile) return;
     let armed = false;
-    const arm = setTimeout(() => {
-      armed = true;
-    }, 0);
-    const onMouseDown = (e: MouseEvent) => {
+    const arm = setTimeout(() => { armed = true; }, 0);
+    const onDown = (e: MouseEvent) => {
       if (!armed) return;
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onMouseDown);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
       clearTimeout(arm);
-      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, isMobile]);
+
+  useEffect(() => {
+    if (!(open && isMobile)) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, isMobile]);
+
+  const triggerLabel =
+    connectedCount === 0
+      ? "Connect wallet"
+      : firstAddr
+        ? `${firstAddr.slice(0, 6)}…${firstAddr.slice(-4)}`
+        : `${connectedCount} connected`;
+
+  const Sheet = (
+    <>
+      {isMobile && (
+        <div
+          className="ol-picker-pop__backdrop"
+          onClick={() => setOpen(false)}
+          aria-hidden
+        />
+      )}
+      <div className="ol-picker-pop" role="dialog" aria-modal="true">
+        <div className="ol-picker-pop__handle" aria-hidden />
+        <div
+          style={{
+            padding: "8px 18px 14px",
+            borderBottom: "1px solid var(--ol-line)",
+          }}
+        >
+          <div className="ol-eyebrow" style={{ marginBottom: 4 }}>
+            Wallets
+          </div>
+          <div
+            className="ol-serif"
+            style={{ fontSize: 20, color: "var(--ol-text)" }}
+          >
+            Connect a wallet
+          </div>
+          <p className="ol-body" style={{ marginTop: 4, fontSize: 13 }}>
+            One per ecosystem. Cross-chain swaps need both sides.
+          </p>
+        </div>
+        <div className="ol-picker-pop__list">
+          {ECOSYSTEMS.map((e) => (
+            <WalletGroup
+              key={e.type}
+              xChainType={e.type}
+              label={e.label}
+              onDone={() => setOpen(false)}
+            />
+          ))}
+        </div>
+      </div>
+    </>
+  );
 
   return (
-    <div className="relative w-full" ref={wrapperRef}>
+    <div
+      ref={wrapperRef}
+      className={`relative ${block ? "w-full" : "inline-block"}`}
+    >
       <button
         type="button"
-        className={`vc-btn ${connectedCount > 0 ? "vc-btn--ghost" : "vc-btn--primary"} w-full justify-between`}
+        className={`ol-btn ${connectedCount > 0 ? "ol-btn--ghost" : "ol-btn--primary"} ${block ? "ol-btn--block" : ""}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-haspopup="menu"
+        aria-haspopup="dialog"
       >
-        <span className="flex items-center gap-2">
-          <span
-            style={{
-              display: "inline-block",
-              width: 10,
-              height: 10,
-              background:
-                connectedCount > 0 ? "var(--vc-green)" : "var(--vc-ink)",
-              boxShadow:
-                connectedCount > 0
-                  ? "0 0 8px var(--vc-green)"
-                  : "none",
-            }}
-          />
-          {connectedCount > 0
-            ? `WALLETS // ${connectedCount} ONLINE`
-            : "▶ CONNECT WALLET"}
-        </span>
-        <span
-          className="vc-mono"
-          style={{ fontSize: 11, opacity: 0.8 }}
-        >
-          {open ? "▲" : "▼"}
-        </span>
+        {connectedCount > 0 ? (
+          <>
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 999,
+                background: "var(--ol-sage)",
+                boxShadow: "0 0 8px var(--ol-sage)",
+              }}
+            />
+            {triggerLabel}
+            <span
+              className="ol-mono"
+              style={{ fontSize: 12, color: "var(--ol-text-3)", marginLeft: 4 }}
+            >
+              · {connectedCount}/{ECOSYSTEMS.length}
+            </span>
+          </>
+        ) : (
+          <>{triggerLabel}</>
+        )}
       </button>
 
-      {open && (
+      {open && !isMobile && (
         <div
-          className="absolute z-50 left-0 right-0 top-full mt-2 vc-panel"
-          role="menu"
+          className="ol-picker-pop"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            right: 0,
+            left: "auto",
+            width: 360,
+            maxHeight: 480,
+          }}
+          role="dialog"
         >
-          <div className="vc-panel__strip">
-            <span
-              className="vc-mono vc-caps"
-              style={{ fontSize: 11, color: "var(--vc-cyan)" }}
-            >
-              WALLETS // ECOSYSTEMS
-            </span>
-            <span
-              className="ml-auto vc-mono"
-              style={{
-                fontSize: 10,
-                color: "var(--vc-text-mute)",
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-              }}
-            >
-              {connectedCount} / {ECOSYSTEMS.length} ONLINE
-            </span>
-          </div>
-
           <div
-            className="px-4 py-2 vc-mono"
             style={{
-              fontSize: 10,
-              color: "var(--vc-text-mute)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              borderBottom: "1px solid var(--vc-line)",
+              padding: "14px 18px",
+              borderBottom: "1px solid var(--ol-line)",
             }}
           >
-            One per ecosystem · both sides for cross-chain
+            <div className="ol-eyebrow" style={{ marginBottom: 4 }}>
+              Wallets · {connectedCount}/{ECOSYSTEMS.length}
+            </div>
+            <div className="ol-serif" style={{ fontSize: 18, color: "var(--ol-text)" }}>
+              Connect a wallet
+            </div>
           </div>
-
-          <div className="max-h-[60vh] overflow-y-auto">
+          <div className="ol-picker-pop__list">
             {ECOSYSTEMS.map((e) => (
               <WalletGroup
                 key={e.type}
                 xChainType={e.type}
                 label={e.label}
-                code={e.code}
+                onDone={() => setOpen(false)}
               />
             ))}
           </div>
-
-          <div
-            className="px-4 py-2 vc-mono flex items-center justify-between"
-            style={{
-              fontSize: 10,
-              color: "var(--vc-text-mute)",
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              borderTop: "1px solid var(--vc-line-hi)",
-              background: "var(--vc-ink)",
-            }}
-          >
-            <span>⊕ SODAX // all networks</span>
-            <span>SECURE LOCAL CONNECT</span>
-          </div>
         </div>
       )}
+      {open && isMobile && typeof document !== "undefined" &&
+        createPortal(Sheet, document.body)}
     </div>
   );
 }
@@ -169,11 +220,11 @@ export function ConnectButton() {
 function WalletGroup({
   xChainType,
   label,
-  code,
+  onDone,
 }: {
   xChainType: ChainType;
   label: string;
-  code: string;
+  onDone: () => void;
 }) {
   const raw = useXConnectors({ xChainType });
   const connectors =
@@ -189,107 +240,88 @@ function WalletGroup({
     : null;
 
   return (
-    <div style={{ borderBottom: "1px solid var(--vc-line)" }}>
+    <div style={{ borderTop: "1px solid var(--ol-line)" }}>
       <div
-        className="flex items-center justify-between px-3 pt-2 pb-1"
-        style={{ background: "var(--vc-ink-2)" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "10px 16px 6px",
+        }}
       >
         <span
-          className="vc-mono"
-          style={{
-            fontSize: 11,
-            letterSpacing: "0.2em",
-            color: "var(--vc-cyan)",
-            textTransform: "uppercase",
-            fontWeight: 700,
-          }}
+          className="ol-eyebrow"
+          style={{ color: "var(--ol-text-2)" }}
         >
-          [{code}] {label}
+          {label}
         </span>
         {short && (
-          <span className="flex items-center gap-2">
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span
-              className="vc-chip vc-chip--live"
-              style={{ fontSize: 9 }}
+              className="ol-mono"
+              style={{ fontSize: 12, color: "var(--ol-sage)" }}
             >
-              <span className="vc-chip__dot" /> {short}
+              ● {short}
             </span>
             <button
               onClick={() => disconnect({ xChainType })}
-              className="vc-btn vc-btn--ghost vc-btn--xs"
-              title={`Disconnect ${label}`}
               type="button"
+              className="ol-btn ol-btn--ghost ol-btn--sm"
+              style={{ height: 28, padding: "0 10px", fontSize: 12 }}
+              title={`Disconnect ${label}`}
             >
-              ✕
+              Disconnect
             </button>
           </span>
         )}
       </div>
-      <div className="flex flex-col pb-1">
+      <div style={{ paddingBottom: 8 }}>
         {connectors.map((c: IXConnector) => (
           <button
             key={c.id}
-            onClick={() => connect(c).catch(() => {})}
+            type="button"
+            onClick={() => connect(c).then(onDone).catch(() => {})}
             disabled={isPending}
-            className="group flex items-center gap-3 px-3 py-2 text-left disabled:opacity-50 transition-colors"
-            style={{
-              color: "var(--vc-text)",
-              fontFamily: "var(--font-body)",
-              fontSize: 14,
-            }}
-            role="menuitem"
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                "var(--vc-ink-3)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                "transparent";
-            }}
+            className="ol-picker-pop__item"
+            style={{ height: 52 }}
           >
             <span
               style={{
-                width: 28,
-                height: 28,
+                width: 32,
+                height: 32,
                 display: "grid",
                 placeItems: "center",
-                background: "var(--vc-ink-3)",
-                border: "1px solid var(--vc-line-hi)",
+                background: "var(--ol-s3)",
+                border: "1px solid var(--ol-line)",
+                borderRadius: 6,
+                flexShrink: 0,
               }}
             >
               {c.icon ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.icon} alt="" width={16} height={16} />
+                <img src={c.icon} alt="" width={18} height={18} />
               ) : (
-                <span
-                  className="vc-mono"
-                  style={{ color: "var(--vc-cyan)", fontSize: 14 }}
-                >
-                  ⌬
-                </span>
+                <span style={{ color: "var(--ol-jade)" }}>◇</span>
               )}
             </span>
-            <span className="flex-1">
-              <span style={{ fontWeight: 600 }}>{c.name}</span>
+            <span
+              className="ol-picker-pop__item__label"
+              style={{ fontSize: 14, fontWeight: 500 }}
+            >
+              {c.name}
               {!c.isInstalled && (
                 <span
-                  className="vc-mono ml-2"
+                  className="ol-mono"
                   style={{
-                    fontSize: 10,
-                    color: "var(--vc-text-mute)",
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
+                    marginLeft: 8,
+                    fontSize: 11,
+                    color: "var(--ol-text-3)",
+                    fontWeight: 400,
                   }}
                 >
                   · not installed
                 </span>
               )}
-            </span>
-            <span
-              className="vc-mono"
-              style={{ color: "var(--vc-cyan)", fontSize: 12 }}
-            >
-              ›
             </span>
           </button>
         ))}
