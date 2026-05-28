@@ -199,7 +199,60 @@ export default async function LeaderboardPage() {
                   </div>
                 </div>
               ) : (
-                <table className="vc-table min-w-[640px]">
+                <>
+                  {/* Mobile: card rows */}
+                  <div className="sm:hidden flex flex-col gap-2">
+                    {rows.map((r) => (
+                      <div key={r.wallet} className="vc-row-card">
+                        <div className="flex items-baseline justify-between">
+                          <span
+                            className="vc-display"
+                            style={{
+                              color: rankColor(r.rank),
+                              fontWeight: 700,
+                              fontSize: 16,
+                              letterSpacing: "0.04em",
+                            }}
+                          >
+                            {medal(r.rank)}
+                          </span>
+                          <span
+                            className="vc-mono"
+                            style={{
+                              fontSize: 12,
+                              color: "var(--vc-cyan-500)",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {formatPoints(r.totalPoints)} PTS
+                          </span>
+                        </div>
+                        <div
+                          className="vc-mono"
+                          style={{ fontSize: 13, color: "var(--vc-text)" }}
+                        >
+                          {shortAddr(r.wallet)}
+                        </div>
+                        <div
+                          className="vc-mono flex items-center justify-between"
+                          style={{
+                            fontSize: 11,
+                            color: "var(--vc-text-mute)",
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          <span>{r.swapCount} swap{r.swapCount === 1 ? "" : "s"}</span>
+                          <span>
+                            ${r.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tablet+ : table */}
+                  <table className="vc-table min-w-[640px] hidden sm:table">
                   <thead>
                     <tr>
                       <th>#</th>
@@ -239,6 +292,7 @@ export default async function LeaderboardPage() {
                     ))}
                   </tbody>
                 </table>
+                </>
               )}
             </div>
 

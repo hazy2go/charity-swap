@@ -22,11 +22,11 @@ export default function Home() {
       <main className="flex-1 relative">
         <DiagonalDecor />
 
-        <div className="relative max-w-[1280px] mx-auto px-4 sm:px-8 pt-10 sm:pt-14 md:pt-20 pb-16 grid lg:grid-cols-[1.05fr_minmax(440px,1fr)] gap-10 lg:gap-16 items-start">
+        <div className="relative max-w-[1280px] mx-auto px-4 sm:px-8 pt-6 sm:pt-14 md:pt-20 pb-10 sm:pb-16 grid lg:grid-cols-[1.05fr_minmax(440px,1fr)] gap-8 lg:gap-16 items-start">
           <Hero />
 
-          <div id="swap" className="scroll-mt-12 flex justify-center lg:justify-end vc-rise-2">
-            <div className="w-full max-w-[460px] flex flex-col items-center lg:items-end gap-4">
+          <div id="swap" className="scroll-mt-12 flex justify-center lg:justify-end vc-rise-2 w-full">
+            <div className="w-full sm:max-w-[460px] flex flex-col items-stretch lg:items-end gap-4">
               <ConnectButton />
               <SwapCard />
             </div>
@@ -124,7 +124,7 @@ function Hero() {
         className="vc-display"
         style={{
           fontWeight: 800,
-          fontSize: "clamp(48px, 9vw, 112px)",
+          fontSize: "clamp(40px, 11vw, 112px)",
           lineHeight: 0.9,
           letterSpacing: "-0.025em",
           color: "var(--vc-text)",
@@ -138,10 +138,10 @@ function Hero() {
       </h1>
 
       <p
-        className="mt-6 sm:mt-8 max-w-[520px]"
+        className="mt-5 sm:mt-8 max-w-[520px]"
         style={{
           fontFamily: "var(--font-body)",
-          fontSize: "clamp(16px, 1.45vw, 20px)",
+          fontSize: "clamp(15px, 1.45vw, 20px)",
           lineHeight: 1.45,
           color: "var(--vc-text-mute)",
           letterSpacing: "0.01em",

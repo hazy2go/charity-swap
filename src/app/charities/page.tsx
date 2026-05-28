@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { WalletBalancePanel } from "@/components/WalletBalancePanel";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -91,6 +92,11 @@ export default async function CharitiesPage() {
             points-weighted vote per cycle. Payout addresses are placeholders
             until winners are locked in.
           </p>
+
+          {/* Live wallet balance — see fees stacking in real time */}
+          <div className="mt-8">
+            <WalletBalancePanel />
+          </div>
 
           {/* Body */}
           <div className="mt-8">

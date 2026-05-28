@@ -32,9 +32,23 @@ const barlow = Barlow_Condensed({
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://swaps-without-borders.vercel.app"),
   title: "SWAPS // WITHOUT BORDERS — built in public on SODAX",
   description:
     "A cross-chain swap app where every fee goes to charity. Community votes the payouts. Built in public over two weeks on the SODAX SDK V2.",
+  openGraph: {
+    title: "SWAPS // WITHOUT BORDERS",
+    description:
+      "Cross-chain swaps · 0.1% partner fee · 100% to community-voted charity · mainnet on SODAX V2.",
+    siteName: "Swaps without Borders",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SWAPS // WITHOUT BORDERS",
+    description:
+      "Cross-chain swaps · 0.1% fee · 100% to charity · mainnet on SODAX V2.",
+  },
 };
 
 export default function RootLayout({

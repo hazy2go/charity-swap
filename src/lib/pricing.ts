@@ -21,6 +21,8 @@ const COIN_ID_BY_SYMBOL: Record<string, string> = {
   DAI: "dai",
   BNUSD: "balanced-dollar",
   SODA: "sodax", // CoinGecko id for SODAX governance token
+  S:    "sonic-3", // Sonic native token (rebrand of Fantom FTM)
+  WS:   "sonic-3", // wrapped S
   ETH: "ethereum",
   WETH: "weth",
   ETHB: "ethereum", // ETH on BNB Chain

@@ -24,6 +24,7 @@ import {
   type ChainKey,
 } from "@/lib/swap-tokens";
 import { formatPoints, DEFAULT_POINTS_PER_USD } from "@/lib/points";
+import { Picker, type PickerGroup } from "@/components/Picker";
 
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000" as const;
 
@@ -228,7 +229,7 @@ export function SwapCard() {
               : "Execute Swap";
 
   return (
-    <div className="w-full max-w-[460px] vc-rise-3">
+    <div className="w-full sm:max-w-[460px] vc-rise-3">
       <div className="vc-panel vc-scan">
         {/* Header strip */}
         <div className="vc-panel__strip">
@@ -481,6 +482,27 @@ export function SwapCard() {
   );
 }
 
+const CHAIN_GROUPS: PickerGroup[] = [
+  {
+    label: "EVM",
+    items: EVM_CHAINS.map((c) => ({
+      id: c.key,
+      label: c.label,
+      search: `${c.label} ${c.type}`,
+      badge: "EVM",
+    })),
+  },
+  {
+    label: "OTHER ECOSYSTEMS",
+    items: ALT_CHAINS.map((c) => ({
+      id: c.key,
+      label: c.label,
+      search: `${c.label} ${c.type}`,
+      badge: c.type,
+    })),
+  },
+];
+
 function ChainSelect({
   value,
   onChange,
@@ -488,23 +510,28 @@ function ChainSelect({
   value: ChainKey;
   onChange: (key: ChainKey) => void;
 }) {
+  const label = chainInfo(value)?.label ?? value;
   return (
-    <select
-      className="vc-select"
+    <Picker
       value={value}
-      onChange={(e) => onChange(e.target.value as ChainKey)}
-    >
-      <optgroup label="EVM">
-        {EVM_CHAINS.map((c) => (
-          <option key={c.key} value={c.key}>{c.label}</option>
-        ))}
-      </optgroup>
-      <optgroup label="OTHER ECOSYSTEMS">
-        {ALT_CHAINS.map((c) => (
-          <option key={c.key} value={c.key}>{c.label}</option>
-        ))}
-      </optgroup>
-    </select>
+      groups={CHAIN_GROUPS}
+      ariaLabel="Network"
+      triggerLabel={
+        <span className="flex items-center gap-2">
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              background: "var(--vc-cyan-500)",
+              boxShadow: "0 0 6px var(--vc-cyan-glow)",
+              display: "inline-block",
+            }}
+          />
+          {label}
+        </span>
+      }
+      onChange={(k) => onChange(k as ChainKey)}
+    />
   );
 }
 
@@ -518,18 +545,33 @@ function TokenSelect({
   onChange: (address: string) => void;
 }) {
   const tokens = tokensForChain(chain);
+  const selected = tokens.find((t) => t.address === value);
   return (
-    <select
-      className="vc-select"
+    <Picker
       value={value}
-      onChange={(e) => onChange(e.target.value)}
-    >
-      {tokens.map((t) => (
-        <option key={t.address} value={t.address}>
-          {t.symbol}
-        </option>
-      ))}
-    </select>
+      items={tokens.map((t) => ({
+        id: t.address,
+        label: t.symbol,
+        search: t.symbol,
+      }))}
+      ariaLabel="Token"
+      triggerLabel={
+        <span className="flex items-center gap-2">
+          <span
+            className="vc-display"
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "var(--vc-magenta-500)",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {selected?.symbol ?? "—"}
+          </span>
+        </span>
+      }
+      onChange={(addr) => onChange(addr)}
+    />
   );
 }
 

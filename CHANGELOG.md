@@ -5,6 +5,54 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 11 — Thu 2026-05-28 (cont. ×2) — VECTORHEART v.0.8 // design-department pass
+
+### Color science upgrade
+- Palette rewritten in **OKLCH** (perceptually uniform). Each accent now has a full tonal ramp (100 / 200 / 400 / 500 / 600 / 800) plus `*-soft` (tinted fill) and `*-glow` (shadow/halo) tokens
+- Three-tier ink elevation: `--vc-ink-0/1/2/3` actually mean depth now (each step lifts ~3 OKLCH luminance points + a hair warmer hue). Inset wells go *darker* than panels
+- Panels gain a subtle linear gradient + top-edge highlight (`::before`) implying overhead lighting, plus inset top-shadow and mid-tier elevation shadow
+- Glow tokens: `--vc-glow-cyan/magenta/green` for focus rings, hover halos, live pulses
+- Background: triple-layer atmosphere (slow magenta wash + cyan wash + halftone dots) that drifts 22px/60s. `prefers-reduced-motion` opts out
+
+### Forms — kill the native &lt;select&gt;
+- New **`<Picker>`** component (`src/components/Picker.tsx`) — searchable, keyboard-nav, grouped, portal-style popup. Custom-themed (cyan focus glow, magenta selected), `↑↓ ↵ esc` work, auto-search if &gt;8 items
+- SwapCard's two chain selects + two token selects now use `<Picker>`. Chain picker shows the chain type as a right-aligned badge (`EVM`, `SOLANA`, `SUI`, …). Token picker shows the symbol in magenta display type
+- New `vc-picker-*` primitives in globals.css: animated pop-in, sticky search input, hover/selected states
+
+### Live charity-wallet balance — **the demo magic**
+- New **`/api/wallet-balance`** route (Edge-cached 30s) — viem public client against Sonic mainnet RPC reads native S balance of `0x95A8…721AD`, multiplies by live CoinGecko S price
+- New **`<WalletBalancePanel>`** component renders on `/charities` with:
+  - **Animated count-up** to USD value (`requestAnimationFrame` ease-out-cubic tween)
+  - Native S balance secondary number
+  - **Progress bar** toward provisional $1,000 threshold (magenta → cyan gradient fill)
+  - Live "syncing/online" chip, sonicscan link, S price + source readout
+- Added `S` + `WS` to `src/lib/pricing.ts` CoinGecko id map (sonic-3)
+
+### OG / Twitter card
+- `src/app/opengraph-image.tsx` — 1200×630 Vectorheart card rendered via `next/og` (edge runtime). Brand mark, TYPE plate, massive SWAPS // WITHOUT . BORDERS headline, yellow `0.1% → CHARITY` chip with magenta drop-shadow, halftone dot grid, magenta+cyan diagonal stripes
+- `src/app/twitter-image.tsx` — re-exports the OG generator for `summary_large_image`
+- Metadata in `layout.tsx` wired with `openGraph` + `twitter` blocks and `metadataBase`
+
+### Mobile pass
+- Mobile-friendly `<select>` replacement (Picker is responsive, fits in 100% width)
+- SwapCard goes full-width on phones (was max-w-460 always)
+- Hero headline minimum bumped down to 40px (was 48px) so it doesn't overflow at 320px
+- Leaderboard table → **card list** under `sm` breakpoint; each card shows rank + address + swap count + USD volume + points
+- Topbar nav horizontal-scrolls cleanly on phones (no scrollbar shown), nav-item padding tightened on mobile
+
+### Animations
+- `vc-rise` family now has 4 stagger steps (80ms / 160ms / 240ms / 320ms) + a subtle blur(2px) → 0 reveal
+- `vc-scan` sweep on key panels (swap card, wallet balance) for a cyan beam every 7s
+- Buttons: top-edge inner-highlight, hover translate-Y, primary buttons get a cyan halo glow on hover
+- `.vc-chip__dot` has a real `box-shadow` glow so live indicators actually look hot
+
+### Tooling
+- Wired **`@21st-dev/magic` MCP** at user scope for design inspiration / component generation
+- Saved memory `feedback-always-push` — commit+push are one step on this repo
+- Saved memory `project-vectorheart-ui` updated with v0.8 deltas
+
+---
+
 ## Day 11 — Thu 2026-05-28 (cont.) — ship-prep: live preview price + mobile nav
 
 - **`/api/price?symbol=…`** (new) — public, GET-only, returns the same CoinGecko price the server uses for the points ledger. 30s public cache.
