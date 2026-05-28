@@ -9,7 +9,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { RegMark, Slash } from "@/components/hud";
 
 const ADMIN_WALLET =
-  (process.env.NEXT_PUBLIC_ADMIN_WALLET ?? "0x9aA8f40bFf01E953fE278179C3888AE8195b839B").toLowerCase();
+  (process.env.NEXT_PUBLIC_ADMIN_WALLET ?? "0x9aa8f40bff01e953fe278179c3888ae8195b839b").toLowerCase();
 
 type Charity = {
   id: string;
