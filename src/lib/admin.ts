@@ -1,15 +1,14 @@
 import { recoverMessageAddress, isAddress, getAddress } from "viem";
 
 /**
- * Admin wallet — Hazy's wallet, hardcoded via env var.
+ * Admin wallet — Hazy's wallet, hardcoded.
  * Used for: opening new vote rounds, closing rounds, declaring winners.
  *
- * Set NEXT_PUBLIC_ADMIN_WALLET in Vercel + .env.local.
- * Falls back to a placeholder during dev so the type system is happy.
+ * Override via NEXT_PUBLIC_ADMIN_WALLET env var if rotating.
  */
 const RAW_ADMIN =
   process.env.NEXT_PUBLIC_ADMIN_WALLET ??
-  "0x0000000000000000000000000000000000000000";
+  "0x9aA8f40bFf01E953fE278179C3888AE8195b839B";
 
 if (!isAddress(RAW_ADMIN)) {
   throw new Error(`Invalid NEXT_PUBLIC_ADMIN_WALLET: ${RAW_ADMIN}`);
