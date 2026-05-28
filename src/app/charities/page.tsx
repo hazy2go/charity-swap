@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { WalletBalancePanel } from "@/components/WalletBalancePanel";
 import { TopBar } from "@/components/TopBar";
+import { SiteFooter } from "@/components/SiteFooter";
 import { RegMark, Slash, Reticle } from "@/components/hud";
 
 export const dynamic = "force-dynamic";
@@ -110,6 +111,8 @@ export default async function CharitiesPage() {
           </div>
         </div>
       </main>
+
+      <SiteFooter />
     </div>
   );
 }

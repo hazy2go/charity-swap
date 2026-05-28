@@ -265,7 +265,7 @@ export function SwapCard() {
         </span>
       </div>
 
-      <div className="vh-card__body" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="vh-card__body" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {/* FROM */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -366,27 +366,25 @@ export function SwapCard() {
           </div>
         </div>
 
-        {/* Charity */}
+        {/* Charity rewards strip — compact */}
         <div
           style={{
             background: "var(--vh-magenta-soft)",
             border: "1px solid var(--vh-magenta-soft)",
             borderRadius: "var(--vh-r)",
-            padding: 14,
+            padding: "10px 12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+            flexWrap: "wrap",
+            rowGap: 6,
           }}
         >
-          <div className="vh-eyebrow" style={{ color: "var(--vh-magenta-500)", marginBottom: 8 }}>
-            Charity rewards · live
-          </div>
+          <span className="vh-eyebrow" style={{ color: "var(--vh-magenta-500)" }}>
+            Charity rewards
+          </span>
           <PointsPreview amountRaw={parsedAmount} decimals={src.decimals} symbol={src.symbol} />
-          <p
-            className="vh-body"
-            style={{ marginTop: 8, fontSize: 12, color: "var(--vh-text-3)" }}
-          >
-            Every swap routes <strong style={{ color: "var(--vh-magenta-500)" }}>0.1%</strong> to a
-            public charity wallet on Sonic.{" "}
-            <strong style={{ color: "var(--vh-text)" }}>100% of fees go to charity.</strong>
-          </p>
         </div>
 
         {/* Action */}
@@ -395,7 +393,6 @@ export function SwapCard() {
           type="button"
           onClick={handleSwap}
           disabled={!canSwap}
-          style={{ height: 52 }}
         >
           {buttonLabel} <Arrow size={12} />
         </button>
@@ -569,17 +566,17 @@ function PointsPreview({
       <span
         className="vh-display vh-num"
         style={{
-          fontSize: 26,
+          fontSize: 20,
           color: "var(--vh-magenta-500)",
-          textShadow: "0 0 14px var(--vh-magenta-glow)",
+          textShadow: "0 0 12px var(--vh-magenta-glow)",
         }}
       >
         {preview ? `+${formatPoints(preview.points)}` : "—"}
         <span
           className="vh-mono"
           style={{
-            fontSize: 11,
-            marginLeft: 8,
+            fontSize: 10,
+            marginLeft: 6,
             color: "var(--vh-text-3)",
             textShadow: "none",
             letterSpacing: "0.12em",

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/hud";
+import { ConnectButton } from "@/components/ConnectButton";
 
 export function TopBar({
   active,
 }: {
-  active: "swap" | "leaderboard" | "charities";
+  active: "swap" | "leaderboard" | "charities" | "about";
 }) {
   return (
     <header className="vh-topbar">
@@ -13,9 +14,7 @@ export function TopBar({
           <span className="vh-brand__mark">
             <BrandMark size={24} />
           </span>
-          <span className="vh-brand__name">
-            Swaps without Borders
-          </span>
+          <span className="vh-brand__name">Swaps without Borders</span>
         </Link>
         <nav className="vh-nav" aria-label="Primary">
           <Link href="/" className={active === "swap" ? "is-active" : ""}>
@@ -33,12 +32,15 @@ export function TopBar({
           >
             Leaderboard
           </Link>
+          <Link
+            href="/about"
+            className={active === "about" ? "is-active" : ""}
+          >
+            About
+          </Link>
         </nav>
         <div className="vh-topbar__tail">
-          <span className="vh-pill vh-pill--live">
-            <span className="vh-pill__dot vh-pulse" />
-            Mainnet
-          </span>
+          <ConnectButton />
         </div>
       </div>
       <div className="vh-hazard" aria-hidden />

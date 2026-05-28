@@ -131,7 +131,7 @@ export function ConnectButton({ block = false }: { block?: boolean }) {
     >
       <button
         type="button"
-        className={`vh-btn ${connectedCount > 0 ? "vh-btn--ghost" : "vh-btn--primary"} ${block ? "vh-btn--block" : ""}`}
+        className={`vh-btn ${connectedCount > 0 ? "vh-btn--ghost" : "vh-btn--primary"} ${block ? "vh-btn--block" : "vh-btn--sm"}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
@@ -140,22 +140,16 @@ export function ConnectButton({ block = false }: { block?: boolean }) {
           <>
             <span
               style={{
-                width: 8,
-                height: 8,
+                width: 7,
+                height: 7,
                 background: "var(--vh-acid-500)",
                 boxShadow: "0 0 8px var(--vh-acid-glow)",
               }}
             />
             {triggerLabel}
-            <span
-              className="vh-mono"
-              style={{ fontSize: 11, opacity: 0.7, marginLeft: 4 }}
-            >
-              · {connectedCount}/{ECOSYSTEMS.length}
-            </span>
           </>
         ) : (
-          <>▸ {triggerLabel}</>
+          <>▸ Connect</>
         )}
       </button>
 

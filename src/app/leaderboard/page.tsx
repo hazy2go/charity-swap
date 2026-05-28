@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatPoints } from "@/lib/points";
 import { TopBar } from "@/components/TopBar";
+import { SiteFooter } from "@/components/SiteFooter";
 import { RegMark, Slash } from "@/components/hud";
 
 export const dynamic = "force-dynamic";
@@ -213,6 +214,8 @@ export default async function LeaderboardPage() {
           </div>
         </div>
       </main>
+
+      <SiteFooter />
     </div>
   );
 }
