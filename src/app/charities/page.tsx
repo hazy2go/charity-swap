@@ -39,150 +39,230 @@ export default async function CharitiesPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="xp-taskbar">
-        <Link href="/" className="xp-start h-full" aria-label="Back to desktop">
-          <span className="xp-start__flag">⟁</span>
-          <span>Back</span>
-        </Link>
-        <span className="xp-taskbar__task xp-taskbar__task--active">
-          <span aria-hidden>🎗</span>
-          <span>Charities.exe</span>
-        </span>
-        <div className="xp-tray text-[10px] sm:text-[11px]">
-          <a
-            href="https://builders.sodax.com/mcp"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:underline flex items-center gap-1"
+      <SubTopBar active="charities" />
+
+      <main className="flex-1 relative px-4 sm:px-8 py-10">
+        <div className="max-w-[1080px] mx-auto vc-rise">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <span className="vc-numplate">TYPE-CH.03</span>
+            <span className="vc-chip vc-chip--mag">
+              SHORTLIST // {rows.length} CANDIDATE{rows.length === 1 ? "" : "S"}
+            </span>
+          </div>
+
+          <h1
+            className="vc-display"
+            style={{
+              fontWeight: 800,
+              fontSize: "clamp(40px, 6vw, 72px)",
+              lineHeight: 0.92,
+              letterSpacing: "-0.02em",
+              color: "var(--vc-text)",
+            }}
           >
-            <span className="xp-tray__icon" aria-hidden>🔌</span>
-            <span className="hidden sm:inline">builders.sodax.com/mcp</span>
-            <span className="sm:hidden">MCP</span>
-          </a>
-        </div>
-      </header>
-
-      <main
-        className="flex-1 p-3 sm:p-6 md:p-8 grid place-items-center"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 8% 12%, rgba(255,255,255,0.06) 0%, transparent 22%), radial-gradient(circle at 92% 88%, rgba(0,0,0,0.18) 0%, transparent 28%)",
-        }}
-      >
-        <div className="xp-window w-[640px] max-w-[95vw]">
-          <div className="xp-titlebar">
-            <span className="xp-titlebar__icon" aria-hidden>🎗</span>
-            <span className="xp-titlebar__title">
-              Charities.exe — Swaps without Borders
+            CHARI<span style={{ color: "var(--vc-magenta)" }}>.</span>
+            <br />
+            <span style={{ color: "var(--vc-cyan)" }}>TIES</span>
+            <span
+              style={{
+                color: "var(--vc-text-mute)",
+                fontSize: "0.4em",
+                marginLeft: 8,
+              }}
+            >
+              {"// CANDIDATE POOL"}
             </span>
-            <div className="xp-titlebar__controls">
-              <Link
-                href="/"
-                className="xp-ctrl xp-ctrl--close"
-                aria-label="Close"
-                tabIndex={-1}
-              >
-                <span style={{ fontWeight: "bold", lineHeight: 1 }}>×</span>
-              </Link>
-            </div>
-          </div>
+          </h1>
 
-          <div className="xp-menubar">
-            <span className="xp-menubar__item"><u>F</u>ile</span>
-            <span className="xp-menubar__item"><u>V</u>iew</span>
-            <span className="xp-menubar__item"><u>H</u>elp</span>
-            <span className="ml-auto self-center pr-1">
-              <span className="xp-pill">{rows.length} candidate(s)</span>
-            </span>
-          </div>
+          <p
+            className="mt-6 max-w-[680px]"
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 17,
+              lineHeight: 1.5,
+              color: "var(--vc-text-mute)",
+            }}
+          >
+            The community-curated shortlist eligible for the next payout. The
+            poll opened <b style={{ color: "var(--vc-text)" }}>Mon 2026-05-25 (Day 8)</b> with
+            these <b style={{ color: "var(--vc-cyan)" }}>5 candidates</b>. When the
+            charity wallet crosses the community-set threshold,{" "}
+            <b style={{ color: "var(--vc-magenta)" }}>Discord</b> opens a
+            points-weighted vote per cycle. Payout addresses are placeholders
+            until winners are locked in.
+          </p>
 
-          <div className="bg-[var(--xp-face)] px-4 py-4">
-            <p className="text-[11px] text-[#444] mb-3 leading-snug">
-              The community-curated shortlist of charities eligible to receive
-              the next payout. The poll opened <strong>Mon 2026-05-25 (Day 8)</strong> with
-              these <strong>5 candidates</strong>; the points-weighted vote on
-              <strong> Day 11+</strong> picks the winners per payout cycle. Payout
-              addresses are placeholders until winners are locked in.
-            </p>
-
+          {/* Body */}
+          <div className="mt-8">
             {error ? (
-              <div className="xp-readout !block !text-[11px] !text-[#7a0a0a]">
-                <strong>Error reading charities:</strong> {error}
+              <div
+                className="vc-readout"
+                style={{
+                  display: "block",
+                  color: "var(--vc-magenta)",
+                  borderColor: "var(--vc-magenta)",
+                }}
+              >
+                <b className="vc-mono">ERR //</b> {error}
               </div>
             ) : rows.length === 0 ? (
-              <div className="xp-readout !block !py-8 text-center text-[#666]">
-                <div className="text-[24px] mb-2" aria-hidden>🎗</div>
-                <div className="font-bold text-[13px] text-[#111]">
-                  No charities seeded yet
+              <div
+                className="vc-panel vc-panel--cut"
+                style={{ padding: "40px 24px", textAlign: "center" }}
+              >
+                <div
+                  className="vc-display"
+                  style={{ fontSize: 36, color: "var(--vc-text-faint)" }}
+                >
+                  ◌
                 </div>
-                <div className="mt-1 text-[11px]">
-                  The 5-charity shortlist lands <strong>Mon 2026-05-25 (Day 8)</strong> once the
-                  community suggestion thread closes.
-                  <br />
-                  Schema is in{" "}
-                  <code className="font-mono">prisma/schema.prisma</code>;
-                  seed script in{" "}
-                  <code className="font-mono">prisma/seed.ts</code>.
+                <div
+                  className="vc-display mt-3"
+                  style={{ fontSize: 18, color: "var(--vc-text)" }}
+                >
+                  NO CANDIDATES SEEDED YET
+                </div>
+                <div
+                  className="vc-mono mt-2"
+                  style={{
+                    fontSize: 11,
+                    color: "var(--vc-text-mute)",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Schema in <span style={{ color: "var(--vc-cyan)" }}>prisma/schema.prisma</span> · seed in <span style={{ color: "var(--vc-cyan)" }}>prisma/seed.ts</span>
                 </div>
               </div>
             ) : (
-              <ul className="space-y-2">
-                {rows.map((c) => (
-                  <li
-                    key={c.id}
-                    className="xp-readout !block !p-3 hover:bg-[#dde8f6]"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="font-bold text-[13px]">{c.name}</div>
-                        <div className="text-[11px] text-[#444] mt-1 leading-snug">
-                          {c.blurb}
-                        </div>
-                      </div>
-                      <div className="text-right text-[10px] text-[#666] font-mono shrink-0">
-                        <div className="uppercase tracking-wider">
-                          {c.payoutKind}
-                        </div>
-                        <div>{shortTarget(c.payoutTarget, c.payoutKind)}</div>
-                      </div>
-                    </div>
-                    {c.website && (
-                      <div className="mt-2 text-[10px]">
-                        <a
-                          href={c.website}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline decoration-dotted underline-offset-2 text-[#0a2a6b]"
-                        >
-                          {c.website}
-                        </a>
-                      </div>
-                    )}
-                  </li>
+              <ul className="grid sm:grid-cols-2 gap-4">
+                {rows.map((c, idx) => (
+                  <CandidateCard key={c.id} c={c} index={idx + 1} />
                 ))}
               </ul>
             )}
-
-            <div className="mt-3 flex justify-end gap-2">
-              <Link href="/" className="xp-button">
-                Back to Swap.exe
-              </Link>
-              <Link href="/leaderboard" className="xp-button">
-                Leaderboard
-              </Link>
-            </div>
           </div>
 
-          <div className="xp-statusbar">
-            <span className="xp-statusbar__cell">
-              {rows.length} active · payout vote opens Day 11
-            </span>
-            <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
-              Day 8 · shortlist live
-            </span>
+          <div className="mt-8 flex flex-wrap gap-2 justify-end">
+            <Link href="/" className="vc-btn vc-btn--ghost">
+              ← Swap
+            </Link>
+            <Link href="/leaderboard" className="vc-btn vc-btn--ghost">
+              ◯ Leaderboard
+            </Link>
           </div>
         </div>
       </main>
     </div>
+  );
+}
+
+function CandidateCard({ c, index }: { c: Charity; index: number }) {
+  const tone = index % 2 === 0 ? "var(--vc-magenta)" : "var(--vc-cyan)";
+  return (
+    <li className="vc-panel vc-panel--cut">
+      <div className="vc-panel__strip">
+        <span
+          className="vc-mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.22em",
+            color: tone,
+            textTransform: "uppercase",
+            fontWeight: 700,
+          }}
+        >
+          CANDIDATE / {String(index).padStart(2, "0")}
+        </span>
+        <span
+          className="ml-auto vc-mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.18em",
+            color: "var(--vc-text-mute)",
+            textTransform: "uppercase",
+          }}
+        >
+          {c.payoutKind}
+        </span>
+      </div>
+      <div className="px-4 py-4">
+        <div
+          className="vc-display"
+          style={{
+            fontSize: 20,
+            fontWeight: 700,
+            color: "var(--vc-text)",
+            letterSpacing: "-0.005em",
+          }}
+        >
+          {c.name}
+        </div>
+        <p
+          className="mt-2"
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: 15,
+            lineHeight: 1.45,
+            color: "var(--vc-text-mute)",
+          }}
+        >
+          {c.blurb}
+        </p>
+
+        <div
+          className="mt-4 vc-mono flex items-center justify-between gap-2"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--vc-text-mute)",
+            borderTop: "1px solid var(--vc-line)",
+            paddingTop: 12,
+          }}
+        >
+          <span>
+            Target <span style={{ color: "var(--vc-cyan)" }}>{shortTarget(c.payoutTarget, c.payoutKind)}</span>
+          </span>
+          {c.website && (
+            <a
+              href={c.website}
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "var(--vc-cyan)" }}
+            >
+              {c.website.replace(/^https?:\/\//, "")} ↗
+            </a>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function SubTopBar({ active }: { active: "leaderboard" | "charities" }) {
+  return (
+    <header className="vc-topbar">
+      <Link href="/" className="vc-topbar__brand" style={{ textDecoration: "none" }}>
+        <span className="vc-topbar__brand-mark">◢</span>
+        <span className="vc-topbar__title">
+          Swaps <span style={{ color: "var(--vc-yellow)" }}>{"//"}</span> Without Borders
+        </span>
+      </Link>
+      <nav className="vc-topbar__nav hidden md:flex">
+        <Link href="/">[01] Swap</Link>
+        <Link href="/leaderboard" className={active === "leaderboard" ? "is-active" : ""}>
+          [02] Leaderboard
+        </Link>
+        <Link href="/charities" className={active === "charities" ? "is-active" : ""}>
+          [03] Charities
+        </Link>
+      </nav>
+      <div className="vc-topbar__tail">
+        <span className="vc-chip vc-chip--live">
+          <span className="vc-chip__dot vc-blink" />
+          MAINNET
+        </span>
+      </div>
+    </header>
   );
 }

@@ -126,9 +126,9 @@ flow, allowance handling, the EVM connect button — fell out in an afternoon.
 | 6   | Sat 2026-05-23 | Week 1 recap | Audits + security hardening ✅ |
 | 7   | Sun 2026-05-24 | — | Rest |
 | 8   | Mon 2026-05-25 | Charity shortlist poll | Charity shortlist seeded ✅ |
-| **9** | **Tue 2026-05-26** | **Build Log #2 — charity wallet goes LIVE** | **0.1% fee enabled · all 18 networks swappable ✅** ← *we are here* |
-| 10  | Wed 2026-05-27 | Three winning charities announced | Voting UI shell |
-| 11  | Thu 2026-05-28 | Threshold + vote-duration polls | Voting backend (`votes`, `vote_ballots`) |
+| 9   | Tue 2026-05-26 | Build Log #2 — charity wallet goes LIVE | 0.1% fee enabled · all 18 networks swappable ✅ |
+| 10  | Wed 2026-05-27 | UI direction vote — **Vectorheart** wins ✅ | (break day) |
+| **11** | **Thu 2026-05-28** | **Vectorheart full revamp** | **New design system · WipEout/TDR aesthetic ✅** ← *we are here* |
 | 12  | Fri 2026-05-29 | Discord stage #2 — v1 demo | Everything live for mainnet demo |
 | 13  | Sat 2026-05-30 | Two-week recap | README + docs pass |
 | 14  | Sun 2026-05-31 | Internal review | — |
@@ -137,7 +137,7 @@ flow, allowance handling, the EVM connect button — fell out in an afternoon.
 
 ## What's live right now
 
-**Day 9.** What works in this commit:
+**Day 11.** What works in this commit:
 
 - ✅ Name: **Swaps without Borders** (community vote, Day 4)
 - ✅ Multi-VM wallet connect via `@sodax/wallet-sdk-react` — EVM (Hana, MetaMask, Rabby, any EIP-6963) **plus** Solana, Sui, Injective, ICON, Stellar, NEAR
@@ -148,7 +148,7 @@ flow, allowance handling, the EVM connect button — fell out in an afternoon.
 - ✅ **0.1% charity fee LIVE** → public Sonic wallet `0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD` (interim EOA; 100% to charity)
 - ✅ **Points ledger live** (Prisma + Supabase) — CoinGecko-priced, logged on every confirmed swap
 - ✅ **`/leaderboard`** reading from Supabase · **`/charities`** 5-candidate shortlist
-- ✅ Windows XP Luna Silver UI (taskbar, windows, functional desktop icons, mobile-aware)
+- ✅ **Vectorheart UI** — late-90s WipEout / The Designers Republic aesthetic (cyan + magenta + yellow on ink, Orbitron + JetBrains Mono + Barlow Condensed, type plates, slash dividers, diagonal corner cuts, hazard-tape ticker, mobile-aware)
 
 What's intentionally **not** live yet:
 

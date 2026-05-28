@@ -5,6 +5,40 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 11 — Thu 2026-05-28 — VECTORHEART // full UI revamp
+
+### Community vote — UI direction
+- Day 10 community poll picked **Vectorheart** — late-90s WipEout / The Designers Republic aesthetic
+- Sharp vector shapes, 45/60° diagonals, flat high-contrast color, futuristic mono+display type
+- Old Windows XP Luna Silver chrome retired in full
+
+### Design system
+- New palette: ink `#08090B`, paper `#EFEAE0`, cyan `#00E5FF`, magenta `#FF2E88`, yellow `#FFE600`, green `#7BE564`
+- Typefaces: **Orbitron** (display caps) · **JetBrains Mono** (data/code) · **Barlow Condensed** (body), loaded via `next/font/google`
+- Motifs: type plates (`TYPE-WB.01 // SODAX V2`), slash dividers `//`, bracket call-outs `[FROM]`, halftone dot grid background, hazard-tape ticker, diagonal corner cuts via `clip-path`
+
+### Pages revamped
+- **`src/app/globals.css`** — full rewrite with `vc-*` primitives (panels, buttons, inputs, chips, plates, tables, animations)
+- **`src/app/page.tsx`** — killed the Notepad ReadMe window for a cleaner hero. Massive `SWAPS // WITHOUT . BORDERS` headline, stat-block grid (charity wallet · fee · networks · schedule), README sys-log panel, hazard-tape ticker
+- **`src/components/SwapCard.tsx`** — restyled (all swap logic untouched): bracketed FROM/TO labels, monospace quote readout, charity-rewards subpanel, primary cyan EXECUTE button
+- **`src/components/ConnectButton.tsx`** — Vectorheart dropdown with numbered `[01] EVM` / `[02] Solana` / … ecosystem groups
+- **`src/app/leaderboard/page.tsx`** — typographic LEADER.BOARD title, cyan stat tiles, rank-coloured ledger table
+- **`src/app/charities/page.tsx`** — CHARI.TIES title, candidate cards numbered `CANDIDATE / 01..05`
+
+### Cleanup
+- **Deleted** `src/components/DesktopIcons.tsx`
+- Removed all `xp-*` classes and Luna Silver tokens (clean cut, no aliases)
+- Boot skeleton in `src/app/providers.tsx` rebuilt in Vectorheart
+- Watermark/copy: build bumped to **0.0.7 · Day 11**
+
+### Not changed (intentionally)
+- Swap logic — `useQuote`/`useSwapAllowance`/`useSwapApprove`/`useSwap` flow byte-identical
+- Routes — all 18 SODAX networks still wired exactly as Day 9
+- Fee config — `0.1% → 0x95A8…721AD` untouched
+- Data layer — Prisma, leaderboard query, charity seed all untouched
+
+---
+
 ## Day 9 — Tue 2026-05-26 — 🚨 the fee is LIVE (Build Log #2)
 
 ### 💸 Partner fee turned on

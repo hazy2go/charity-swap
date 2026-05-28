@@ -60,10 +60,17 @@ function shortAddr(a: string) {
 }
 
 function medal(rank: number) {
-  if (rank === 1) return "🥇";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
-  return null;
+  if (rank === 1) return "01 ◆";
+  if (rank === 2) return "02 ◇";
+  if (rank === 3) return "03 ◈";
+  return String(rank).padStart(2, "0");
+}
+
+function rankColor(rank: number) {
+  if (rank === 1) return "var(--vc-yellow)";
+  if (rank === 2) return "var(--vc-cyan)";
+  if (rank === 3) return "var(--vc-magenta)";
+  return "var(--vc-text-mute)";
 }
 
 export default async function LeaderboardPage() {
@@ -71,172 +78,301 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="xp-taskbar">
-        <Link href="/" className="xp-start h-full" aria-label="Back to desktop">
-          <span className="xp-start__flag">⟁</span>
-          <span>Back</span>
-        </Link>
-        <span className="xp-taskbar__task xp-taskbar__task--active">
-          <span aria-hidden>🏆</span>
-          <span>Leaderboard.exe</span>
-        </span>
-        <div className="xp-tray text-[10px] sm:text-[11px]">
-          <a
-            href="https://builders.sodax.com/mcp"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:underline flex items-center gap-1"
+      <SubTopBar active="leaderboard" />
+
+      <main className="flex-1 relative px-4 sm:px-8 py-10">
+        <div className="max-w-[1080px] mx-auto vc-rise">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <span className="vc-numplate">TYPE-LB.02</span>
+            <span className="vc-chip vc-chip--live">
+              <span className="vc-chip__dot vc-blink" />
+              LIVE // READS FROM SUPABASE
+            </span>
+          </div>
+
+          <h1
+            className="vc-display"
+            style={{
+              fontWeight: 800,
+              fontSize: "clamp(40px, 6vw, 72px)",
+              lineHeight: 0.92,
+              letterSpacing: "-0.02em",
+              color: "var(--vc-text)",
+            }}
           >
-            <span className="xp-tray__icon" aria-hidden>🔌</span>
-            <span className="hidden sm:inline">builders.sodax.com/mcp</span>
-            <span className="sm:hidden">MCP</span>
-          </a>
-        </div>
-      </header>
+            LEADER<span style={{ color: "var(--vc-cyan)" }}>.</span>
+            <br />
+            <span style={{ color: "var(--vc-magenta)" }}>BOARD</span>
+            <span style={{ color: "var(--vc-text-mute)", fontSize: "0.4em" }}>{" // TOP 100"}</span>
+          </h1>
 
-      <main
-        className="flex-1 p-3 sm:p-6 md:p-8 grid place-items-center"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 8% 12%, rgba(255,255,255,0.06) 0%, transparent 22%), radial-gradient(circle at 92% 88%, rgba(0,0,0,0.18) 0%, transparent 28%)",
-        }}
-      >
-        <div className="xp-window w-[640px] max-w-[95vw]">
-          <div className="xp-titlebar">
-            <span className="xp-titlebar__icon" aria-hidden>🏆</span>
-            <span className="xp-titlebar__title">
-              Leaderboard.exe — Swaps without Borders
-            </span>
-            <div className="xp-titlebar__controls">
-              <Link
-                href="/"
-                className="xp-ctrl xp-ctrl--close"
-                aria-label="Close"
-                tabIndex={-1}
+          {/* Totals strip */}
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Stat label="WALLETS" value={totals.walletCount} tone="cyan" />
+            <Stat label="SWAPS"   value={totals.swapCount}   tone="magenta" />
+            <Stat
+              label="VOLUME USD"
+              value={`$${totals.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+              tone="yellow"
+            />
+            <Stat
+              label="POINTS"
+              value={formatPoints(totals.totalPoints)}
+              tone="green"
+            />
+          </div>
+
+          {/* Body */}
+          <div className="mt-6 vc-panel">
+            <div className="vc-panel__strip">
+              <span
+                className="vc-mono vc-caps"
+                style={{ fontSize: 11, color: "var(--vc-cyan)" }}
               >
-                <span style={{ fontWeight: "bold", lineHeight: 1 }}>×</span>
-              </Link>
-            </div>
-          </div>
-
-          <div className="xp-menubar">
-            <span className="xp-menubar__item"><u>F</u>ile</span>
-            <span className="xp-menubar__item"><u>V</u>iew</span>
-            <span className="xp-menubar__item"><u>S</u>ort</span>
-            <span className="xp-menubar__item"><u>H</u>elp</span>
-            <span className="ml-auto self-center pr-1">
-              <span className="xp-pill xp-pill--ok">LIVE · reads from Supabase</span>
-            </span>
-          </div>
-
-          <div className="bg-[var(--xp-face)] px-4 py-4">
-            {/* Totals strip */}
-            <div className="grid grid-cols-3 gap-2 mb-3 text-[11px]">
-              <div className="xp-readout !block !min-h-0 !py-[6px]">
-                <div className="text-[10px] uppercase tracking-wider text-[#666]">Wallets</div>
-                <div className="font-mono text-[15px] font-bold">{totals.walletCount}</div>
-              </div>
-              <div className="xp-readout !block !min-h-0 !py-[6px]">
-                <div className="text-[10px] uppercase tracking-wider text-[#666]">Swaps</div>
-                <div className="font-mono text-[15px] font-bold">{totals.swapCount}</div>
-              </div>
-              <div className="xp-readout !block !min-h-0 !py-[6px]">
-                <div className="text-[10px] uppercase tracking-wider text-[#666]">Volume</div>
-                <div className="font-mono text-[15px] font-bold">
-                  ${totals.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                </div>
-              </div>
+                LEDGER // RANKED BY POINTS
+              </span>
+              <span
+                className="ml-auto vc-mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--vc-text-mute)",
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {rows.length} entr{rows.length === 1 ? "y" : "ies"}
+              </span>
             </div>
 
-            {error ? (
-              <div className="xp-readout !block !text-[11px] !text-[#7a0a0a]">
-                <strong>Error reading leaderboard:</strong> {error}
-                <div className="mt-1 text-[10px] text-[#666]">
-                  Likely the DATABASE_URL env isn&apos;t set, or Supabase is offline.
+            <div className="px-4 sm:px-6 py-4 overflow-x-auto">
+              {error ? (
+                <div
+                  className="vc-readout"
+                  style={{
+                    display: "block",
+                    color: "var(--vc-magenta)",
+                    borderColor: "var(--vc-magenta)",
+                  }}
+                >
+                  <b className="vc-mono">ERR //</b> {error}
+                  <div
+                    className="vc-mono mt-2"
+                    style={{ fontSize: 11, color: "var(--vc-text-mute)" }}
+                  >
+                    DATABASE_URL likely unset, or Supabase offline.
+                  </div>
                 </div>
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="xp-readout !block !py-8 text-center text-[#666]">
-                <div className="text-[24px] mb-2" aria-hidden>📋</div>
-                <div className="font-bold text-[13px] text-[#111]">
-                  No swaps logged yet
+              ) : rows.length === 0 ? (
+                <div
+                  className="vc-readout"
+                  style={{
+                    display: "block",
+                    padding: "32px 16px",
+                    textAlign: "center",
+                  }}
+                >
+                  <div
+                    className="vc-display"
+                    style={{
+                      fontSize: 32,
+                      color: "var(--vc-text-faint)",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    ◍
+                  </div>
+                  <div
+                    className="vc-display mt-2"
+                    style={{ fontSize: 16, color: "var(--vc-text)" }}
+                  >
+                    NO SWAPS LOGGED YET
+                  </div>
+                  <div
+                    className="vc-mono mt-2"
+                    style={{
+                      fontSize: 11,
+                      color: "var(--vc-text-mute)",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    Wired and listening. First confirmed swap lands here.
+                  </div>
                 </div>
-                <div className="mt-1 text-[11px]">
-                  The leaderboard is wired up and listening. The first swap that
-                  goes through will appear here.
-                </div>
-              </div>
-            ) : (
-              <table className="w-full text-[11px] mb-3">
-                <thead>
-                  <tr className="text-left text-[10px] uppercase tracking-wider text-[#666] border-b border-[#aaa]">
-                    <th className="py-1 pr-2">#</th>
-                    <th className="py-1 pr-2">Wallet</th>
-                    <th className="py-1 pr-2 text-right">Swaps</th>
-                    <th className="py-1 pr-2 text-right">Volume (USD)</th>
-                    <th className="py-1 pr-2 text-right">Points</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.wallet} className="border-b border-[#ddd] hover:bg-[#dde8f6]">
-                      <td className="py-1 pr-2 font-mono">
-                        {medal(r.rank) ?? r.rank}
-                      </td>
-                      <td className="py-1 pr-2 font-mono">{shortAddr(r.wallet)}</td>
-                      <td className="py-1 pr-2 text-right font-mono">{r.swapCount}</td>
-                      <td className="py-1 pr-2 text-right font-mono">
-                        ${r.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-1 pr-2 text-right font-mono font-bold text-[#0a2a6b]">
-                        {formatPoints(r.totalPoints)}
-                      </td>
+              ) : (
+                <table className="vc-table min-w-[640px]">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Wallet</th>
+                      <th className="text-right">Swaps</th>
+                      <th className="text-right">Volume</th>
+                      <th className="text-right">Points</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-
-            <div className="xp-readout !block !text-[11px]">
-              <div className="flex items-baseline justify-between">
-                <span className="text-[#666]">Points formula</span>
-                <span className="font-mono">1 pt = $1 swapped</span>
-              </div>
-              <div className="mt-1 text-[10px] text-[#666]">
-                Final ratio decided by the Day 11 community vote. Whatever the
-                community picks lands as a single config flip — no silent
-                weighting, no rounding.
-              </div>
+                  </thead>
+                  <tbody>
+                    {rows.map((r) => (
+                      <tr key={r.wallet}>
+                        <td>
+                          <span
+                            className="vc-mono"
+                            style={{
+                              color: rankColor(r.rank),
+                              letterSpacing: "0.06em",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {medal(r.rank)}
+                          </span>
+                        </td>
+                        <td className="vc-mono">{shortAddr(r.wallet)}</td>
+                        <td className="vc-mono text-right">{r.swapCount}</td>
+                        <td className="vc-mono text-right">
+                          ${r.totalUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        </td>
+                        <td
+                          className="vc-mono text-right"
+                          style={{ color: "var(--vc-cyan)", fontWeight: 700 }}
+                        >
+                          {formatPoints(r.totalPoints)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
 
-            <div className="mt-3 flex justify-end gap-2">
-              <Link href="/" className="xp-button">
-                Back to Swap.exe
-              </Link>
-              <Link href="/charities" className="xp-button">
-                Charities
-              </Link>
-              <a
-                href="https://github.com/hazy2go/swaps-without-borders/blob/main/prisma/schema.prisma"
-                target="_blank"
-                rel="noreferrer"
-                className="xp-button"
+            <div
+              className="flex flex-wrap items-center gap-3 px-4 sm:px-6 py-3"
+              style={{
+                borderTop: "1px solid var(--vc-line-hi)",
+                background: "var(--vc-ink)",
+              }}
+            >
+              <span
+                className="vc-mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--vc-text-mute)",
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                }}
               >
-                View schema.prisma
-              </a>
+                POINTS FORMULA
+              </span>
+              <span
+                className="vc-mono"
+                style={{ fontSize: 12, color: "var(--vc-text)" }}
+              >
+                1 PT = $1 SWAPPED
+              </span>
+              <span
+                className="ml-auto vc-mono"
+                style={{
+                  fontSize: 10,
+                  color: "var(--vc-text-mute)",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Final ratio: Day 11 community vote
+              </span>
             </div>
           </div>
 
-          <div className="xp-statusbar">
-            <span className="xp-statusbar__cell">
-              {totals.swapCount} swap(s) · {totals.walletCount} wallet(s)
-            </span>
-            <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
-              Day 8 · live
-            </span>
+          <div className="mt-6 flex flex-wrap gap-2 justify-end">
+            <Link href="/" className="vc-btn vc-btn--ghost">
+              ← Swap
+            </Link>
+            <Link href="/charities" className="vc-btn vc-btn--ghost">
+              ◯ Charities
+            </Link>
+            <a
+              href="https://github.com/hazy2go/swaps-without-borders/blob/main/prisma/schema.prisma"
+              target="_blank"
+              rel="noreferrer"
+              className="vc-btn vc-btn--ghost"
+            >
+              ⌬ schema.prisma ↗
+            </a>
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+function SubTopBar({ active }: { active: "leaderboard" | "charities" }) {
+  return (
+    <header className="vc-topbar">
+      <Link href="/" className="vc-topbar__brand" style={{ textDecoration: "none" }}>
+        <span className="vc-topbar__brand-mark">◢</span>
+        <span className="vc-topbar__title">
+          Swaps <span style={{ color: "var(--vc-yellow)" }}>{"//"}</span> Without Borders
+        </span>
+      </Link>
+      <nav className="vc-topbar__nav hidden md:flex">
+        <Link href="/">[01] Swap</Link>
+        <Link href="/leaderboard" className={active === "leaderboard" ? "is-active" : ""}>
+          [02] Leaderboard
+        </Link>
+        <Link href="/charities" className={active === "charities" ? "is-active" : ""}>
+          [03] Charities
+        </Link>
+      </nav>
+      <div className="vc-topbar__tail">
+        <span className="vc-chip vc-chip--live">
+          <span className="vc-chip__dot vc-blink" />
+          MAINNET
+        </span>
+      </div>
+    </header>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  tone: "cyan" | "magenta" | "yellow" | "green";
+}) {
+  const color =
+    tone === "cyan"
+      ? "var(--vc-cyan)"
+      : tone === "magenta"
+        ? "var(--vc-magenta)"
+        : tone === "yellow"
+          ? "var(--vc-yellow)"
+          : "var(--vc-green)";
+  return (
+    <div className="vc-panel vc-panel--cut">
+      <div className="px-4 py-3">
+        <div
+          className="vc-mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.2em",
+            color: "var(--vc-text-mute)",
+            textTransform: "uppercase",
+          }}
+        >
+          [{label}]
+        </div>
+        <div
+          className="vc-display mt-1"
+          style={{
+            fontSize: 24,
+            fontWeight: 700,
+            color,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {value}
+        </div>
+      </div>
     </div>
   );
 }

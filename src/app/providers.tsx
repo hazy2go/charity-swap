@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // time. In Next App Router every client component is also rendered on the
   // server, and on the server the store is not hydrated yet ⇒ "Cannot read
   // properties of undefined (reading 'hasHydrated')" 500s. Render the real
-  // tree only after client mount; fall back to a static XP-themed skeleton
+  // tree only after client mount; fall back to a static Vectorheart skeleton
   // during SSR so the route still returns 200 with meaningful content.
   useEffect(() => {
     setMounted(true);
@@ -34,56 +34,51 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 }
 
-/**
- * SSR-only static shell. No state, no providers, no SDK calls.
- * Visible for a single render before client hydrates.
- */
 function SsrBootSkeleton() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <div className="xp-taskbar">
-        <span className="xp-start" style={{ pointerEvents: "none" }}>
-          <span className="xp-start__flag" aria-hidden>⟁</span>
-          <span>booting…</span>
-        </span>
-        <div className="xp-taskbar__task xp-taskbar__task--active hidden sm:flex">
-          <span aria-hidden>🪟</span>
-          <span>Swap.exe</span>
+      <div className="vc-topbar">
+        <div className="vc-topbar__brand">
+          <span className="vc-topbar__brand-mark">◢</span>
+          <span className="vc-topbar__title">
+            Swaps <span style={{ color: "var(--vc-yellow)" }}>{"//"}</span> Without Borders
+          </span>
         </div>
-        <div className="xp-tray">
-          <span className="xp-tray__icon" aria-hidden>🔌</span>
-          <span className="hidden sm:inline">builders.sodax.com/mcp</span>
-          <span className="sm:hidden">MCP</span>
+        <div className="vc-topbar__tail">
+          <span className="vc-chip vc-chip--cyan vc-blink">
+            <span className="vc-chip__dot" />
+            BOOT // INIT
+          </span>
         </div>
       </div>
       <main
         style={{
           flex: 1,
-          padding: 24,
-          backgroundImage:
-            "radial-gradient(circle at 8% 12%, rgba(255,255,255,0.06) 0%, transparent 22%), radial-gradient(circle at 92% 88%, rgba(0,0,0,0.18) 0%, transparent 28%)",
+          padding: 32,
+          display: "grid",
+          placeItems: "center",
+          background: "var(--vc-ink)",
         }}
       >
-        <div style={{ display: "grid", placeItems: "center", minHeight: "60vh" }}>
-          <div className="xp-window" style={{ width: 320 }}>
-            <div className="xp-titlebar">
-              <span className="xp-titlebar__icon" aria-hidden>⏳</span>
-              <span className="xp-titlebar__title">Swaps without Borders — loading</span>
-            </div>
-            <div
-              style={{
-                background: "var(--xp-face)",
-                padding: "18px 16px",
-                fontSize: 12,
-                lineHeight: 1.5,
-              }}
+        <div className="vc-panel vc-panel--cut vc-scan" style={{ width: 360 }}>
+          <div className="vc-panel__strip">
+            <span className="vc-mono vc-caps" style={{ fontSize: 11, color: "var(--vc-cyan)" }}>
+              SYS // LOADING
+            </span>
+          </div>
+          <div style={{ padding: "24px 18px" }}>
+            <p
+              className="vc-display vc-caps-tight"
+              style={{ margin: 0, fontSize: 16, color: "var(--vc-text)" }}
             >
-              <p style={{ margin: 0 }}>Starting Windows…</p>
-              <p style={{ margin: "8px 0 0", color: "#444" }}>
-                Loading SODAX SDK. If this stays visible, check JavaScript is
-                enabled.
-              </p>
-            </div>
+              Bootstrapping SODAX SDK V2
+            </p>
+            <p
+              className="vc-mono"
+              style={{ marginTop: 10, fontSize: 12, color: "var(--vc-text-mute)" }}
+            >
+              If this hangs, ensure JavaScript is enabled.
+            </p>
           </div>
         </div>
       </main>

@@ -41,9 +41,6 @@ export function SwapCard() {
   const dst: TokenInfo =
     findToken(dstChain, dstAddr) ?? tokensForChain(dstChain)[0];
 
-  // Resolve the account for each side by its chain's ecosystem. A swap
-  // signs on the source chain and settles to an address on the dest chain,
-  // so cross-ecosystem routes need both wallets connected.
   const srcType = xChainTypeOf(src.chain);
   const dstType = xChainTypeOf(dst.chain);
   const srcAccount = useXAccount({ xChainType: srcType });
@@ -97,9 +94,6 @@ export function SwapCard() {
 
   const quotedOut = quoteResult?.ok ? BigInt(quoteResult.value.quoted_amount) : 0n;
 
-  // Surface why a quote came back empty. The solver returns "No path…" for
-  // pairs it can't route (e.g. selling SODA today) and an incompatibility
-  // message for tokens it doesn't quote — show that instead of a bare "—".
   const quoteFailed =
     parsedAmount > 0n && !samePair && !isQuoting && !!quoteResult && !quoteResult.ok;
   const quoteHint = (() => {
@@ -128,7 +122,6 @@ export function SwapCard() {
         }
       : undefined;
 
-  // Native tokens (address(0)) need no ERC-20 approval.
   const srcIsNative = isNativeToken(src.address);
 
   const { data: isApproved } = useSwapAllowance({
@@ -203,7 +196,7 @@ export function SwapCard() {
         kind: "ok",
         message:
           pointsAwarded != null
-            ? `Swap submitted · +${pointsAwarded.toLocaleString()} pts logged to leaderboard`
+            ? `Swap submitted · +${pointsAwarded.toLocaleString()} pts logged`
             : `Swap submitted. Solver: ${JSON.stringify(solverExecutionResponse).slice(0, 80)}…`,
       });
     } catch (e) {
@@ -222,7 +215,7 @@ export function SwapCard() {
   const buttonLabel = !srcAccount.address
     ? `Connect ${srcLabel} wallet`
     : !dstAccount.address
-      ? `Connect ${dstLabel} wallet (to receive)`
+      ? `Connect ${dstLabel} wallet (receive)`
       : samePair
         ? "Pick two different tokens"
         : isApproving
@@ -234,165 +227,254 @@ export function SwapCard() {
               : "Execute Swap";
 
   return (
-    <div className="xp-window w-[440px] max-w-[95vw]">
-      {/* Title bar */}
-      <div className="xp-titlebar">
-        <span className="xp-titlebar__icon" aria-hidden>
-          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
-            <rect x="1" y="1" width="12" height="12" fill="#cfdef3" stroke="#003c74" />
-            <path d="M3 5h6l-2-2M11 9H5l2 2" stroke="#003c74" strokeWidth="1.2" fill="none" strokeLinecap="square" />
-          </svg>
-        </span>
-        <span className="xp-titlebar__title">Swap.exe — Swaps without Borders</span>
-        <div className="xp-titlebar__controls">
-          <button className="xp-ctrl" aria-label="Minimize" tabIndex={-1}>
-            <span style={{display:"inline-block",width:8,height:2,background:"#000",marginTop:8}} />
-          </button>
-          <button className="xp-ctrl" aria-label="Maximize" tabIndex={-1}>
-            <span style={{display:"inline-block",width:10,height:9,border:"1px solid #000",borderTopWidth:2}} />
-          </button>
-          <button className="xp-ctrl xp-ctrl--close" aria-label="Close" tabIndex={-1}>
-            <span style={{fontFamily:'"Marlett","Tahoma",sans-serif',fontWeight:"bold",lineHeight:1}}>×</span>
-          </button>
+    <div className="w-full max-w-[460px] vc-rise-3">
+      <div className="vc-panel vc-scan">
+        {/* Header strip */}
+        <div className="vc-panel__strip">
+          <span
+            className="vc-mono vc-caps"
+            style={{ fontSize: 11, color: "var(--vc-cyan)" }}
+          >
+            SWAP.CORE // SODAX-V2
+          </span>
+          <span className="ml-auto flex items-center gap-1.5">
+            <span className="vc-chip vc-chip--live">
+              <span className="vc-chip__dot" />
+              MAINNET
+            </span>
+            <span className="vc-chip vc-chip--mag">0.1% → CHARITY</span>
+          </span>
         </div>
-      </div>
 
-      {/* Menu bar */}
-      <div className="xp-menubar">
-        <span className="xp-menubar__item"><u>F</u>ile</span>
-        <span className="xp-menubar__item"><u>E</u>dit</span>
-        <span className="xp-menubar__item"><u>V</u>iew</span>
-        <span className="xp-menubar__item"><u>H</u>elp</span>
-        <span className="ml-auto self-center pr-1">
-          <span className="xp-pill xp-pill--ok">MAINNET · 0.1% → charity</span>
-        </span>
-      </div>
-
-      {/* Window body */}
-      <div className="bg-[var(--xp-face)] px-3 pb-3 pt-2">
-        {/* FROM */}
-        <fieldset className="xp-fieldset">
-          <legend>From</legend>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="xp-label">Network</label>
-              <ChainSelect value={src.chain} onChange={(k) => pickChain("src", k)} />
+        <div className="px-4 sm:px-5 py-5 space-y-4">
+          {/* FROM */}
+          <div className="vc-field">
+            <div className="flex items-center justify-between">
+              <span className="vc-bracket">FROM</span>
+              <span
+                className="vc-mono"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.16em",
+                  color: "var(--vc-text-mute)",
+                }}
+              >
+                SEND // {src.symbol}
+              </span>
             </div>
-            <div>
-              <label className="xp-label">Token</label>
+            <div className="grid grid-cols-2 gap-2">
+              <ChainSelect
+                value={src.chain}
+                onChange={(k) => pickChain("src", k)}
+              />
               <TokenSelect chain={src.chain} value={src.address} onChange={setSrcAddr} />
             </div>
+            <input
+              inputMode="decimal"
+              placeholder="0.000"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="vc-input vc-input-amount vc-input-big"
+            />
           </div>
-          <label className="xp-label mt-2">Send ({src.symbol})</label>
-          <input
-            inputMode="decimal"
-            placeholder="0.00000000"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="xp-input xp-input--big"
-          />
-        </fieldset>
 
-        {/* Flip */}
-        <div className="flex justify-center -my-1.5 relative z-10">
-          <button
-            type="button"
-            className="xp-button !px-2 !py-0.5 !min-w-0"
-            onClick={flip}
-            aria-label="Swap direction"
-            title="Flip From / To"
-          >
-            ⇅
-          </button>
-        </div>
+          {/* Flip */}
+          <div className="flex items-center gap-3">
+            <hr className="vc-rule flex-1" />
+            <button
+              type="button"
+              onClick={flip}
+              aria-label="Swap direction"
+              title="Flip From / To"
+              className="vc-btn vc-btn--ghost vc-btn--xs"
+            >
+              ⇅ Flip
+            </button>
+            <hr className="vc-rule flex-1" />
+          </div>
 
-        {/* TO */}
-        <fieldset className="xp-fieldset">
-          <legend>To</legend>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="xp-label">Network</label>
-              <ChainSelect value={dst.chain} onChange={(k) => pickChain("dst", k)} />
+          {/* TO */}
+          <div className="vc-field">
+            <div className="flex items-center justify-between">
+              <span className="vc-bracket" style={{ color: "var(--vc-magenta)" }}>
+                TO
+              </span>
+              <span
+                className="vc-mono"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.16em",
+                  color: "var(--vc-text-mute)",
+                }}
+              >
+                RECEIVE // {dst.symbol}
+              </span>
             </div>
-            <div>
-              <label className="xp-label">Token</label>
+            <div className="grid grid-cols-2 gap-2">
+              <ChainSelect
+                value={dst.chain}
+                onChange={(k) => pickChain("dst", k)}
+              />
               <TokenSelect chain={dst.chain} value={dst.address} onChange={setDstAddr} />
             </div>
+            <div
+              className="vc-readout"
+              style={{ borderColor: "var(--vc-line-hi)" }}
+            >
+              <span style={{ color: "var(--vc-text-mute)" }}>≈</span>
+              <span className="vc-readout-big">
+                {isQuoting && parsedAmount > 0n ? (
+                  <span
+                    className="vc-mono vc-blink"
+                    style={{ color: "var(--vc-cyan)", fontSize: 14 }}
+                  >
+                    QUOTING…
+                  </span>
+                ) : quotedOut > 0n ? (
+                  formatUnits(quotedOut, dst.decimals)
+                ) : (
+                  <span style={{ color: "var(--vc-text-faint)" }}>—</span>
+                )}
+              </span>
+            </div>
+            {quoteHint && (
+              <div
+                className="vc-mono"
+                style={{
+                  fontSize: 11,
+                  color: "var(--vc-amber)",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                ⚠ {quoteHint}
+              </div>
+            )}
+            <div
+              className="vc-mono flex items-center justify-between"
+              style={{
+                fontSize: 10,
+                color: "var(--vc-text-mute)",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              <span>SLIPPAGE: <b style={{ color: "var(--vc-text)" }}>0.50%</b></span>
+              <span>SOLVER: <b style={{ color: "var(--vc-text)" }}>ANY</b></span>
+            </div>
           </div>
-          <label className="xp-label mt-2">You receive ({dst.symbol})</label>
-          <div className="xp-readout">
-            <span className="text-[#888]">≈</span>
-            <span>
-              {isQuoting && parsedAmount > 0n
-                ? <span className="text-[#666] italic xp-cursor">fetching quote</span>
-                : quotedOut > 0n
-                  ? formatUnits(quotedOut, dst.decimals)
-                  : <span className="text-[#999]">—</span>}
-            </span>
+
+          {/* Charity rewards */}
+          <div className="vc-panel" style={{ background: "var(--vc-ink)" }}>
+            <div
+              className="px-3 py-2 flex items-center justify-between"
+              style={{ borderBottom: "1px solid var(--vc-line-hi)" }}
+            >
+              <span
+                className="vc-mono vc-caps"
+                style={{ fontSize: 10, color: "var(--vc-magenta)", letterSpacing: "0.22em" }}
+              >
+                CHARITY // REWARDS
+              </span>
+              <span className="vc-chip vc-chip--live">
+                <span className="vc-chip__dot" />
+                FEE LIVE
+              </span>
+            </div>
+            <div className="px-3 py-3">
+              <PointsPreview
+                amountRaw={parsedAmount}
+                decimals={src.decimals}
+                symbol={src.symbol}
+              />
+              <p
+                className="vc-mono mt-3"
+                style={{
+                  fontSize: 10,
+                  color: "var(--vc-text-mute)",
+                  letterSpacing: "0.08em",
+                  lineHeight: 1.5,
+                }}
+              >
+                Every swap routes a <b style={{ color: "var(--vc-text)" }}>0.1%</b> fee to a public charity wallet on Sonic.{" "}
+                <b style={{ color: "var(--vc-yellow)" }}>100%</b> of fees go to charity.
+              </p>
+            </div>
           </div>
-          {quoteHint && (
-            <div className="mt-1 text-[10px] text-[#7a0a0a]">{quoteHint}</div>
+
+          {/* Buttons */}
+          <div className="flex flex-col-reverse sm:flex-row items-stretch gap-2">
+            <button
+              className="vc-btn vc-btn--ghost"
+              type="button"
+              onClick={() => setAmount("")}
+              disabled={!amount}
+            >
+              ✕ Clear
+            </button>
+            <button
+              className="vc-btn vc-btn--primary flex-1 justify-center"
+              type="button"
+              onClick={handleSwap}
+              disabled={!canSwap}
+            >
+              ▶ {buttonLabel}
+            </button>
+          </div>
+
+          {status.kind === "ok" && (
+            <div
+              className="vc-readout"
+              style={{
+                borderColor: "var(--vc-green)",
+                color: "var(--vc-green)",
+                fontSize: 13,
+                display: "block",
+              }}
+            >
+              <b className="vc-mono">OK //</b> {status.message}
+            </div>
           )}
-          <div className="mt-2 flex items-center justify-between text-[10px] text-[#555]">
-            <span>Slippage: <strong>0.50%</strong></span>
-            <span>Solver: <strong>any</strong></span>
-          </div>
-        </fieldset>
-
-        {/* Charity Rewards GroupBox */}
-        <fieldset className="xp-fieldset mt-3">
-          <legend>Charity rewards</legend>
-          <PointsPreview amountRaw={parsedAmount} decimals={src.decimals} symbol={src.symbol} />
-          <p className="mt-2 text-[10px] leading-snug text-[#444]">
-            <span className="xp-pill xp-pill--ok">LIVE: 0.1% fee</span>{" "}
-            Every swap routes a <strong>0.1%</strong> fee to a public charity
-            wallet on Sonic. <strong>100% of fees go to charity.</strong>
-          </p>
-        </fieldset>
-
-        {/* Buttons */}
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <button
-            className="xp-button"
-            type="button"
-            onClick={() => setAmount("")}
-            disabled={!amount}
-          >
-            Clear
-          </button>
-          <button
-            className="xp-button xp-button--primary !min-w-[160px]"
-            type="button"
-            onClick={handleSwap}
-            disabled={!canSwap}
-          >
-            {buttonLabel}
-          </button>
+          {status.kind === "err" && (
+            <div
+              className="vc-readout"
+              style={{
+                borderColor: "var(--vc-magenta)",
+                color: "var(--vc-magenta)",
+                fontSize: 13,
+                display: "block",
+              }}
+            >
+              <b className="vc-mono">ERR //</b> {status.message}
+            </div>
+          )}
         </div>
 
-        {status.kind === "ok" && (
-          <div className="mt-3 xp-readout !block !font-sans !text-[11px] !text-[#0a4a0a]">
-            <strong>OK:</strong> {status.message}
-          </div>
-        )}
-        {status.kind === "err" && (
-          <div className="mt-3 xp-readout !block !font-sans !text-[11px] !text-[#7a0a0a]">
-            <strong>Error:</strong> {status.message}
-          </div>
-        )}
-      </div>
-
-      {/* Status bar */}
-      <div className="xp-statusbar">
-        <span className="xp-statusbar__cell">
-          {srcAccount.address
-            ? <>{srcLabel} · <span className="font-mono">{srcAccount.address.slice(0,6)}…{srcAccount.address.slice(-4)}</span></>
-            : `${srcLabel}: disconnected`}
-        </span>
-        <span className="xp-statusbar__cell xp-statusbar__cell--fixed">SODAX V2</span>
-        <span className="xp-statusbar__cell xp-statusbar__cell--fixed">
-          {chainInfo(src.chain)?.label} → {chainInfo(dst.chain)?.label}
-        </span>
+        {/* Footer status strip */}
+        <div
+          className="flex items-center gap-3 px-4 py-2 vc-mono"
+          style={{
+            borderTop: "1px solid var(--vc-line-hi)",
+            background: "var(--vc-ink)",
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            color: "var(--vc-text-mute)",
+            textTransform: "uppercase",
+          }}
+        >
+          <span>
+            {srcAccount.address ? (
+              <>
+                {srcLabel} <span style={{ color: "var(--vc-green)" }}>●</span>{" "}
+                {srcAccount.address.slice(0, 6)}…{srcAccount.address.slice(-4)}
+              </>
+            ) : (
+              <>{srcLabel} <span style={{ color: "var(--vc-text-faint)" }}>○ DISCONNECTED</span></>
+            )}
+          </span>
+          <span className="ml-auto" style={{ color: "var(--vc-cyan)" }}>
+            {chainInfo(src.chain)?.label} → {chainInfo(dst.chain)?.label}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -407,7 +489,7 @@ function ChainSelect({
 }) {
   return (
     <select
-      className="xp-select w-full"
+      className="vc-select"
       value={value}
       onChange={(e) => onChange(e.target.value as ChainKey)}
     >
@@ -416,7 +498,7 @@ function ChainSelect({
           <option key={c.key} value={c.key}>{c.label}</option>
         ))}
       </optgroup>
-      <optgroup label="Other ecosystems">
+      <optgroup label="OTHER ECOSYSTEMS">
         {ALT_CHAINS.map((c) => (
           <option key={c.key} value={c.key}>{c.label}</option>
         ))}
@@ -437,7 +519,7 @@ function TokenSelect({
   const tokens = tokensForChain(chain);
   return (
     <select
-      className="xp-select w-full"
+      className="vc-select"
       value={value}
       onChange={(e) => onChange(e.target.value)}
     >
@@ -463,29 +545,61 @@ function PointsPreview({
     amountRaw > 0n ? previewPoints(amountRaw, decimals, symbol) : null;
 
   return (
-    <div className="xp-readout !block">
-      <div className="flex items-baseline justify-between">
-        <span className="text-[10px] uppercase tracking-wider text-[#666]">
-          You would earn
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <span
+          className="vc-mono"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.2em",
+            color: "var(--vc-text-mute)",
+            textTransform: "uppercase",
+          }}
+        >
+          YOU WOULD EARN
         </span>
-        <span className="font-mono text-[18px] font-bold text-[#0a2a6b]">
-          {preview ? `+${formatPoints(preview.points)}` : "—"}{" "}
-          <span className="text-[10px] font-normal text-[#666]">pts</span>
+        <span
+          className="vc-display"
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            color: "var(--vc-cyan)",
+            letterSpacing: "-0.01em",
+            lineHeight: 1,
+          }}
+        >
+          {preview ? `+${formatPoints(preview.points)}` : "—"}
+          <span
+            className="vc-mono"
+            style={{
+              fontSize: 11,
+              marginLeft: 6,
+              color: "var(--vc-text-mute)",
+              letterSpacing: "0.2em",
+            }}
+          >
+            PTS
+          </span>
         </span>
       </div>
-      <div className="mt-1 text-[10px] text-[#555] flex items-center justify-between">
+      <div
+        className="vc-mono mt-2 flex items-center justify-between gap-3"
+        style={{
+          fontSize: 10,
+          color: "var(--vc-text-mute)",
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+        }}
+      >
         <span>
-          {preview
-            ? <>≈ <strong>${preview.usd.toFixed(2)}</strong> swapped</>
-            : "Points unlock once a quote is in"}
+          {preview ? (
+            <>≈ <b style={{ color: "var(--vc-text)" }}>${preview.usd.toFixed(2)}</b> swapped</>
+          ) : (
+            "Points unlock once a quote is in"
+          )}
         </span>
-        <span>{DEFAULT_POINTS_PER_USD} pt / $1 (Day 11 vote)</span>
+        <span>{DEFAULT_POINTS_PER_USD} PT / $1</span>
       </div>
-      <p className="mt-2 text-[9px] leading-snug text-[#777] italic">
-        Estimate — actual points are logged on a confirmed swap and appear on the{" "}
-        <a href="/leaderboard" className="underline">leaderboard</a>. USD value is
-        snapshotted via CoinGecko at submit time.
-      </p>
     </div>
   );
 }

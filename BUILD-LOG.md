@@ -9,6 +9,77 @@ A day-by-day public log of building Swaps without Borders on the
 
 ---
 
+## Day 11 — Thu 2026-05-28 — Vectorheart: the look gets its identity
+
+Day 10 was a break. Day 11 picks up with the UI vote outcome.
+
+When the community was asked what the dapp should *look* like, the winning
+answer was **Vectorheart** — the late-90s WipEout / The Designers Republic
+aesthetic. Sharp vector shapes. 45° and 60° diagonals. Flat, high-contrast
+color. Futuristic mono+display typography. The kind of interface that looks
+like a real product with attitude, not another wallet dashboard.
+
+The Windows XP Luna Silver build was a fun temporary skin — kitschy, dense,
+loved by the people who got the joke. But it didn't scale to the project's
+ambition. Vectorheart does.
+
+### The system
+
+A small, hand-rolled design system replaces the XP CSS:
+
+- **Palette** — ink `#08090B` ground, paper `#EFEAE0` blocks, three hi-vis
+  accents (cyan `#00E5FF`, magenta `#FF2E88`, yellow `#FFE600`) plus green
+  for live/OK states. No purple gradients. Nothing safe.
+- **Type** — Orbitron for display caps (the SWAPS // WITHOUT . BORDERS hero
+  is built to be felt across the room), JetBrains Mono for every number and
+  technical readout, Barlow Condensed for body. All via `next/font/google`.
+- **Motifs** — type plates (`TYPE-WB.01 // SODAX V2`), slash dividers,
+  bracket call-outs (`[FROM]`, `[TO]`), corner notches via `clip-path`,
+  a halftone dot grid behind everything, a hazard-tape marquee at the bottom
+  of the page.
+
+### What changed
+
+Every visible surface. The home page lost the Notepad ReadMe window — it
+was charming but it diluted the hero. In its place: a massive headline, a
+4-stat block grid (live charity wallet, fee, network count, schedule), a
+sys-log panel for the explainer copy, and a marquee ticker.
+
+The swap card kept every line of swap logic but lost every line of XP
+chrome. `useQuote`, `useSwapAllowance`, `useSwapApprove`, `useSwap` — all
+byte-identical. The visual treatment is new: bracketed FROM/TO labels,
+a big cyan input that doubles as the amount field, the magenta TO readout,
+and a primary EXECUTE button that's a single sharp cyan slab.
+
+Connect Wallet became a clean dropdown with numbered ecosystem groups
+(`[01] EVM`, `[02] Solana`, …). Leaderboard got a typographic title and a
+rank-coloured table — gold/cyan/magenta medals replaced the emoji. Charities
+got candidate cards numbered `CANDIDATE / 01..05`.
+
+### What stayed the same
+
+This is the important part. The revamp is **paint only**:
+
+- Routes: all 18 SODAX networks still wired exactly as Day 9.
+- Fee: `0.1% → 0x95A8…721AD` untouched.
+- Data: Prisma schema, leaderboard query, charity seed all untouched.
+- API: `/api/swap-events`, `/api/leaderboard` untouched.
+
+A swap submitted under Luna Silver and a swap submitted under Vectorheart
+hit the same SDK calls in the same order with the same parameters. The
+audit surface didn't move.
+
+### Honest notes
+
+- Lint is back to the pre-existing baseline (2 SDK warnings + 2 pre-existing
+  errors in `providers.tsx` and `stub-empty.ts` that were there on Day 9).
+  No new lint debt from the revamp.
+- Mainnet swap test still pending — the smoke pass was render-only.
+- Voting UI/backend bumped to Day 12 (the vote runs in Discord and isn't
+  threshold-triggered yet, so there's no urgency).
+
+---
+
 ## Day 9 — Tue 2026-05-26 — Build Log #2: the fee is live
 
 This is the day the project stops being a demo. Until now, every swap was
