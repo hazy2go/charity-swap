@@ -193,7 +193,12 @@ export function SwapCard() {
   const quoteHint = (() => {
     if (!quoteFailed) return null;
     const raw = JSON.stringify((quoteResult as { error?: unknown }).error ?? "");
-    if (/no path/i.test(raw)) return "No route for this pair right now.";
+    if (/no path/i.test(raw)) {
+      // Solver returns "no path" both for genuinely unsupported routes AND
+      // for amount-too-big situations (insufficient destination-side
+      // liquidity). Most user-facing cases are the latter.
+      return "No route at this size — try a smaller amount, or pick a different token pair.";
+    }
     if (/not compatible/i.test(raw)) return "This token isn't quotable yet.";
     return "Quote unavailable for this pair.";
   })();

@@ -10,6 +10,7 @@ import {
   sortConnectors,
   type IXConnector,
 } from "@sodax/wallet-sdk-react";
+import { useBitcoinXConnectors } from "@sodax/wallet-sdk-react/xchains/bitcoin";
 import type { ChainType } from "@sodax/types";
 
 const PREFERRED = ["hana", "metamask", "rabby"] as const;
@@ -201,7 +202,13 @@ function WalletGroup({
   label: string;
   onDone: () => void;
 }) {
-  const raw = useXConnectors({ xChainType });
+  // Bitcoin connectors live in a separate subpath; the generic
+  // useXConnectors returns no Bitcoin wallets. Per the docs, use
+  // useBitcoinXConnectors and merge with the generic flow.
+  const generic = useXConnectors({ xChainType });
+  const btc = useBitcoinXConnectors();
+  const raw: IXConnector[] =
+    xChainType === "BITCOIN" ? (btc as unknown as IXConnector[]) : generic;
   const connectors =
     xChainType === "EVM" ? sortConnectors(raw, { preferred: PREFERRED }) : raw;
   const { mutateAsync: connect, isPending } = useXConnect();

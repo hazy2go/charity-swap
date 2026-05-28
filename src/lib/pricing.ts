@@ -62,6 +62,22 @@ const COIN_ID_BY_SYMBOL: Record<string, string> = {
   VSUI:      "sui",
   YAPSUI:    "sui",
   TREVINSUI: "sui",
+  // ── Sui ecosystem tokens ──
+  DEEP: "deep",
+  WAL:  "walrus-2",
+  NAVX: "navi-protocol",
+  // ── Solana ecosystem tokens ──
+  BONK:    "bonk",
+  JUP:     "jupiter-exchange-solana",
+  RAY:     "raydium",
+  PYTH:    "pyth-network",
+  JTO:     "jito-governance-token",
+  JITOSOL: "jito-staked-sol",
+  MSOL:    "msol",
+  // ── ICON ecosystem ──
+  BALN: "balance-token",
+  // ── NEAR ecosystem ──
+  WNEAR: "wrapped-near",
   // ── LightLink wrappers (1:1 to underlying) ──
   "BTC.LL":  "bitcoin",
   "AVAX.LL": "avalanche-2",
