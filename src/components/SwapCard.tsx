@@ -7,8 +7,14 @@ import {
   useSwap,
   useSwapAllowance,
   useSwapApprove,
+  useRadfiSession,
+  useTradingWalletBalance,
+  useExpiredUtxos,
+  useFundTradingWallet,
+  loadRadfiSession,
 } from "@sodax/dapp-kit";
 import { useWalletProvider, useXAccount } from "@sodax/wallet-sdk-react";
+import { ChainKeys } from "@sodax/sdk";
 import { useQuery } from "@tanstack/react-query";
 import type { CreateIntentParams } from "@sodax/sdk";
 import {
@@ -28,6 +34,7 @@ import { Picker, type PickerGroup } from "@/components/Picker";
 import { Bracketed, Arrow } from "@/components/hud";
 
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000" as const;
+const BTC_DUST_LIMIT_SATS = 546n; // minOutputAmount floor when dest is BTC
 
 const EVM_CHAINS = CHAINS.filter((c) => c.type === "EVM");
 const ALT_CHAINS = CHAINS.filter((c) => c.type !== "EVM");
@@ -76,6 +83,44 @@ export function SwapCard() {
   const srcAccount = useXAccount({ xChainType: srcType });
   const dstAccount = useXAccount({ xChainType: dstType });
   const walletProvider = useWalletProvider({ xChainId: src.chain });
+
+  // Bitcoin via Radfi — separate flow: 2-of-2 multisig trading wallet,
+  // sign-in + fund + per-swap dust limit + trading address as dst. See
+  // https://docs.sodax.com/developers/how-to/bitcoin-integration
+  const srcIsBtc = src.chain === ChainKeys.BITCOIN_MAINNET;
+  const dstIsBtc = dst.chain === ChainKeys.BITCOIN_MAINNET;
+  const btcInvolved = srcIsBtc || dstIsBtc;
+  const btcWalletProvider = useWalletProvider({
+    xChainId: ChainKeys.BITCOIN_MAINNET,
+  });
+  const radfi = useRadfiSession(btcWalletProvider);
+  const { data: tradingBalance } = useTradingWalletBalance({
+    params: {
+      walletProvider: btcWalletProvider,
+      tradingAddress: radfi.tradingAddress,
+    },
+  });
+  const { data: expiredUtxos } = useExpiredUtxos({
+    params: {
+      walletProvider: btcWalletProvider,
+      tradingAddress: radfi.tradingAddress,
+    },
+  });
+  const { mutateAsync: fundTrading, isPending: isFunding } =
+    useFundTradingWallet();
+
+  // Readiness gate per the docs:
+  //   destination-only BTC = only needs auth + a trading address
+  //   source BTC also needs trading-wallet balance and no expired UTXOs
+  const btcReady = (() => {
+    if (!btcInvolved) return true;
+    if (!radfi.isAuthed || !radfi.tradingAddress) return false;
+    if (!srcIsBtc) return true; // dest-only, no balance needed
+    return (
+      (tradingBalance?.btcSatoshi ?? 0n) > 0n &&
+      (!expiredUtxos || expiredUtxos.length === 0)
+    );
+  })();
 
   function pickChain(side: "src" | "dst", key: ChainKey) {
     const first = tokensForChain(key)[0];
@@ -130,19 +175,32 @@ export function SwapCard() {
     return "Quote unavailable for this pair.";
   })();
 
+  // Bitcoin-aware intent params (per Radfi guide):
+  //   dstAddress = trading wallet when destination is BTC
+  //   minOutputAmount clamped ≥ 546 sats when destination is BTC
+  //   srcAddress stays as personal wallet (SDK derives trading internally)
+  const rawMinOut = (quotedOut * 995n) / 1000n;
+  const dstAddressForIntent = dstIsBtc
+    ? loadRadfiSession(dstAccount.address ?? "")?.tradingAddress
+    : dstAccount.address;
+  const minOutputForIntent =
+    dstIsBtc && dst.symbol === "BTC"
+      ? rawMinOut > BTC_DUST_LIMIT_SATS ? rawMinOut : BTC_DUST_LIMIT_SATS
+      : rawMinOut;
+
   const intentParams: CreateIntentParams | undefined =
-    srcAccount.address && dstAccount.address && quotedOut > 0n
+    srcAccount.address && dstAddressForIntent && quotedOut > 0n
       ? {
           inputToken: src.address,
           outputToken: dst.address,
           inputAmount: parsedAmount,
-          minOutputAmount: (quotedOut * 995n) / 1000n,
+          minOutputAmount: minOutputForIntent,
           deadline: 0n,
           allowPartialFill: false,
           srcChainKey: src.chain,
           dstChainKey: dst.chain,
           srcAddress: srcAccount.address,
-          dstAddress: dstAccount.address,
+          dstAddress: dstAddressForIntent,
           solver: ADDRESS_ZERO,
           data: "0x",
         }
@@ -150,9 +208,12 @@ export function SwapCard() {
 
   const srcIsNative = isNativeToken(src.address);
 
+  // BTC uses UTXO model — no ERC-20-style approve step. Skip the allowance
+  // query entirely when source is Bitcoin (the SDK short-circuits too,
+  // but we avoid an unnecessary hook call).
   const { data: isApproved } = useSwapAllowance({
     params:
-      intentParams && !srcIsNative
+      intentParams && !srcIsNative && !srcIsBtc
         ? { payload: intentParams, srcChainKey: src.chain, walletProvider }
         : undefined,
   });
@@ -166,7 +227,7 @@ export function SwapCard() {
     | { kind: "err"; message: string }
   >({ kind: "idle" });
 
-  const needsApprove = !srcIsNative && isApproved === false;
+  const needsApprove = !srcIsNative && !srcIsBtc && isApproved === false;
 
   const handleSwap = async () => {
     if (!intentParams || !walletProvider) return;
@@ -232,7 +293,12 @@ export function SwapCard() {
   };
 
   const canSwap =
-    !!intentParams && !!walletProvider && !isSwapping && !isApproving && !samePair;
+    !!intentParams &&
+    !!walletProvider &&
+    !isSwapping &&
+    !isApproving &&
+    !samePair &&
+    btcReady;
 
   const srcLabel = chainInfo(src.chain)?.label ?? srcType;
   const dstLabel = chainInfo(dst.chain)?.label ?? dstType;
@@ -242,13 +308,21 @@ export function SwapCard() {
       ? `Connect ${dstLabel}`
       : samePair
         ? "Pick two different tokens"
-        : isApproving
-          ? "Approving…"
-          : isSwapping
-            ? "Engaging…"
-            : needsApprove
-              ? "Approve & engage"
-              : "Engage swap";
+        : btcInvolved && !radfi.isAuthed
+          ? "Sign in to Bitcoin (Radfi)"
+          : btcInvolved && !radfi.tradingAddress
+            ? "Provisioning trading wallet…"
+            : srcIsBtc && (tradingBalance?.btcSatoshi ?? 0n) === 0n
+              ? "Fund Bitcoin trading wallet"
+              : srcIsBtc && expiredUtxos && expiredUtxos.length > 0
+                ? "Renew expired UTXOs"
+                : isApproving
+                  ? "Approving…"
+                  : isSwapping
+                    ? "Engaging…"
+                    : needsApprove
+                      ? "Approve & engage"
+                      : "Engage swap";
 
   return (
     <div className="vh-card vh-scan">
@@ -387,14 +461,77 @@ export function SwapCard() {
           <PointsPreview amountRaw={parsedAmount} decimals={src.decimals} symbol={src.symbol} />
         </div>
 
-        {/* Action */}
+        {/* Bitcoin readiness banner — only when BTC involved + not ready */}
+        {btcInvolved && !btcReady && (
+          <div
+            style={{
+              padding: "10px 12px",
+              border: "1px solid var(--vh-yellow-soft)",
+              background: "var(--vh-yellow-soft)",
+              color: "var(--vh-yellow-500)",
+              borderRadius: "var(--vh-r)",
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              letterSpacing: "0.04em",
+              lineHeight: 1.5,
+            }}
+          >
+            <strong>BTC // Radfi:</strong>{" "}
+            {!radfi.isAuthed
+              ? "sign in to your Bitcoin wallet to provision the 2-of-2 multisig trading wallet."
+              : srcIsBtc && (tradingBalance?.btcSatoshi ?? 0n) === 0n
+                ? "fund the trading wallet from your personal Bitcoin wallet (~10 min on-chain confirmation, one-time)."
+                : srcIsBtc && expiredUtxos && expiredUtxos.length > 0
+                  ? `renew ${expiredUtxos.length} expired UTXO(s) before swapping.`
+                  : "preparing…"}
+          </div>
+        )}
+
+        {/* Action — Bitcoin-aware dispatch */}
         <button
           className="vh-btn vh-btn--primary vh-btn--block"
           type="button"
-          onClick={handleSwap}
-          disabled={!canSwap}
+          onClick={async () => {
+            // Bitcoin readiness dispatch
+            if (btcInvolved && !radfi.isAuthed) {
+              try { await radfi.login(); } catch { /* user rejected */ }
+              return;
+            }
+            if (btcInvolved && srcIsBtc && (tradingBalance?.btcSatoshi ?? 0n) === 0n) {
+              if (!btcWalletProvider) return;
+              const sats = window.prompt(
+                "How many sats to send to your trading wallet? (e.g. 100000 = 0.001 BTC). One-time, ~10 min confirmation.",
+                "100000",
+              );
+              const n = sats ? Number(sats) : NaN;
+              if (!Number.isFinite(n) || n < 546) return;
+              try {
+                await fundTrading({
+                  amount: BigInt(Math.floor(n)),
+                  walletProvider: btcWalletProvider,
+                });
+                setStatus({
+                  kind: "ok",
+                  message: `Funding tx broadcast — wait ~10 min for confirmation, then swap.`,
+                });
+              } catch (e) {
+                setStatus({
+                  kind: "err",
+                  message: e instanceof Error ? e.message : "fund failed",
+                });
+              }
+              return;
+            }
+            await handleSwap();
+          }}
+          disabled={
+            isSwapping || isApproving || isFunding ||
+            radfi.isLoginPending ||
+            (!btcInvolved && !canSwap) ||
+            (btcInvolved && radfi.isAuthed && btcReady && !canSwap)
+          }
         >
-          {buttonLabel} <Arrow size={12} />
+          {radfi.isLoginPending ? "Signing in…" : isFunding ? "Funding…" : buttonLabel} <Arrow size={12} />
         </button>
 
         {status.kind === "ok" && (

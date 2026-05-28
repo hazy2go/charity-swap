@@ -22,6 +22,7 @@ const ECOSYSTEMS: { type: ChainType; label: string }[] = [
   { type: "ICON",      label: "ICON" },
   { type: "STELLAR",   label: "Stellar" },
   { type: "NEAR",      label: "NEAR" },
+  { type: "BITCOIN",   label: "Bitcoin" },
 ];
 
 export function ConnectButton({ block = false }: { block?: boolean }) {
@@ -37,6 +38,7 @@ export function ConnectButton({ block = false }: { block?: boolean }) {
     useXAccount({ xChainType: "ICON" }).address,
     useXAccount({ xChainType: "STELLAR" }).address,
     useXAccount({ xChainType: "NEAR" }).address,
+    useXAccount({ xChainType: "BITCOIN" }).address,
   ];
   const connectedCount = accounts.filter(Boolean).length;
   const firstAddr = accounts.find(Boolean);

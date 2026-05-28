@@ -5,6 +5,39 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 11 — Thu 2026-05-28 (BTC) — SDK rc.8 + Bitcoin via Radfi
+
+Boss feedback: bump to latest SDK (rc.8) and wire native BTC via the
+Radfi 2-of-2 multisig trading wallet integration. Done.
+
+### SDK
+- All 4 @sodax packages bumped: `2.0.0-rc.1` → **`2.0.0-rc.8`**
+- Type-clean against the new minor (no API breakages in our usage)
+
+### Bitcoin (via Radfi)
+- `wallet-config.ts` — added `BITCOIN: {}` slot (production defaults baked in; no API key needed)
+- `swap-tokens.ts` — added Bitcoin chain + native BTC token (`0xeB0393…58b`, 8 decimals)
+- `swap-tokens.ts` — `ChainType` union extended with `"BITCOIN"`
+- `ConnectButton.tsx` — Bitcoin added to ECOSYSTEMS (Unisat/Xverse/OKX connectors auto-mount)
+- **`SwapCard.tsx`** — full Radfi readiness gate:
+  - `useRadfiSession(btcWalletProvider)` for sign-in + trading-wallet provisioning
+  - `useTradingWalletBalance` + `useExpiredUtxos` for source-side readiness checks
+  - `useFundTradingWallet` for the one-time on-chain BTC top-up
+  - **Bitcoin-aware intent params** per the docs:
+    - `dstAddress` swapped to the Radfi trading address when destination is BTC
+    - `minOutputAmount` clamped to ≥ 546 sats (dust limit) when destination is BTC
+    - `srcAddress` stays as the personal wallet (SDK derives trading internally)
+  - **No approve step** when source is BTC (UTXO model — `useSwapAllowance` + `needsApprove` short-circuit)
+  - **Action button dispatch** — if BTC involved, button progresses through: Sign in → Fund trading wallet → Engage swap. Each state has its own label + readiness banner.
+- `pricing.ts` — native `BTC` symbol mapped to CoinGecko `bitcoin` (was previously only the wrapped variants)
+
+### ⚠️ Hazy must do before Bitcoin works in production
+- The Radfi API only accepts requests from **whitelisted origins**:
+  - **Local dev:** run `pnpm dev --port 1993` (Radfi only accepts `http://localhost:1993`)
+  - **Production:** submit your Vercel domain (`charity-swap-hasantoprak28-4555s-projects.vercel.app` or any custom domain) to the SODAX team for whitelisting. Until whitelisted, BTC features will show Radfi errors.
+
+---
+
 ## Day 11 — Thu 2026-05-28 (final) — full SDK catalog parity · every token earns points
 
 End-of-day SDK audit caught 13 missing tokens we hadn't added since Day 9,

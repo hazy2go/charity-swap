@@ -48,6 +48,7 @@ const COIN_ID_BY_SYMBOL: Record<string, string> = {
   SUI:   "sui",
   LL:    "lightlink",
   // ── BTC family ──
+  BTC:   "bitcoin",   // native BTC via Radfi trading wallet
   WBTC:  "wrapped-bitcoin",
   BTCB:  "bitcoin",   // BTC on BNB Chain
   WEETH: "wrapped-eeth",

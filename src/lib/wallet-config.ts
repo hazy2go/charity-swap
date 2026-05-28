@@ -52,11 +52,19 @@ export const walletConfig: SodaxWalletConfig = {
   },
   // Non-EVM ecosystems. All adapter libs ship bundled in the wallet SDK;
   // each slot mounts that ecosystem's provider with registry defaults.
-  // Bitcoin/Stacks omitted — SODAX exposes no swap tokens for them.
   SOLANA: {},
   SUI: {},
   INJECTIVE: {},
   ICON: {},
   STELLAR: {},
   NEAR: {},
+  // Bitcoin via Radfi (2-of-2 multisig trading wallet).
+  // Production defaults are baked in — no API key, no per-dApp registration.
+  // See https://docs.sodax.com/developers/how-to/bitcoin-integration
+  //
+  // ⚠️ The Radfi API only accepts requests from whitelisted origins:
+  //   - Local dev: http://localhost:1993 (run `pnpm dev --port 1993`)
+  //   - Production: the deployed domain must be whitelisted by the SODAX team
+  // Non-whitelisted origins are rejected and BTC features will appear broken.
+  BITCOIN: {},
 };

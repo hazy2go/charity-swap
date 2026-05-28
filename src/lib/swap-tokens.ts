@@ -16,7 +16,7 @@ export type ChainKey = (typeof ChainKeys)[keyof typeof ChainKeys];
 // chain, so a cross-ecosystem route needs a wallet connected on both.
 
 export type ChainType =
-  | "EVM" | "SOLANA" | "SUI" | "INJECTIVE" | "ICON" | "STELLAR" | "NEAR";
+  | "EVM" | "SOLANA" | "SUI" | "INJECTIVE" | "ICON" | "STELLAR" | "NEAR" | "BITCOIN";
 
 export type ChainInfo = {
   key: ChainKey;
@@ -58,6 +58,10 @@ export const CHAINS: ChainInfo[] = [
   { key: ChainKeys.ICON_MAINNET,      label: "ICON",       type: "ICON",      swappable: true },
   { key: ChainKeys.STELLAR_MAINNET,   label: "Stellar",    type: "STELLAR",   swappable: true },
   { key: ChainKeys.NEAR_MAINNET,      label: "NEAR",       type: "NEAR",      swappable: true },
+  // Bitcoin via Radfi 2-of-2 multisig trading wallet.
+  // Requires sign-in + trading-wallet funding before first swap; see
+  // https://docs.sodax.com/developers/how-to/bitcoin-integration
+  { key: ChainKeys.BITCOIN_MAINNET,   label: "Bitcoin",    type: "BITCOIN",   swappable: true },
 ];
 
 // ChainType doubles as the SDK's xChainType identifier.
@@ -179,6 +183,11 @@ export const TOKENS: TokenInfo[] = [
   { chain: ChainKeys.KAIA_MAINNET, symbol: "USDT",  name: "Tether USD", address: "0xd077a400968890eacc75cdc901f0356c943e4fdb", decimals: 6 },
   { chain: ChainKeys.KAIA_MAINNET, symbol: "SODA",  name: "SODAX",      address: "0x772ffe538e45b2cddfb5823041ec26c44815b9ab", decimals: 18 },
   { chain: ChainKeys.KAIA_MAINNET, symbol: "bnUSD", name: "bnUSD",      address: "0xF8D13cAcb8E2B6BA8396DbA35a7365EF6b603cd6", decimals: 18 },
+
+  // ── Bitcoin (via Radfi — 2-of-2 multisig trading wallet) ──
+  // Token address is the SDK's hub-side identifier for native BTC.
+  // Source: docs.sodax.com bitcoin-integration guide.
+  { chain: ChainKeys.BITCOIN_MAINNET, symbol: "BTC", name: "Bitcoin", address: "0xeB0393893b5bf98a50073d6740738B08e575058b", decimals: 8 },
 
   // ── Solana (non-EVM) ──
   { chain: ChainKeys.SOLANA_MAINNET, symbol: "SOL",   name: "Solana",   address: "11111111111111111111111111111111", decimals: 9 },
