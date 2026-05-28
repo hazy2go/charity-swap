@@ -148,13 +148,15 @@ flow, allowance handling, the EVM connect button — fell out in an afternoon.
 - ✅ **0.1% charity fee LIVE** → public Sonic wallet `0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD` (interim EOA; 100% to charity)
 - ✅ **Points ledger live** (Prisma + Supabase) — CoinGecko-priced, logged on every confirmed swap
 - ✅ **`/leaderboard`** reading from Supabase · **`/charities`** 5-candidate shortlist
-- ✅ **Vectorheart UI** — late-90s WipEout / The Designers Republic aesthetic (cyan + magenta + yellow on ink, Orbitron + JetBrains Mono + Barlow Condensed, type plates, slash dividers, diagonal corner cuts, hazard-tape ticker, mobile-aware)
+- ✅ **Live charity-wallet balance panel** on `/charities` — animated USD counter + arc gauge for progress to next-payout threshold
+- ✅ **`/vote`** — public, points-weighted on-site voting. Admin opens a round at `/vote/admin` with 3 candidates + threshold (signed message verified server-side). Public page shows live tallies with magenta→cyan gradient bars, auto-polled.
+- ✅ **Vectorheart v3 UI** — WipEout 3 / The Designers Republic aesthetic done with intent. Audiowide + DM Sans + JetBrains Mono; cool ink + cyan + magenta + yellow; SVG HUD primitives (registration marks, target reticles, brand-mark wedge, arc gauge); selective HUD vocabulary (HUD on swap card + wallet panel; editorial Vectorheart on hero + content)
 
 What's intentionally **not** live yet:
 
 - ❌ **Charity multisig** — interim single-key wallet today; migration is a one-line address change
-- ❌ **Voting** — Day 10-11 once the community picks the rules (runs in Discord)
 - ⚠️ **Non-EVM swap signing** — wired per the SDK and routes verified live, but not yet exercised with a real Solana/Sui/etc. wallet
+- ⚠️ **Real on-chain charity payout addresses** — currently `*-offramp-tbd` placeholders; locked in only after the first vote winner is declared (money-gate, single reviewed diff)
 
 ---
 
