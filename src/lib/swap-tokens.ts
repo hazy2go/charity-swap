@@ -192,10 +192,19 @@ export const TOKENS: TokenInfo[] = [
   { chain: ChainKeys.BITCOIN_MAINNET, symbol: "BTC", name: "Bitcoin", address: "0:0", decimals: 8 },
 
   // ── Solana (non-EVM) ──
-  { chain: ChainKeys.SOLANA_MAINNET, symbol: "SOL",   name: "Solana",   address: "11111111111111111111111111111111", decimals: 9 },
-  { chain: ChainKeys.SOLANA_MAINNET, symbol: "USDC",  name: "USD Coin", address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", decimals: 6 },
-  { chain: ChainKeys.SOLANA_MAINNET, symbol: "SODA",  name: "SODAX",    address: "8Bj8gSbga8My8qRkT1RrvgxFBExiGFgdRNHFaR9o2T3Q", decimals: 9 },
-  { chain: ChainKeys.SOLANA_MAINNET, symbol: "bnUSD", name: "bnUSD",    address: "3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5", decimals: 9 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "SOL",     name: "Solana",                  address: "11111111111111111111111111111111", decimals: 9 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "USDC",    name: "USD Coin",                address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", decimals: 6 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "USDT",    name: "Tether USD",              address: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", decimals: 6 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "SODA",    name: "SODAX",                   address: "8Bj8gSbga8My8qRkT1RrvgxFBExiGFgdRNHFaR9o2T3Q", decimals: 9 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "bnUSD",   name: "bnUSD",                   address: "3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5", decimals: 9 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "WBTC",    name: "Wrapped BTC (Solana)",    address: "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh", decimals: 8 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "JitoSOL", name: "Jito Staked SOL",         address: "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn", decimals: 9 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "mSOL",    name: "Marinade Staked SOL",     address: "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So", decimals: 9 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "BONK",    name: "Bonk",                    address: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", decimals: 5 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "JUP",     name: "Jupiter",                 address: "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN", decimals: 6 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "RAY",     name: "Raydium",                 address: "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", decimals: 6 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "PYTH",    name: "Pyth Network",            address: "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3", decimals: 6 },
+  { chain: ChainKeys.SOLANA_MAINNET, symbol: "JTO",     name: "Jito",                    address: "jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL", decimals: 9 },
 
   // ── Sui (non-EVM) ──
   { chain: ChainKeys.SUI_MAINNET, symbol: "SUI",       name: "SUI",                 address: "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI", decimals: 9 },
@@ -208,14 +217,23 @@ export const TOKENS: TokenInfo[] = [
   { chain: ChainKeys.SUI_MAINNET, symbol: "vSUI",      name: "Volo Staked SUI",     address: "0x549e8b69270defbfafd4f94e17ec44cdbdd99820b33bda2278dea3b9a32d3f55::cert::CERT", decimals: 9 },
   { chain: ChainKeys.SUI_MAINNET, symbol: "yapSUI",    name: "Yap Staked SUI",      address: "0x83f1bb8c91ecd1fd313344058b0eed94d63c54e41d8d1ae5bff1353443517d65::yap_sui::YAP_SUI", decimals: 9 },
   { chain: ChainKeys.SUI_MAINNET, symbol: "trevinSUI", name: "Trevin Staked SUI",   address: "0x502867b177303bf1bf226245fcdd3403c177e78d175a55a56c0602c7ff51c7fa::trevin_sui::TREVIN_SUI", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "USDT",      name: "Tether USD",          address: "0x375f70cf2ae4c00bf37117d0c85a2c71545e6ee05c4a5c7d282cd66a4504b068::usdt::USDT", decimals: 6 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "DEEP",      name: "DeepBook",            address: "0xdeeb7a4662eec9f2f3def03fb937a663dddaa2e215b8078a284d026b7946c270::deep::DEEP", decimals: 6 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "WAL",       name: "Walrus",              address: "0x356a26eb9e012a68958082340d4c4116e7f55615cf27affcff209cf0ae544f59::wal::WAL", decimals: 9 },
+  { chain: ChainKeys.SUI_MAINNET, symbol: "NAVX",      name: "Navi Protocol",       address: "0xa99b8952d4f7d947ea77fe0ecdcc9e5fc0bcab2841d6e2a5aa00c3044e5544b5::navx::NAVX", decimals: 9 },
 
   // ── Injective (non-EVM) ──
-  { chain: ChainKeys.INJECTIVE_MAINNET, symbol: "SODA", name: "SODAX", address: "factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/soda", decimals: 18 },
+  { chain: ChainKeys.INJECTIVE_MAINNET, symbol: "INJ",   name: "Injective",   address: "inj", decimals: 18 },
+  { chain: ChainKeys.INJECTIVE_MAINNET, symbol: "USDC",  name: "USD Coin",    address: "ibc/2CBC2EA121AE42563B08028466F37B600F2D7D4282342DE938283CC3FB2BC00E", decimals: 6 },
+  { chain: ChainKeys.INJECTIVE_MAINNET, symbol: "USDT",  name: "Tether USD",  address: "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7", decimals: 6 },
+  { chain: ChainKeys.INJECTIVE_MAINNET, symbol: "bnUSD", name: "bnUSD",       address: "factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD", decimals: 18 },
+  { chain: ChainKeys.INJECTIVE_MAINNET, symbol: "SODA",  name: "SODAX",       address: "factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/soda", decimals: 18 },
 
   // ── ICON (non-EVM) ──
   { chain: ChainKeys.ICON_MAINNET, symbol: "ICX",   name: "ICON",         address: "cx0000000000000000000000000000000000000000", decimals: 18 },
   { chain: ChainKeys.ICON_MAINNET, symbol: "wICX",  name: "Wrapped ICX",  address: "cx3975b43d260fb8ec802cef6e60c2f4d07486f11d", decimals: 18 },
   { chain: ChainKeys.ICON_MAINNET, symbol: "bnUSD", name: "bnUSD (legacy)", address: "cx88fd7df7ddff82f7cc735c871dc519838cb235bb", decimals: 18 },
+  { chain: ChainKeys.ICON_MAINNET, symbol: "BALN",  name: "Balance Token",  address: "cxf61cd5a45dc9f91c15aa65831a30a90d59a09619", decimals: 18 },
 
   // ── Stellar (non-EVM) ──
   { chain: ChainKeys.STELLAR_MAINNET, symbol: "XLM",   name: "Stellar Lumens", address: "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA", decimals: 7 },
@@ -229,6 +247,7 @@ export const TOKENS: TokenInfo[] = [
   { chain: ChainKeys.NEAR_MAINNET, symbol: "USDT",  name: "Tether USD", address: "usdt.tether-token.near", decimals: 6 },
   { chain: ChainKeys.NEAR_MAINNET, symbol: "SODA",  name: "SODAX",      address: "soda.sodax.near", decimals: 24 },
   { chain: ChainKeys.NEAR_MAINNET, symbol: "bnUSD", name: "bnUSD",      address: "bnusd.sodax.near", decimals: 24 },
+  { chain: ChainKeys.NEAR_MAINNET, symbol: "wNEAR", name: "Wrapped NEAR", address: "wrap.near", decimals: 24 },
 ];
 
 export function chainInfo(key: ChainKey): ChainInfo | undefined {

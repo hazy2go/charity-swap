@@ -11,6 +11,7 @@ import {
   useTradingWalletBalance,
   useExpiredUtxos,
   useFundTradingWallet,
+  useRenewUtxos,
   loadRadfiSession,
 } from "@sodax/dapp-kit";
 import { useWalletProvider, useXAccount } from "@sodax/wallet-sdk-react";
@@ -65,12 +66,34 @@ type PreviewPrice = {
   source: "coingecko" | "cached" | "fallback" | null;
 };
 
+const SLIPPAGE_KEY = "swb_slippage_bps";
+const SLIPPAGE_PRESETS = [10, 50, 100, 300] as const; // 0.10%, 0.50%, 1.00%, 3.00%
+
 export function SwapCard() {
   const [srcChain, setSrcChain] = useState<ChainKey>(DEFAULT_SRC.chain);
   const [srcAddr, setSrcAddr] = useState(DEFAULT_SRC.address);
   const [dstChain, setDstChain] = useState<ChainKey>(DEFAULT_DST.chain);
   const [dstAddr, setDstAddr] = useState(DEFAULT_DST.address);
   const [amount, setAmount] = useState("");
+  const [slippageBps, setSlippageBps] = useState<number>(50); // 0.50%
+  const [showSlippage, setShowSlippage] = useState(false);
+
+  // Persist user slippage choice across reloads
+  useMemo(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem(SLIPPAGE_KEY);
+    if (saved) {
+      const n = Number(saved);
+      if (Number.isFinite(n) && n >= 1 && n <= 5000) setSlippageBps(n);
+    }
+  }, []);
+  const setSlip = (bps: number) => {
+    const clamped = Math.max(1, Math.min(5000, Math.round(bps)));
+    setSlippageBps(clamped);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SLIPPAGE_KEY, String(clamped));
+    }
+  };
 
   const src: TokenInfo =
     findToken(srcChain, srcAddr) ?? tokensForChain(srcChain)[0];
@@ -107,6 +130,7 @@ export function SwapCard() {
   });
   const { mutateAsync: fundTrading, isPending: isFunding } =
     useFundTradingWallet();
+  const { mutateAsync: renewUtxos, isPending: isRenewing } = useRenewUtxos();
 
   // Readiness gate per the docs:
   //   destination-only BTC = only needs auth + a trading address
@@ -178,7 +202,8 @@ export function SwapCard() {
   //   dstAddress = trading wallet when destination is BTC
   //   minOutputAmount clamped ≥ 546 sats when destination is BTC
   //   srcAddress stays as personal wallet (SDK derives trading internally)
-  const rawMinOut = (quotedOut * 995n) / 1000n;
+  // minOutputAmount uses user-settable slippage (basis points, 10000 = 100%)
+  const rawMinOut = (quotedOut * BigInt(10000 - slippageBps)) / 10000n;
   const dstAddressForIntent = dstIsBtc
     ? loadRadfiSession(dstAccount.address ?? "")?.tradingAddress
     : dstAccount.address;
@@ -427,6 +452,7 @@ export function SwapCard() {
             style={{
               display: "flex",
               justifyContent: "space-between",
+              alignItems: "center",
               gap: 8,
               fontSize: 10,
               letterSpacing: "0.1em",
@@ -434,9 +460,112 @@ export function SwapCard() {
               color: "var(--vh-text-3)",
             }}
           >
-            <span>Slippage 0.50%</span>
+            <button
+              type="button"
+              onClick={() => setShowSlippage((v) => !v)}
+              style={{
+                background: "transparent",
+                border: 0,
+                padding: 0,
+                color: "var(--vh-cyan-500)",
+                fontFamily: "inherit",
+                fontSize: "inherit",
+                letterSpacing: "inherit",
+                textTransform: "inherit",
+                cursor: "pointer",
+              }}
+            >
+              Slippage {(slippageBps / 100).toFixed(2)}% ▾
+            </button>
             <span>Solver: any</span>
           </div>
+          {showSlippage && (
+            <div
+              style={{
+                marginTop: 6,
+                padding: "8px 10px",
+                background: "var(--vh-inset)",
+                border: "1px solid var(--vh-line)",
+                borderRadius: "var(--vh-r)",
+                display: "flex",
+                gap: 6,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              {SLIPPAGE_PRESETS.map((bps) => (
+                <button
+                  key={bps}
+                  type="button"
+                  onClick={() => setSlip(bps)}
+                  className="vh-btn vh-btn--xs"
+                  style={{
+                    height: 26,
+                    padding: "0 8px",
+                    fontSize: 10,
+                    background:
+                      slippageBps === bps
+                        ? "var(--vh-cyan-soft)"
+                        : "var(--vh-s3)",
+                    color:
+                      slippageBps === bps
+                        ? "var(--vh-cyan-500)"
+                        : "var(--vh-text-2)",
+                    borderColor:
+                      slippageBps === bps
+                        ? "var(--vh-cyan-500)"
+                        : "var(--vh-line-hi)",
+                  }}
+                >
+                  {(bps / 100).toFixed(bps < 100 ? 2 : 1)}%
+                </button>
+              ))}
+              <span
+                style={{
+                  fontSize: 10,
+                  color: "var(--vh-text-3)",
+                  marginLeft: 4,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Custom
+              </span>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                max="50"
+                value={(slippageBps / 100).toFixed(2)}
+                onChange={(e) => {
+                  const pct = Number(e.target.value);
+                  if (Number.isFinite(pct)) setSlip(pct * 100);
+                }}
+                style={{
+                  width: 70,
+                  height: 26,
+                  background: "var(--vh-s3)",
+                  border: "1px solid var(--vh-line-hi)",
+                  borderRadius: "var(--vh-r)",
+                  color: "var(--vh-text)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  padding: "0 6px",
+                  textAlign: "right",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 10,
+                  color: "var(--vh-text-3)",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                %
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Charity rewards strip — compact */}
@@ -521,16 +650,49 @@ export function SwapCard() {
               }
               return;
             }
+            // Renew expired UTXOs before swapping (Radfi requirement)
+            if (
+              btcInvolved &&
+              srcIsBtc &&
+              expiredUtxos &&
+              expiredUtxos.length > 0
+            ) {
+              if (!btcWalletProvider) return;
+              try {
+                await renewUtxos({
+                  txIdVouts: expiredUtxos.map(
+                    (u) => u.txidVout ?? `${u.txid}:${u.vout}`,
+                  ),
+                  walletProvider: btcWalletProvider,
+                });
+                setStatus({
+                  kind: "ok",
+                  message: `Renewed ${expiredUtxos.length} UTXO(s). Try swap again.`,
+                });
+              } catch (e) {
+                setStatus({
+                  kind: "err",
+                  message: e instanceof Error ? e.message : "renew failed",
+                });
+              }
+              return;
+            }
             await handleSwap();
           }}
           disabled={
-            isSwapping || isApproving || isFunding ||
+            isSwapping || isApproving || isFunding || isRenewing ||
             radfi.isLoginPending ||
             (!btcInvolved && !canSwap) ||
             (btcInvolved && radfi.isAuthed && btcReady && !canSwap)
           }
         >
-          {radfi.isLoginPending ? "Signing in…" : isFunding ? "Funding…" : buttonLabel} <Arrow size={12} />
+          {radfi.isLoginPending
+            ? "Signing in…"
+            : isFunding
+              ? "Funding…"
+              : isRenewing
+                ? "Renewing UTXOs…"
+                : buttonLabel} <Arrow size={12} />
         </button>
 
         {status.kind === "ok" && (
