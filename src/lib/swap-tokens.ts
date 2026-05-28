@@ -185,9 +185,11 @@ export const TOKENS: TokenInfo[] = [
   { chain: ChainKeys.KAIA_MAINNET, symbol: "bnUSD", name: "bnUSD",      address: "0xF8D13cAcb8E2B6BA8396DbA35a7365EF6b603cd6", decimals: 18 },
 
   // ── Bitcoin (via Radfi — 2-of-2 multisig trading wallet) ──
-  // Token address is the SDK's hub-side identifier for native BTC.
-  // Source: docs.sodax.com bitcoin-integration guide.
-  { chain: ChainKeys.BITCOIN_MAINNET, symbol: "BTC", name: "Bitcoin", address: "0xeB0393893b5bf98a50073d6740738B08e575058b", decimals: 8 },
+  // Spoke-side identifier for native BTC ("0:0" — UTXO-style, NOT a
+  // hex address). The SDK's getQuote resolves this to the hub-side
+  // wrapped representation (0xeB0393…58b) before calling the solver.
+  // Verified against bitcoinSupportedTokens.BTC in @sodax/sdk rc.8.
+  { chain: ChainKeys.BITCOIN_MAINNET, symbol: "BTC", name: "Bitcoin", address: "0:0", decimals: 8 },
 
   // ── Solana (non-EVM) ──
   { chain: ChainKeys.SOLANA_MAINNET, symbol: "SOL",   name: "Solana",   address: "11111111111111111111111111111111", decimals: 9 },
