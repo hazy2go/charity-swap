@@ -24,12 +24,7 @@ const ECOSYSTEMS: { type: ChainType; label: string }[] = [
   { type: "NEAR",      label: "NEAR" },
 ];
 
-export function ConnectButton({
-  block = false,
-}: {
-  /** Force full-width button (used in mobile hero) */
-  block?: boolean;
-}) {
+export function ConnectButton({ block = false }: { block?: boolean }) {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -97,33 +92,25 @@ export function ConnectButton({
     <>
       {isMobile && (
         <div
-          className="ol-picker-pop__backdrop"
+          className="vh-picker-pop__backdrop"
           onClick={() => setOpen(false)}
           aria-hidden
         />
       )}
-      <div className="ol-picker-pop" role="dialog" aria-modal="true">
-        <div className="ol-picker-pop__handle" aria-hidden />
-        <div
-          style={{
-            padding: "8px 18px 14px",
-            borderBottom: "1px solid var(--ol-line)",
-          }}
-        >
-          <div className="ol-eyebrow" style={{ marginBottom: 4 }}>
-            Wallets
+      <div className="vh-picker-pop" role="dialog" aria-modal="true">
+        <div className="vh-picker-pop__handle" aria-hidden />
+        <div style={{ padding: "8px 16px 12px", borderBottom: "1px solid var(--vh-line)" }}>
+          <div className="vh-eyebrow" style={{ marginBottom: 4 }}>
+            Wallets · {connectedCount}/{ECOSYSTEMS.length} online
           </div>
-          <div
-            className="ol-serif"
-            style={{ fontSize: 20, color: "var(--ol-text)" }}
-          >
+          <div className="vh-h3" style={{ fontSize: 18, color: "var(--vh-text)" }}>
             Connect a wallet
           </div>
-          <p className="ol-body" style={{ marginTop: 4, fontSize: 13 }}>
+          <p className="vh-body" style={{ marginTop: 6, fontSize: 13, color: "var(--vh-text-3)" }}>
             One per ecosystem. Cross-chain swaps need both sides.
           </p>
         </div>
-        <div className="ol-picker-pop__list">
+        <div className="vh-picker-pop__list">
           {ECOSYSTEMS.map((e) => (
             <WalletGroup
               key={e.type}
@@ -144,7 +131,7 @@ export function ConnectButton({
     >
       <button
         type="button"
-        className={`ol-btn ${connectedCount > 0 ? "ol-btn--ghost" : "ol-btn--primary"} ${block ? "ol-btn--block" : ""}`}
+        className={`vh-btn ${connectedCount > 0 ? "vh-btn--ghost" : "vh-btn--primary"} ${block ? "vh-btn--block" : ""}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
@@ -155,27 +142,26 @@ export function ConnectButton({
               style={{
                 width: 8,
                 height: 8,
-                borderRadius: 999,
-                background: "var(--ol-sage)",
-                boxShadow: "0 0 8px var(--ol-sage)",
+                background: "var(--vh-acid-500)",
+                boxShadow: "0 0 8px var(--vh-acid-glow)",
               }}
             />
             {triggerLabel}
             <span
-              className="ol-mono"
-              style={{ fontSize: 12, color: "var(--ol-text-3)", marginLeft: 4 }}
+              className="vh-mono"
+              style={{ fontSize: 11, opacity: 0.7, marginLeft: 4 }}
             >
               · {connectedCount}/{ECOSYSTEMS.length}
             </span>
           </>
         ) : (
-          <>{triggerLabel}</>
+          <>▸ {triggerLabel}</>
         )}
       </button>
 
       {open && !isMobile && (
         <div
-          className="ol-picker-pop"
+          className="vh-picker-pop"
           style={{
             position: "absolute",
             top: "calc(100% + 8px)",
@@ -186,20 +172,13 @@ export function ConnectButton({
           }}
           role="dialog"
         >
-          <div
-            style={{
-              padding: "14px 18px",
-              borderBottom: "1px solid var(--ol-line)",
-            }}
-          >
-            <div className="ol-eyebrow" style={{ marginBottom: 4 }}>
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--vh-line)" }}>
+            <div className="vh-eyebrow" style={{ marginBottom: 4 }}>
               Wallets · {connectedCount}/{ECOSYSTEMS.length}
             </div>
-            <div className="ol-serif" style={{ fontSize: 18, color: "var(--ol-text)" }}>
-              Connect a wallet
-            </div>
+            <div className="vh-h3" style={{ fontSize: 18 }}>Connect a wallet</div>
           </div>
-          <div className="ol-picker-pop__list">
+          <div className="vh-picker-pop__list">
             {ECOSYSTEMS.map((e) => (
               <WalletGroup
                 key={e.type}
@@ -240,60 +219,56 @@ function WalletGroup({
     : null;
 
   return (
-    <div style={{ borderTop: "1px solid var(--ol-line)" }}>
+    <div style={{ borderTop: "1px solid var(--vh-line)" }}>
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "10px 16px 6px",
+          padding: "8px 16px 4px",
+          gap: 8,
         }}
       >
-        <span
-          className="ol-eyebrow"
-          style={{ color: "var(--ol-text-2)" }}
-        >
+        <span className="vh-eyebrow" style={{ color: "var(--vh-cyan-500)" }}>
           {label}
         </span>
         {short && (
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span
-              className="ol-mono"
-              style={{ fontSize: 12, color: "var(--ol-sage)" }}
+              className="vh-mono"
+              style={{ fontSize: 12, color: "var(--vh-acid-500)" }}
             >
               ● {short}
             </span>
             <button
               onClick={() => disconnect({ xChainType })}
               type="button"
-              className="ol-btn ol-btn--ghost ol-btn--sm"
-              style={{ height: 28, padding: "0 10px", fontSize: 12 }}
-              title={`Disconnect ${label}`}
+              className="vh-btn vh-btn--ghost vh-btn--xs"
             >
-              Disconnect
+              ✕
             </button>
           </span>
         )}
       </div>
-      <div style={{ paddingBottom: 8 }}>
+      <div style={{ paddingBottom: 6 }}>
         {connectors.map((c: IXConnector) => (
           <button
             key={c.id}
             type="button"
             onClick={() => connect(c).then(onDone).catch(() => {})}
             disabled={isPending}
-            className="ol-picker-pop__item"
+            className="vh-picker-pop__item"
             style={{ height: 52 }}
           >
             <span
               style={{
-                width: 32,
-                height: 32,
+                width: 30,
+                height: 30,
                 display: "grid",
                 placeItems: "center",
-                background: "var(--ol-s3)",
-                border: "1px solid var(--ol-line)",
-                borderRadius: 6,
+                background: "var(--vh-s3)",
+                border: "1px solid var(--vh-line)",
+                borderRadius: 2,
                 flexShrink: 0,
               }}
             >
@@ -301,21 +276,21 @@ function WalletGroup({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={c.icon} alt="" width={18} height={18} />
               ) : (
-                <span style={{ color: "var(--ol-jade)" }}>◇</span>
+                <span style={{ color: "var(--vh-cyan-500)" }}>◇</span>
               )}
             </span>
             <span
-              className="ol-picker-pop__item__label"
-              style={{ fontSize: 14, fontWeight: 500 }}
+              className="vh-picker-pop__item__label"
+              style={{ fontFamily: "var(--font-sans)", fontWeight: 500 }}
             >
               {c.name}
               {!c.isInstalled && (
                 <span
-                  className="ol-mono"
+                  className="vh-mono"
                   style={{
                     marginLeft: 8,
                     fontSize: 11,
-                    color: "var(--ol-text-3)",
+                    color: "var(--vh-text-3)",
                     fontWeight: 400,
                   }}
                 >

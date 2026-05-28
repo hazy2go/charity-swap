@@ -3,6 +3,7 @@ import { ConnectButton } from "@/components/ConnectButton";
 import { SwapCard } from "@/components/SwapCard";
 import { WalletBalancePanel } from "@/components/WalletBalancePanel";
 import { TopBar } from "@/components/TopBar";
+import { RegMark, Slash, Arrow } from "@/components/hud";
 
 const CHARITY_WALLET = "0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD";
 
@@ -12,16 +13,12 @@ export default function Home() {
       <TopBar active="swap" />
 
       <main style={{ flex: 1 }}>
-        {/* HERO + SWAP — single column < lg, side-by-side ≥ lg */}
-        <section className="ol-section">
-          <div className="ol-container">
-            <div className="ol-hero-grid">
+        {/* HERO + SWAP */}
+        <section className="vh-section">
+          <div className="vh-container">
+            <div className="vh-hero-grid">
               <Hero />
-
-              <div
-                id="swap"
-                className="ol-rise-2 ol-hero-grid__swap scroll-mt-24"
-              >
+              <div id="swap" className="vh-hero-grid__swap vh-rise-2" style={{ scrollMarginTop: 80 }}>
                 <ConnectButton block />
                 <SwapCard />
               </div>
@@ -29,94 +26,115 @@ export default function Home() {
           </div>
         </section>
 
-        {/* DATA BAND — the live "see fees move" moment */}
-        <section className="ol-section--tight" style={{ paddingTop: 0 }}>
-          <div className="ol-container">
+        {/* LIVE WALLET — full-width data moment */}
+        <section className="vh-section--tight" style={{ paddingTop: 0 }}>
+          <div className="vh-container">
             <WalletBalancePanel />
           </div>
         </section>
 
-        {/* HOW IT WORKS — three editorial paragraphs */}
-        <section className="ol-section">
-          <div className="ol-container">
-            <div className="grid gap-12 lg:grid-cols-3">
+        {/* HOW IT WORKS — three pillars */}
+        <section className="vh-section">
+          <div className="vh-container">
+            <div className="vh-eyebrow" style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ color: "var(--vh-cyan-500)" }}><RegMark size={12} /></span>
+              The system
+            </div>
+            <div style={{ display: "grid", gap: 28, gridTemplateColumns: "1fr" }} className="md:grid-cols-3">
               <Pillar
-                eyebrow="01 · how it works"
-                title="You swap. The dapp keeps 0.1%."
-              >
-                Pick any two tokens across <strong>18 networks</strong>. The
-                SODAX solver routes the swap. A 0.1% partner fee is deducted
-                in the input token and forwarded to a public wallet on Sonic.
-              </Pillar>
+                index="01"
+                title="You swap."
+                body={
+                  <>
+                    Pick any two tokens across <strong style={{ color: "var(--vh-text)" }}>18 networks</strong>. The SODAX
+                    solver routes the swap. A 0.1% partner fee is deducted in the input token and forwarded to a public
+                    wallet on Sonic.
+                  </>
+                }
+              />
               <Pillar
-                eyebrow="02 · transparency"
-                title="The wallet is public. The balance is verifiable."
-              >
-                It&apos;s the address above. Watch fees stack in real time on{" "}
-                <a
-                  href={`https://sonicscan.org/address/${CHARITY_WALLET}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  sonicscan
-                </a>
-                . When it crosses a community-set threshold, the next charity
-                vote opens.
-              </Pillar>
+                index="02"
+                title="The wallet is public."
+                accent="cyan"
+                body={
+                  <>
+                    Audit it on{" "}
+                    <a
+                      href={`https://sonicscan.org/address/${CHARITY_WALLET}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      sonicscan
+                    </a>{" "}
+                    any time. When it crosses a community-set threshold, the next charity vote opens.
+                  </>
+                }
+              />
               <Pillar
-                eyebrow="03 · community vote"
-                title="The community picks where it goes."
-              >
-                A shortlist of charities is{" "}
-                <Link href="/charities">curated and voted on</Link>. The
-                winner of each cycle receives the full balance.{" "}
-                <strong>100% to charity.</strong> No skim, no ops cut.
-              </Pillar>
+                index="03"
+                title="Community votes."
+                accent="magenta"
+                body={
+                  <>
+                    A shortlist of <Link href="/charities">charities</Link> is curated and voted on. The winner of each
+                    cycle receives the full balance.{" "}
+                    <strong style={{ color: "var(--vh-text)" }}>100% to charity.</strong> No skim, no ops cut.
+                  </>
+                }
+              />
             </div>
           </div>
         </section>
 
         {/* BUILD IN PUBLIC */}
         <section
-          className="ol-section--tight"
+          className="vh-section--tight"
           style={{
-            borderTop: "1px solid var(--ol-line)",
-            borderBottom: "1px solid var(--ol-line)",
-            background: "var(--ol-s1)",
+            borderTop: "1px solid var(--vh-line)",
+            borderBottom: "1px solid var(--vh-line)",
+            background: "var(--vh-s1)",
           }}
         >
-          <div className="ol-container">
-            <div className="grid gap-8 md:grid-cols-[1fr_auto] items-center">
+          <div className="vh-container">
+            <div
+              style={{
+                display: "grid",
+                gap: 24,
+                gridTemplateColumns: "1fr",
+                alignItems: "center",
+              }}
+              className="md:grid-cols-[1fr_auto]"
+            >
               <div>
-                <div className="ol-eyebrow" style={{ marginBottom: 6 }}>
-                  Built in public on the SODAX SDK V2
+                <div className="vh-eyebrow" style={{ marginBottom: 8 }}>
+                  Built in public on SODAX SDK V2
                 </div>
                 <p
-                  className="ol-serif"
+                  className="vh-display"
                   style={{
-                    fontSize: "clamp(20px, 2.4vw, 26px)",
-                    color: "var(--ol-text)",
-                    lineHeight: 1.25,
+                    fontSize: "clamp(20px, 3.2vw, 28px)",
+                    color: "var(--vh-text)",
+                    lineHeight: 1.2,
                     margin: 0,
                   }}
                 >
-                  Two weeks. Mainnet from day one. Every milestone is a commit.
+                  Two weeks. <Slash /> Mainnet from day one. Every milestone is a commit.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 <a
                   href="https://github.com/hazy2go/swaps-without-borders"
                   target="_blank"
                   rel="noreferrer"
-                  className="ol-btn ol-btn--ghost"
+                  className="vh-btn vh-btn--ghost vh-btn--sm"
                 >
-                  Source on GitHub
+                  Source
                 </a>
                 <a
                   href="https://github.com/hazy2go/swaps-without-borders/blob/main/BUILD-LOG.md"
                   target="_blank"
                   rel="noreferrer"
-                  className="ol-btn ol-btn--ghost"
+                  className="vh-btn vh-btn--ghost vh-btn--sm"
                 >
                   Build log
                 </a>
@@ -124,7 +142,7 @@ export default function Home() {
                   href="https://builders.sodax.com/mcp"
                   target="_blank"
                   rel="noreferrer"
-                  className="ol-btn ol-btn--jade"
+                  className="vh-btn vh-btn--magenta vh-btn--sm"
                 >
                   SODAX Builders MCP
                 </a>
@@ -141,54 +159,46 @@ export default function Home() {
 
 function Hero() {
   return (
-    <section className="ol-rise">
-      <p className="ol-eyebrow" style={{ marginBottom: 14 }}>
-        <span
-          style={{
-            display: "inline-block",
-            width: 24,
-            height: 1,
-            background: "var(--ol-persimmon)",
-            marginRight: 10,
-            verticalAlign: "middle",
-          }}
-        />
-        Day 11 · build in public · mainnet
-      </p>
-      <h1 className="ol-h1">
-        Swaps that{" "}
-        <span
-          className="ol-serif-it"
-          style={{ color: "var(--ol-persimmon)" }}
-        >
-          quietly
-        </span>{" "}
-        fund charity.
+    <section className="vh-rise">
+      <div
+        className="vh-eyebrow"
+        style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}
+      >
+        <span style={{ color: "var(--vh-cyan-500)" }}>
+          <RegMark size={12} />
+        </span>
+        Day 11 <Slash color="yellow" /> Build in public <Slash color="yellow" /> Mainnet
+      </div>
+
+      <h1 className="vh-h1">
+        Cross-chain swaps
+        <br />
+        <span style={{ color: "var(--vh-cyan-500)" }}>that fund</span>{" "}
+        <span style={{ color: "var(--vh-magenta-500)" }}>charity.</span>
       </h1>
-      <p className="ol-lede" style={{ marginTop: 20, maxWidth: 560 }}>
-        A cross-chain swap dapp on the SODAX SDK V2. Every fee — a single
-        tenth of a percent — routes to a public charity wallet on Sonic.
-        <strong style={{ color: "var(--ol-text)" }}>
-          {" "}100% goes to the community-voted cause.
+
+      <p className="vh-lede" style={{ marginTop: 18, maxWidth: 580 }}>
+        A dapp on the SODAX SDK V2. Every fee — a single tenth of a percent —
+        routes to a public charity wallet on Sonic.{" "}
+        <strong style={{ color: "var(--vh-text)" }}>
+          100% goes to the community-voted cause.
         </strong>{" "}
         No skim. No ops cut.
       </p>
-      <div className="flex flex-wrap gap-3" style={{ marginTop: 28 }}>
-        <a href="#swap" className="ol-btn ol-btn--primary">
-          Open swap
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 24 }}>
+        <a href="#swap" className="vh-btn vh-btn--primary">
+          Open swap <Arrow size={12} />
         </a>
-        <Link href="/charities" className="ol-btn ol-btn--ghost">
+        <Link href="/charities" className="vh-btn vh-btn--ghost">
           See charity wallet
         </Link>
       </div>
 
-      <div
-        className="ol-data-band"
-        style={{ marginTop: 36, maxWidth: 560 }}
-      >
+      <div className="vh-data-band" style={{ marginTop: 28 }}>
         <DataCell label="Fee per swap" value="0.1%" />
         <DataCell label="Networks live" value="18" />
-        <DataCell label="To charity" value="100%" highlight />
+        <DataCell label="To charity" value="100%" accent />
       </div>
     </section>
   );
@@ -197,18 +207,18 @@ function Hero() {
 function DataCell({
   label,
   value,
-  highlight,
+  accent,
 }: {
   label: string;
   value: string;
-  highlight?: boolean;
+  accent?: boolean;
 }) {
   return (
-    <div className="ol-data-band__cell">
-      <div className="ol-data-band__label">{label}</div>
+    <div className="vh-data-band__cell">
+      <div className="vh-data-band__label">{label}</div>
       <div
-        className="ol-data-band__value"
-        style={highlight ? { color: "var(--ol-persimmon)" } : undefined}
+        className="vh-data-band__value"
+        style={accent ? { color: "var(--vh-magenta-500)" } : undefined}
       >
         {value}
       </div>
@@ -217,37 +227,39 @@ function DataCell({
 }
 
 function Pillar({
-  eyebrow,
+  index,
   title,
-  children,
+  body,
+  accent = "default",
 }: {
-  eyebrow: string;
+  index: string;
   title: string;
-  children: React.ReactNode;
+  body: React.ReactNode;
+  accent?: "default" | "cyan" | "magenta";
 }) {
+  const c =
+    accent === "cyan"
+      ? "var(--vh-cyan-500)"
+      : accent === "magenta"
+        ? "var(--vh-magenta-500)"
+        : "var(--vh-text-3)";
   return (
     <article>
-      <div className="ol-eyebrow" style={{ marginBottom: 12 }}>
-        {eyebrow}
-      </div>
-      <h3
-        className="ol-serif"
+      <div
+        className="vh-display"
         style={{
-          fontSize: "clamp(20px, 2.4vw, 26px)",
-          color: "var(--ol-text)",
-          lineHeight: 1.2,
-          letterSpacing: "-0.012em",
-          marginBottom: 10,
+          fontSize: 22,
+          color: c,
+          letterSpacing: "0.02em",
+          marginBottom: 8,
         }}
       >
+        {index}.
+      </div>
+      <h3 className="vh-h3" style={{ marginBottom: 8 }}>
         {title}
       </h3>
-      <p
-        className="ol-body"
-        style={{ color: "var(--ol-text-2)", fontSize: 15 }}
-      >
-        {children}
-      </p>
+      <p className="vh-body">{body}</p>
     </article>
   );
 }
@@ -256,49 +268,48 @@ function Footer() {
   return (
     <footer
       style={{
-        padding: "32px 0 56px",
-        borderTop: "1px solid var(--ol-line)",
+        padding: "28px 0 56px",
+        borderTop: "1px solid var(--vh-line)",
       }}
     >
-      <div className="ol-container">
-        <div className="grid gap-6 md:grid-cols-[1fr_auto] items-end">
+      <div className="vh-container">
+        <div
+          style={{
+            display: "grid",
+            gap: 16,
+            gridTemplateColumns: "1fr",
+            alignItems: "end",
+          }}
+          className="md:grid-cols-[1fr_auto]"
+        >
           <div>
             <div
-              className="ol-serif"
-              style={{
-                fontSize: 18,
-                color: "var(--ol-text)",
-                marginBottom: 4,
-              }}
+              className="vh-display"
+              style={{ fontSize: 18, color: "var(--vh-text)", marginBottom: 4 }}
             >
               Swaps without Borders
             </div>
-            <p className="ol-body" style={{ fontSize: 13, maxWidth: 480 }}>
+            <p
+              className="vh-body"
+              style={{ fontSize: 12, maxWidth: 480, color: "var(--vh-text-3)" }}
+            >
               Built by{" "}
-              <a
-                href="https://sodaxpay.vercel.app"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href="https://sodaxpay.vercel.app" target="_blank" rel="noreferrer">
                 Hazy
               </a>{" "}
               with the{" "}
-              <a
-                href="https://builders.sodax.com/mcp"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href="https://builders.sodax.com/mcp" target="_blank" rel="noreferrer">
                 SODAX Builders MCP
               </a>
-              . Open source · MIT · audited and verified on Sonicscan.
+              . Open source · MIT.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <a
               href="https://github.com/hazy2go/swaps-without-borders"
               target="_blank"
               rel="noreferrer"
-              className="ol-btn ol-btn--ghost ol-btn--sm"
+              className="vh-btn vh-btn--ghost vh-btn--sm"
             >
               Source
             </a>
@@ -306,7 +317,7 @@ function Footer() {
               href="https://github.com/hazy2go/swaps-without-borders/blob/main/CHANGELOG.md"
               target="_blank"
               rel="noreferrer"
-              className="ol-btn ol-btn--ghost ol-btn--sm"
+              className="vh-btn vh-btn--ghost vh-btn--sm"
             >
               Changelog
             </a>

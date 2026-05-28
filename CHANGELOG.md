@@ -5,6 +5,59 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 11 — Thu 2026-05-28 (cont. ×4) — VECTORHEART v.3 — done with intent
+
+Open Ledger retired. The community voted **Vectorheart** and Vectorheart they
+get, just done with proper craft this time. Anchored on **WipEout 3 (1999)**
+specifically (per Hazy) and **moderate HUD density** (swap card + wallet
+panel use racing-HUD vocabulary; hero + content pages stay editorial).
+
+### Why this iteration is different
+- Anchored to a specific TDR/WipEout era (3, 1999) instead of "diagonals + cyan"
+- Custom inline SVG HUD primitives (registration marks, target reticles, brand mark wedge, arc gauge) — not just CSS clip-path tricks
+- Selective HUD: where the data is technical (the swap, the live balance), HUD vocabulary; where the narrative is human (hero, charities), editorial Vectorheart
+- Hard mobile breakpoints replace unreliable clamp() guessing
+
+### Type system (every pick justified)
+- Display: **Audiowide** — single-weight tech caps, characterful, broadly TDR-evoking (community-picked)
+- Body/UI: **DM Sans** — modern grotesque, NOT Inter
+- Data/numbers: **JetBrains Mono** — best slashed zero, tight tnum
+
+### Palette (cool ink, R<B, WCAG AA verified)
+- Surfaces: cool-ink ramp `#06080F` → `#222838`
+- Text: cream `#E8F1F7` (~16:1), `#A6B4C8` (~7:1), `#7886A0` (~4.6:1)
+- **Cyan `#21D4E5`** — primary signal (live, action, focus)
+- **Magenta `#FF4FB8`** — charity signal (fee, vote, hot CTA)
+- **Yellow `#F5D300`** — hazard / numplate
+- **Acid `#BFF252`** — sage / online
+- Real glow tokens (`*-glow`) and soft tints (`*-soft`) for halos + backgrounds
+
+### Rebuilt (vh- prefix)
+- **`globals.css`** — full design system, mobile-first hard breakpoints
+- **`hud.tsx`** (new) — `<RegMark>`, `<Reticle>`, `<Chevron>`, `<Arrow>`, `<BrandMark>` (vector logo, not text), `<GaugeArc>` (240° SVG gauge with progress fill + tick marks), `<Bracketed>`, `<Slash>`
+- **`TopBar.tsx`** — vector brand mark + minimal nav + Mainnet pill + bottom hazard-tape strip
+- **`Picker.tsx`** — desktop dropdown / mobile portal-bottom-sheet (HUD-styled)
+- **`ConnectButton.tsx`** — Engage / connected states, dropdown ↔ sheet
+- **`SwapCard.tsx`** — bracketed FROM/TO, segmented LED-style amount input (cyan glow text-shadow), bottom-sheet pickers, magenta charity-rewards subpanel, cyan ENGAGE button
+- **`WalletBalancePanel.tsx`** — Audiowide live counter + **240° SVG arc gauge** for progress (magenta→cyan→acid gradient stroke with cyan glow), telemetry footer
+- **`page.tsx`** — editorial hero (reg-mark eyebrow, two-color headline split, dual CTAs, data band) + swap + live wallet + 3-pillar system + build-in-public band + footer
+- **`leaderboard/page.tsx`** — same editorial header, telemetry table (cards on mobile)
+- **`charities/page.tsx`** — wallet panel front-and-center, reticle-marked candidate cards
+- **`opengraph-image.tsx`** — cool-ink ground, two-color headline, telemetry stat row
+- **`layout.tsx`** — Audiowide + DM Sans + JetBrains via next/font, viewport meta
+
+### Tech kept (didn't reinvent the wheel)
+- viewport meta wiring
+- Picker portal/sheet pattern
+- `useCountUp` rAF tween on balance
+- `/api/wallet-balance` + `/api/price` endpoints
+- All useQuote/useSwap/useSwapAllowance/useSwapApprove flows byte-identical
+- All 18 SODAX networks still wired
+- Fee config 0.1% → 0x95A8…721AD untouched
+- Prisma + leaderboard + charity seed untouched
+
+---
+
 ## Day 11 — Thu 2026-05-28 (cont. ×3) — OPEN LEDGER · full ground-up redesign
 
 Vectorheart retired. The neon WipEout aesthetic was tonally wrong for a

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/hud";
 
 export function TopBar({
   active,
@@ -6,13 +7,17 @@ export function TopBar({
   active: "swap" | "leaderboard" | "charities";
 }) {
   return (
-    <header className="ol-topbar">
-      <div className="ol-topbar__inner">
-        <Link href="/" className="ol-brand">
-          <span className="ol-brand__mark">S</span>
-          <span className="ol-brand__name">Swaps without Borders</span>
+    <header className="vh-topbar">
+      <div className="vh-topbar__inner">
+        <Link href="/" className="vh-brand">
+          <span className="vh-brand__mark">
+            <BrandMark size={24} />
+          </span>
+          <span className="vh-brand__name">
+            Swaps without Borders
+          </span>
         </Link>
-        <nav className="ol-nav">
+        <nav className="vh-nav" aria-label="Primary">
           <Link href="/" className={active === "swap" ? "is-active" : ""}>
             Swap
           </Link>
@@ -29,13 +34,14 @@ export function TopBar({
             Leaderboard
           </Link>
         </nav>
-        <div className="ol-topbar__tail">
-          <span className="ol-pill ol-pill--live">
-            <span className="ol-pill__dot ol-pulse" />
+        <div className="vh-topbar__tail">
+          <span className="vh-pill vh-pill--live">
+            <span className="vh-pill__dot vh-pulse" />
             Mainnet
           </span>
         </div>
       </div>
+      <div className="vh-hazard" aria-hidden />
     </header>
   );
 }

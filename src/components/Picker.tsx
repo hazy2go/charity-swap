@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { Chevron } from "@/components/hud";
 
 export type PickerItem = {
   id: string;
@@ -19,10 +20,7 @@ export type PickerItem = {
   payload?: unknown;
 };
 
-export type PickerGroup = {
-  label: string;
-  items: PickerItem[];
-};
+export type PickerGroup = { label: string; items: PickerItem[] };
 
 export interface PickerProps {
   value: string;
@@ -30,7 +28,6 @@ export interface PickerProps {
   items?: PickerItem[];
   triggerLabel?: ReactNode;
   ariaLabel?: string;
-  /** Heading shown in the mobile bottom sheet */
   sheetTitle?: string;
   placeholder?: string;
   searchable?: boolean;
@@ -39,27 +36,9 @@ export interface PickerProps {
   disabled?: boolean;
 }
 
-const ChevronIcon = () => (
-  <svg
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden
-    className="ol-picker-btn__chev"
-  >
-    <path d="m4 6 4 4 4-4" />
-  </svg>
-);
-
 /**
- * A picker that behaves like a dropdown on desktop and a bottom sheet
- * on mobile. Searchable when > 8 items. Keyboard navigation on desktop.
- *
- * Mobile sheet is rendered into a portal on document.body so it isn't
- * trapped inside the trigger's overflow container.
+ * Desktop = popover under trigger. Mobile = portal-rendered bottom sheet.
+ * Keyboard nav, searchable when > 8 items, body-scroll-lock on sheet.
  */
 export function Picker({
   value,
@@ -83,7 +62,6 @@ export function Picker({
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Detect mobile via CSS matchMedia — single source of truth
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 639px)");
     const sync = () => setIsMobile(mql.matches);
@@ -112,9 +90,7 @@ export function Picker({
       .map((g) => ({
         ...g,
         items: g.items.filter(
-          (it) =>
-            it.label.toLowerCase().includes(q) ||
-            it.search?.toLowerCase().includes(q),
+          (it) => it.label.toLowerCase().includes(q) || it.search?.toLowerCase().includes(q),
         ),
       }))
       .filter((g) => g.items.length > 0);
@@ -127,7 +103,6 @@ export function Picker({
 
   useEffect(() => { setActiveIdx(0); }, [query, open]);
 
-  // Click-outside + Esc (desktop dropdown)
   useEffect(() => {
     if (!open || isMobile) return;
     let armed = false;
@@ -138,9 +113,7 @@ export function Picker({
         setOpen(false);
       }
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -150,14 +123,11 @@ export function Picker({
     };
   }, [open, isMobile]);
 
-  // Lock body scroll while mobile sheet open
   useEffect(() => {
     if (!(open && isMobile)) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
@@ -165,7 +135,6 @@ export function Picker({
     };
   }, [open, isMobile]);
 
-  // Focus search on open
   useEffect(() => {
     if (open && autoSearchable) {
       const t = setTimeout(() => searchRef.current?.focus(), 60);
@@ -173,12 +142,9 @@ export function Picker({
     }
   }, [open, autoSearchable]);
 
-  // Scroll active item into view (desktop)
   useEffect(() => {
     if (!open) return;
-    const el = listRef.current?.querySelector<HTMLButtonElement>(
-      `[data-idx="${activeIdx}"]`,
-    );
+    const el = listRef.current?.querySelector<HTMLButtonElement>(`[data-idx="${activeIdx}"]`);
     el?.scrollIntoView({ block: "nearest" });
   }, [activeIdx, open]);
 
@@ -206,32 +172,31 @@ export function Picker({
     }
   };
 
-  const Popover = (
+  const Pop = (
     <>
       {isMobile && (
         <div
-          className="ol-picker-pop__backdrop"
+          className="vh-picker-pop__backdrop"
           onClick={() => setOpen(false)}
           aria-hidden
         />
       )}
       <div
-        className="ol-picker-pop"
+        className="vh-picker-pop"
         role="listbox"
         onKeyDown={onListKey}
         tabIndex={-1}
       >
-        <div className="ol-picker-pop__handle" aria-hidden />
+        <div className="vh-picker-pop__handle" aria-hidden />
         {isMobile && (
           <div
             style={{
-              padding: "4px 16px 8px",
-              fontFamily: "var(--font-sans)",
-              fontSize: 12,
-              fontWeight: 600,
-              letterSpacing: "0.06em",
+              padding: "4px 14px 8px",
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "var(--ol-text-3)",
+              color: "var(--vh-text-3)",
             }}
           >
             {sheetTitle}
@@ -245,18 +210,19 @@ export function Picker({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onListKey}
-            className="ol-picker-pop__search"
+            className="vh-picker-pop__search"
             autoComplete="off"
             spellCheck={false}
           />
         )}
-        <div ref={listRef} className="ol-picker-pop__list">
+        <div ref={listRef} className="vh-picker-pop__list">
           {filteredGroups.length === 0 && (
             <div
               style={{
                 padding: "16px 14px",
                 fontSize: 13,
-                color: "var(--ol-text-3)",
+                color: "var(--vh-text-3)",
+                fontFamily: "var(--font-mono)",
               }}
             >
               No matches.
@@ -264,9 +230,7 @@ export function Picker({
           )}
           {filteredGroups.map((g) => (
             <div key={g.label || "g"}>
-              {g.label && (
-                <div className="ol-picker-pop__group">{g.label}</div>
-              )}
+              {g.label && <div className="vh-picker-pop__group">{g.label}</div>}
               {g.items.map((it) => {
                 const gIdx = flatFiltered.indexOf(it);
                 return (
@@ -276,16 +240,14 @@ export function Picker({
                     data-idx={gIdx}
                     data-active={gIdx === activeIdx}
                     data-selected={it.id === value}
-                    className="ol-picker-pop__item"
+                    className="vh-picker-pop__item"
                     onMouseEnter={() => setActiveIdx(gIdx)}
                     onClick={() => commit(gIdx)}
                   >
                     {it.icon && <span aria-hidden>{it.icon}</span>}
-                    <span className="ol-picker-pop__item__label">{it.label}</span>
+                    <span className="vh-picker-pop__item__label">{it.label}</span>
                     {it.badge && (
-                      <span className="ol-picker-pop__item__badge">
-                        {it.badge}
-                      </span>
+                      <span className="vh-picker-pop__item__badge">{it.badge}</span>
                     )}
                   </button>
                 );
@@ -301,24 +263,24 @@ export function Picker({
     <div ref={wrapperRef} className={`relative ${className}`}>
       <button
         type="button"
-        className="ol-picker-btn"
+        className="vh-picker-btn"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="ol-picker-btn__label">
+        <span className="vh-picker-btn__label">
           {triggerLabel ?? selected?.label ?? (
-            <span style={{ color: "var(--ol-text-4)" }}>{placeholder}</span>
+            <span style={{ color: "var(--vh-text-4)" }}>{placeholder}</span>
           )}
         </span>
-        <ChevronIcon />
+        <Chevron size={14} dir="down" />
       </button>
 
-      {open && !isMobile && Popover}
+      {open && !isMobile && Pop}
       {open && isMobile && typeof document !== "undefined" &&
-        createPortal(Popover, document.body)}
+        createPortal(Pop, document.body)}
     </div>
   );
 }

@@ -25,6 +25,7 @@ import {
 } from "@/lib/swap-tokens";
 import { formatPoints, DEFAULT_POINTS_PER_USD } from "@/lib/points";
 import { Picker, type PickerGroup } from "@/components/Picker";
+import { Bracketed, Arrow } from "@/components/hud";
 
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000" as const;
 
@@ -33,7 +34,7 @@ const ALT_CHAINS = CHAINS.filter((c) => c.type !== "EVM");
 
 const CHAIN_GROUPS: PickerGroup[] = [
   {
-    label: "EVM networks",
+    label: "EVM",
     items: EVM_CHAINS.map((c) => ({
       id: c.key,
       label: c.label,
@@ -42,7 +43,7 @@ const CHAIN_GROUPS: PickerGroup[] = [
     })),
   },
   {
-    label: "Other ecosystems",
+    label: "Other",
     items: ALT_CHAINS.map((c) => ({
       id: c.key,
       label: c.label,
@@ -98,11 +99,7 @@ export function SwapCard() {
 
   const parsedAmount = useMemo(() => {
     if (!amount) return 0n;
-    try {
-      return parseUnits(amount, src.decimals);
-    } catch {
-      return 0n;
-    }
+    try { return parseUnits(amount, src.decimals); } catch { return 0n; }
   }, [amount, src.decimals]);
 
   const { data: quoteResult, isFetching: isQuoting } = useQuote({
@@ -217,9 +214,7 @@ export function SwapCard() {
           const j = (await res.json()) as { pointsAwarded?: number };
           pointsAwarded = j.pointsAwarded ?? null;
         }
-      } catch {
-        // swallow
-      }
+      } catch { /* swallow */ }
 
       setStatus({
         kind: "ok",
@@ -242,50 +237,41 @@ export function SwapCard() {
   const srcLabel = chainInfo(src.chain)?.label ?? srcType;
   const dstLabel = chainInfo(dst.chain)?.label ?? dstType;
   const buttonLabel = !srcAccount.address
-    ? `Connect ${srcLabel} wallet`
+    ? `Connect ${srcLabel}`
     : !dstAccount.address
-      ? `Connect ${dstLabel} wallet`
+      ? `Connect ${dstLabel}`
       : samePair
         ? "Pick two different tokens"
         : isApproving
           ? "Approving…"
           : isSwapping
-            ? "Swapping…"
+            ? "Engaging…"
             : needsApprove
-              ? `Approve & swap`
-              : "Swap";
+              ? "Approve & engage"
+              : "Engage swap";
 
   return (
-    <div className="ol-card w-full">
-      <div
-        className="ol-card__header"
-        style={{ flexWrap: "wrap", rowGap: 8 }}
-      >
-        <span className="ol-eyebrow">Swap</span>
-        <span
-          style={{
-            marginLeft: "auto",
-            display: "flex",
-            gap: 6,
-            flexWrap: "wrap",
-            justifyContent: "flex-end",
-          }}
-        >
-          <span className="ol-pill ol-pill--live">
-            <span className="ol-pill__dot ol-pulse" />
+    <div className="vh-card vh-scan">
+      <div className="vh-card__head">
+        <span className="vh-eyebrow" style={{ color: "var(--vh-cyan-500)" }}>
+          Swap // Core
+        </span>
+        <span style={{ marginLeft: "auto", display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <span className="vh-pill vh-pill--live">
+            <span className="vh-pill__dot vh-pulse" />
             Mainnet
           </span>
-          <span className="ol-pill ol-pill--giving">0.1% to charity</span>
+          <span className="vh-pill vh-pill--mag">0.1% → charity</span>
         </span>
       </div>
 
-      <div className="ol-card__body space-y-4">
+      <div className="vh-card__body" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* FROM */}
-        <div className="ol-field">
-          <div className="ol-field__label">
-            <span>From</span>
-            <span className="ol-mono" style={{ color: "var(--ol-text-3)" }}>
-              {srcLabel} · {src.symbol}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Bracketed color="cyan">From</Bracketed>
+            <span className="vh-mono" style={{ fontSize: 10, color: "var(--vh-text-3)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              Send · {src.symbol}
             </span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 8 }}>
@@ -297,91 +283,82 @@ export function SwapCard() {
             placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="ol-input ol-input-amount ol-input-big"
+            className="vh-input vh-input-amount vh-input-big"
           />
         </div>
 
         {/* Flip */}
-        <div className="flex items-center gap-3">
-          <hr className="ol-rule flex-1" />
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <hr className="vh-rule" style={{ flex: 1 }} />
           <button
             type="button"
             onClick={flip}
             aria-label="Flip"
             title="Flip From / To"
-            className="ol-btn ol-btn--ghost ol-btn--sm"
-            style={{ height: 32, padding: "0 12px", fontSize: 12 }}
+            className="vh-btn vh-btn--ghost vh-btn--xs"
           >
-            ↑↓ Flip
+            ⇅ Flip
           </button>
-          <hr className="ol-rule flex-1" />
+          <hr className="vh-rule" style={{ flex: 1 }} />
         </div>
 
         {/* TO */}
-        <div className="ol-field">
-          <div className="ol-field__label">
-            <span>To</span>
-            <span className="ol-mono" style={{ color: "var(--ol-text-3)" }}>
-              {dstLabel} · {dst.symbol}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Bracketed color="magenta">To</Bracketed>
+            <span className="vh-mono" style={{ fontSize: 10, color: "var(--vh-text-3)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              Receive · {dst.symbol}
             </span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 8 }}>
             <ChainPicker value={dst.chain} onChange={(k) => pickChain("dst", k)} side="To" />
             <TokenPicker chain={dst.chain} value={dst.address} onChange={setDstAddr} side="To" />
           </div>
-          <div
-            className="ol-input"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: 64,
-              padding: "0 16px",
-            }}
-          >
-            <span style={{ color: "var(--ol-text-3)" }}>≈</span>
+          <div className="vh-readout">
+            <span style={{ color: "var(--vh-text-3)" }}>≈</span>
             <span
-              className="ol-serif"
+              className="vh-display vh-num"
               style={{
-                fontSize: 26,
-                color: "var(--ol-text)",
-                fontVariantNumeric: "tabular-nums",
-                letterSpacing: "-0.01em",
+                fontSize: 24,
+                color: "var(--vh-magenta-500)",
+                textShadow: "0 0 14px var(--vh-magenta-glow)",
               }}
             >
               {isQuoting && parsedAmount > 0n ? (
-                <span
-                  className="ol-mono"
-                  style={{ color: "var(--ol-text-3)", fontSize: 13 }}
-                >
-                  Pricing…
+                <span className="vh-mono" style={{ color: "var(--vh-text-3)", fontSize: 13, textShadow: "none" }}>
+                  Quoting…
                 </span>
               ) : quotedOut > 0n ? (
                 Number(formatUnits(quotedOut, dst.decimals)).toLocaleString("en-US", {
                   maximumFractionDigits: 8,
                 })
               ) : (
-                <span style={{ color: "var(--ol-text-4)" }}>—</span>
+                <span style={{ color: "var(--vh-text-4)", textShadow: "none" }}>—</span>
               )}
             </span>
           </div>
           {quoteHint && (
             <div
+              className="vh-mono"
               style={{
-                fontSize: 13,
-                color: "var(--ol-honey)",
-                padding: "4px 2px",
+                fontSize: 12,
+                color: "var(--vh-amber-500)",
+                padding: "2px 0",
               }}
             >
-              {quoteHint}
+              ⚠ {quoteHint}
             </div>
           )}
           <div
-            className="ol-mono flex items-center justify-between"
+            className="vh-mono"
             style={{
-              fontSize: 12,
-              color: "var(--ol-text-3)",
-              paddingTop: 2,
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 8,
+              fontSize: 10,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--vh-text-3)",
             }}
           >
             <span>Slippage 0.50%</span>
@@ -389,46 +366,38 @@ export function SwapCard() {
           </div>
         </div>
 
-        {/* Charity rewards readout */}
+        {/* Charity */}
         <div
           style={{
-            background: "var(--ol-persimmon-soft)",
-            border: "1px solid rgba(232, 100, 60, 0.22)",
-            borderRadius: "var(--ol-r-lg)",
+            background: "var(--vh-magenta-soft)",
+            border: "1px solid var(--vh-magenta-soft)",
+            borderRadius: "var(--vh-r)",
             padding: 14,
           }}
         >
-          <div className="ol-eyebrow" style={{ color: "var(--ol-persimmon)" }}>
-            Charity rewards
+          <div className="vh-eyebrow" style={{ color: "var(--vh-magenta-500)", marginBottom: 8 }}>
+            Charity rewards · live
           </div>
-          <PointsPreview
-            amountRaw={parsedAmount}
-            decimals={src.decimals}
-            symbol={src.symbol}
-          />
+          <PointsPreview amountRaw={parsedAmount} decimals={src.decimals} symbol={src.symbol} />
           <p
-            className="ol-body"
-            style={{
-              fontSize: 12,
-              marginTop: 8,
-              color: "var(--ol-text-2)",
-            }}
+            className="vh-body"
+            style={{ marginTop: 8, fontSize: 12, color: "var(--vh-text-3)" }}
           >
-            Every swap routes <strong style={{ color: "var(--ol-persimmon)" }}>0.1%</strong> to a
+            Every swap routes <strong style={{ color: "var(--vh-magenta-500)" }}>0.1%</strong> to a
             public charity wallet on Sonic.{" "}
-            <strong style={{ color: "var(--ol-text)" }}>100% of fees go to charity.</strong>
+            <strong style={{ color: "var(--vh-text)" }}>100% of fees go to charity.</strong>
           </p>
         </div>
 
         {/* Action */}
         <button
-          className="ol-btn ol-btn--primary ol-btn--block"
+          className="vh-btn vh-btn--primary vh-btn--block"
           type="button"
           onClick={handleSwap}
           disabled={!canSwap}
-          style={{ height: 52, fontSize: 15 }}
+          style={{ height: 52 }}
         >
-          {buttonLabel}
+          {buttonLabel} <Arrow size={12} />
         </button>
 
         {status.kind === "ok" && (
@@ -436,10 +405,10 @@ export function SwapCard() {
             role="status"
             style={{
               padding: 12,
-              border: "1px solid rgba(168, 201, 122, 0.4)",
-              background: "var(--ol-sage-soft)",
-              color: "var(--ol-sage)",
-              borderRadius: "var(--ol-r)",
+              border: "1px solid var(--vh-acid-soft)",
+              background: "var(--vh-acid-soft)",
+              color: "var(--vh-acid-500)",
+              fontFamily: "var(--font-mono)",
               fontSize: 13,
             }}
           >
@@ -451,32 +420,32 @@ export function SwapCard() {
             role="status"
             style={{
               padding: 12,
-              border: "1px solid rgba(232, 100, 60, 0.4)",
-              background: "var(--ol-persimmon-soft)",
-              color: "var(--ol-persimmon)",
-              borderRadius: "var(--ol-r)",
+              border: "1px solid var(--vh-magenta-soft)",
+              background: "var(--vh-magenta-soft)",
+              color: "var(--vh-magenta-500)",
+              fontFamily: "var(--font-mono)",
               fontSize: 13,
             }}
           >
-            <strong>Error ·</strong> {status.message}
+            <strong>ERR ·</strong> {status.message}
           </div>
         )}
       </div>
 
-      <div className="ol-card__footer">
+      <div className="vh-card__foot">
         <span>
           {srcAccount.address ? (
             <>
-              <span style={{ color: "var(--ol-sage)" }}>●</span>{" "}
+              <span style={{ color: "var(--vh-acid-500)" }}>●</span>{" "}
               {srcLabel} · {srcAccount.address.slice(0, 6)}…{srcAccount.address.slice(-4)}
             </>
           ) : (
             <>
-              <span style={{ color: "var(--ol-text-4)" }}>○</span> {srcLabel} disconnected
+              <span style={{ color: "var(--vh-text-4)" }}>○</span> {srcLabel} disconnected
             </>
           )}
         </span>
-        <span style={{ marginLeft: "auto", color: "var(--ol-jade)" }}>
+        <span style={{ marginLeft: "auto", color: "var(--vh-cyan-500)" }}>
           {srcLabel} → {dstLabel}
         </span>
       </div>
@@ -507,8 +476,8 @@ function ChainPicker({
             style={{
               width: 6,
               height: 6,
-              borderRadius: 999,
-              background: "var(--ol-jade)",
+              background: "var(--vh-cyan-500)",
+              boxShadow: "0 0 6px var(--vh-cyan-glow)",
               flexShrink: 0,
             }}
           />
@@ -536,20 +505,16 @@ function TokenPicker({
   return (
     <Picker
       value={value}
-      items={tokens.map((t) => ({
-        id: t.address,
-        label: t.symbol,
-        search: t.symbol,
-      }))}
+      items={tokens.map((t) => ({ id: t.address, label: t.symbol, search: t.symbol }))}
       ariaLabel="Token"
       sheetTitle={`${side} · Token`}
       triggerLabel={
         <span
-          className="ol-serif"
+          className="vh-display"
           style={{
-            fontSize: 16,
-            color: "var(--ol-persimmon)",
-            fontWeight: 600,
+            fontSize: 14,
+            color: "var(--vh-magenta-500)",
+            letterSpacing: "0.02em",
           }}
         >
           {selected?.symbol ?? "—"}
@@ -599,40 +564,42 @@ function PointsPreview({
         alignItems: "baseline",
         justifyContent: "space-between",
         gap: 12,
-        marginTop: 6,
       }}
     >
       <span
-        className="ol-serif"
+        className="vh-display vh-num"
         style={{
-          fontSize: 30,
-          fontWeight: 600,
-          color: "var(--ol-persimmon)",
-          fontVariantNumeric: "tabular-nums",
+          fontSize: 26,
+          color: "var(--vh-magenta-500)",
+          textShadow: "0 0 14px var(--vh-magenta-glow)",
         }}
       >
         {preview ? `+${formatPoints(preview.points)}` : "—"}
         <span
-          className="ol-mono"
+          className="vh-mono"
           style={{
-            fontSize: 12,
+            fontSize: 11,
             marginLeft: 8,
-            color: "var(--ol-text-3)",
+            color: "var(--vh-text-3)",
+            textShadow: "none",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
           }}
         >
           pts
         </span>
       </span>
       <span
-        className="ol-mono"
+        className="vh-mono"
         style={{
-          fontSize: 12,
-          color: "var(--ol-text-3)",
+          fontSize: 11,
+          color: "var(--vh-text-3)",
+          letterSpacing: "0.06em",
           textAlign: "right",
         }}
       >
         {preview ? (
-          <>≈ <strong style={{ color: "var(--ol-text)" }}>${preview.usd.toFixed(2)}</strong></>
+          <>≈ <strong style={{ color: "var(--vh-text)" }}>${preview.usd.toFixed(2)}</strong></>
         ) : isFetching && amountRaw > 0n ? (
           "Pricing…"
         ) : noPrice ? (

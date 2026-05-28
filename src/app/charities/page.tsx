@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { WalletBalancePanel } from "@/components/WalletBalancePanel";
 import { TopBar } from "@/components/TopBar";
+import { RegMark, Slash, Reticle } from "@/components/hud";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -43,68 +44,57 @@ export default async function CharitiesPage() {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <TopBar active="charities" />
 
-      <main style={{ flex: 1 }} className="ol-section">
-        <div className="ol-container">
-          <div className="ol-rise" style={{ maxWidth: 920, marginInline: "auto" }}>
-            <p className="ol-eyebrow" style={{ marginBottom: 14 }}>
-              <span
-                style={{
-                  display: "inline-block",
-                  width: 24,
-                  height: 1,
-                  background: "var(--ol-persimmon)",
-                  marginRight: 10,
-                  verticalAlign: "middle",
-                }}
-              />
-              Shortlist · {rows.length} candidate{rows.length === 1 ? "" : "s"}
-            </p>
-            <h1 className="ol-h1" style={{ marginBottom: 12 }}>
-              Charities.
+      <main style={{ flex: 1 }} className="vh-section">
+        <div className="vh-container">
+          <div className="vh-rise" style={{ maxWidth: 920, marginInline: "auto" }}>
+            <div className="vh-eyebrow" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <span style={{ color: "var(--vh-magenta-500)" }}><RegMark size={12} /></span>
+              Shortlist <Slash color="yellow" /> {rows.length} candidate{rows.length === 1 ? "" : "s"} <Slash color="yellow" /> Vote opens at threshold
+            </div>
+            <h1 className="vh-h1" style={{ marginBottom: 14 }}>
+              Chari<span style={{ color: "var(--vh-magenta-500)" }}>ties.</span>
             </h1>
-            <p className="ol-lede" style={{ maxWidth: 640 }}>
+            <p className="vh-lede" style={{ maxWidth: 640 }}>
               The community-curated shortlist for the next payout cycle. When
               the public wallet crosses the community-set threshold, a vote
               opens — the winner receives the full balance. Payout addresses
               are placeholders until winners are locked in.
             </p>
 
-            {/* Wallet panel — live */}
-            <div className="ol-rise-2" style={{ marginTop: 32 }}>
+            <div className="vh-rise-2" style={{ marginTop: 28 }}>
               <WalletBalancePanel />
             </div>
 
-            {/* Candidate cards */}
-            <div style={{ marginTop: 40 }}>
+            <div style={{ marginTop: 32 }}>
               {error ? (
                 <div
                   style={{
-                    padding: 16,
-                    border: "1px solid rgba(232,100,60,0.4)",
-                    background: "var(--ol-persimmon-soft)",
-                    color: "var(--ol-persimmon)",
-                    borderRadius: "var(--ol-r-lg)",
+                    padding: 14,
+                    border: "1px solid var(--vh-magenta-soft)",
+                    background: "var(--vh-magenta-soft)",
+                    color: "var(--vh-magenta-500)",
+                    fontFamily: "var(--font-mono)",
                   }}
                 >
                   <strong>Error · </strong>
                   {error}
                 </div>
               ) : rows.length === 0 ? (
-                <div
-                  className="ol-card"
-                  style={{ padding: "44px 24px", textAlign: "center" }}
-                >
-                  <div
-                    className="ol-serif"
-                    style={{ fontSize: 22, color: "var(--ol-text)" }}
-                  >
+                <div className="vh-card" style={{ padding: "40px 22px", textAlign: "center" }}>
+                  <div className="vh-h3" style={{ marginBottom: 8 }}>
                     No candidates seeded yet.
                   </div>
                 </div>
               ) : (
                 <ul
-                  className="grid gap-4 sm:grid-cols-2"
-                  style={{ listStyle: "none", padding: 0 }}
+                  style={{
+                    display: "grid",
+                    gap: 14,
+                    gridTemplateColumns: "1fr",
+                    listStyle: "none",
+                    padding: 0,
+                  }}
+                  className="sm:grid-cols-2"
                 >
                   {rows.map((c, idx) => (
                     <CandidateCard key={c.id} c={c} idx={idx + 1} />
@@ -113,16 +103,9 @@ export default async function CharitiesPage() {
               )}
             </div>
 
-            <div
-              className="flex flex-wrap gap-2"
-              style={{ marginTop: 32, justifyContent: "flex-end" }}
-            >
-              <Link href="/" className="ol-btn ol-btn--ghost ol-btn--sm">
-                Back to swap
-              </Link>
-              <Link href="/leaderboard" className="ol-btn ol-btn--ghost ol-btn--sm">
-                Leaderboard
-              </Link>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 28, justifyContent: "flex-end" }}>
+              <Link href="/" className="vh-btn vh-btn--ghost vh-btn--sm">← Swap</Link>
+              <Link href="/leaderboard" className="vh-btn vh-btn--ghost vh-btn--sm">Leaderboard</Link>
             </div>
           </div>
         </div>
@@ -133,56 +116,39 @@ export default async function CharitiesPage() {
 
 function CandidateCard({ c, idx }: { c: Charity; idx: number }) {
   return (
-    <li className="ol-card">
-      <div className="ol-card__body">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 10,
-          }}
-        >
-          <span className="ol-eyebrow">
+    <li className="vh-card">
+      <div className="vh-card__head">
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--vh-cyan-500)" }}>
+          <Reticle size={12} />
+          <span className="vh-eyebrow" style={{ color: "var(--vh-cyan-500)" }}>
             Candidate {String(idx).padStart(2, "0")}
           </span>
-          <span className="ol-tag">{c.payoutKind}</span>
-        </div>
-        <h3
-          className="ol-serif"
-          style={{
-            fontSize: 24,
-            color: "var(--ol-text)",
-            marginBottom: 8,
-            letterSpacing: "-0.012em",
-            lineHeight: 1.15,
-          }}
-        >
-          {c.name}
-        </h3>
-        <p
-          className="ol-body"
-          style={{ fontSize: 14, color: "var(--ol-text-2)" }}
-        >
-          {c.blurb}
-        </p>
+        </span>
+        <span style={{ marginLeft: "auto" }} className="vh-pill">{c.payoutKind}</span>
+      </div>
+      <div className="vh-card__body">
+        <h3 className="vh-h3" style={{ marginBottom: 8 }}>{c.name}</h3>
+        <p className="vh-body">{c.blurb}</p>
+
         <div
           style={{
             marginTop: 14,
             paddingTop: 12,
-            borderTop: "1px solid var(--ol-line)",
+            borderTop: "1px solid var(--vh-line)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             gap: 8,
-            fontSize: 12,
-            color: "var(--ol-text-3)",
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            color: "var(--vh-text-3)",
             flexWrap: "wrap",
+            letterSpacing: "0.06em",
           }}
         >
-          <span className="ol-mono">
+          <span>
             target ·{" "}
-            <span style={{ color: "var(--ol-text-2)" }}>
+            <span style={{ color: "var(--vh-text-2)" }}>
               {shortTarget(c.payoutTarget, c.payoutKind)}
             </span>
           </span>
@@ -191,7 +157,7 @@ function CandidateCard({ c, idx }: { c: Charity; idx: number }) {
               href={c.website}
               target="_blank"
               rel="noreferrer"
-              style={{ color: "var(--ol-jade)" }}
+              style={{ color: "var(--vh-cyan-500)" }}
             >
               {c.website.replace(/^https?:\/\//, "")} ↗
             </a>
