@@ -5,6 +5,13 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 11 — Thu 2026-05-28 (cont.) — ship-prep: live preview price + mobile nav
+
+- **`/api/price?symbol=…`** (new) — public, GET-only, returns the same CoinGecko price the server uses for the points ledger. 30s public cache.
+- **SwapCard preview now matches the leaderboard** — `PointsPreview` calls `/api/price` via React Query. SODA no longer pinned to $1; the "≈ $X swapped" line and the "+N pts" estimate use the real live price.
+- **Deleted dead preview stub** — `src/lib/points.ts` no longer exports `previewUsdValue` / `previewPoints` / `PREVIEW_PRICE_USD` (everything routed through the new endpoint).
+- **Mobile nav regression fixed** — `/`, `/leaderboard`, `/charities` topbar nav is now visible on all viewports (was `hidden md:flex`, dropped to mobile-blank by the revamp). Labels collapse to `[01] [02] [03]` < md, full text ≥ md. Topbar padding tightened on mobile.
+
 ## Day 11 — Thu 2026-05-28 — VECTORHEART // full UI revamp
 
 ### Community vote — UI direction

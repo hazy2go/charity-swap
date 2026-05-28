@@ -55,10 +55,19 @@ function TopBar() {
           <span style={{ color: "var(--vc-yellow)" }}>{"//"}</span> SWB
         </span>
       </div>
-      <nav className="vc-topbar__nav hidden md:flex">
-        <a href="#swap" className="is-active">[01] Swap</a>
-        <a href="/leaderboard">[02] Leaderboard</a>
-        <a href="/charities">[03] Charities</a>
+      <nav className="vc-topbar__nav flex">
+        <a href="#swap" className="is-active">
+          <span className="md:hidden">[01]</span>
+          <span className="hidden md:inline">[01] Swap</span>
+        </a>
+        <a href="/leaderboard">
+          <span className="md:hidden">[02]</span>
+          <span className="hidden md:inline">[02] Leaderboard</span>
+        </a>
+        <a href="/charities">
+          <span className="md:hidden">[03]</span>
+          <span className="hidden md:inline">[03] Charities</span>
+        </a>
       </nav>
       <div className="vc-topbar__tail">
         <span className="vc-chip vc-chip--live">

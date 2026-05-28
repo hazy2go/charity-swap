@@ -429,7 +429,7 @@ body {
 .vc-topbar__nav a {
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 10px;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.18em;
@@ -437,6 +437,9 @@ body {
   color: var(--vc-text-mute);
   border-right: 1px solid var(--vc-line-hi);
   transition: color 80ms linear, background 80ms linear;
+}
+@media (min-width: 768px) {
+  .vc-topbar__nav a { padding: 0 16px; }
 }
 .vc-topbar__nav a:hover  { color: var(--vc-cyan); background: var(--vc-ink-2); }
 .vc-topbar__nav a.is-active {

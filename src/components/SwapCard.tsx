@@ -9,6 +9,7 @@ import {
   useSwapApprove,
 } from "@sodax/dapp-kit";
 import { useWalletProvider, useXAccount } from "@sodax/wallet-sdk-react";
+import { useQuery } from "@tanstack/react-query";
 import type { CreateIntentParams } from "@sodax/sdk";
 import {
   CHAINS,
@@ -22,7 +23,7 @@ import {
   type TokenInfo,
   type ChainKey,
 } from "@/lib/swap-tokens";
-import { previewPoints, formatPoints, DEFAULT_POINTS_PER_USD } from "@/lib/points";
+import { formatPoints, DEFAULT_POINTS_PER_USD } from "@/lib/points";
 
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000" as const;
 
@@ -532,6 +533,12 @@ function TokenSelect({
   );
 }
 
+type PreviewPrice = {
+  symbol: string;
+  usd: number | null;
+  source: "coingecko" | "cached" | "fallback" | null;
+};
+
 function PointsPreview({
   amountRaw,
   decimals,
@@ -541,8 +548,33 @@ function PointsPreview({
   decimals: number;
   symbol: string;
 }) {
-  const preview =
-    amountRaw > 0n ? previewPoints(amountRaw, decimals, symbol) : null;
+  // Pulls the same CoinGecko price the API route uses when logging a
+  // confirmed swap, so the preview matches what hits the leaderboard.
+  const { data: priceData, isFetching } = useQuery<PreviewPrice>({
+    queryKey: ["preview-price", symbol.toUpperCase()],
+    queryFn: async () => {
+      const r = await fetch(`/api/price?symbol=${encodeURIComponent(symbol)}`);
+      if (!r.ok) throw new Error("price fetch failed");
+      return r.json() as Promise<PreviewPrice>;
+    },
+    staleTime: 30_000,
+    enabled: amountRaw > 0n,
+  });
+
+  const preview = (() => {
+    if (amountRaw <= 0n) return null;
+    if (priceData?.usd == null) return null;
+    const amount = Number(formatUnits(amountRaw, decimals));
+    if (!Number.isFinite(amount)) return null;
+    const usd = amount * priceData.usd;
+    return {
+      usd,
+      points: Math.round(usd * DEFAULT_POINTS_PER_USD),
+    };
+  })();
+
+  const noPrice =
+    amountRaw > 0n && !isFetching && priceData && priceData.usd == null;
 
   return (
     <div>
@@ -594,6 +626,10 @@ function PointsPreview({
         <span>
           {preview ? (
             <>≈ <b style={{ color: "var(--vc-text)" }}>${preview.usd.toFixed(2)}</b> swapped</>
+          ) : isFetching && amountRaw > 0n ? (
+            "Pricing…"
+          ) : noPrice ? (
+            <>{symbol} not priced — points off</>
           ) : (
             "Points unlock once a quote is in"
           )}

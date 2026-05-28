@@ -248,13 +248,18 @@ function SubTopBar({ active }: { active: "leaderboard" | "charities" }) {
           Swaps <span style={{ color: "var(--vc-yellow)" }}>{"//"}</span> Without Borders
         </span>
       </Link>
-      <nav className="vc-topbar__nav hidden md:flex">
-        <Link href="/">[01] Swap</Link>
+      <nav className="vc-topbar__nav flex">
+        <Link href="/">
+          <span className="md:hidden">[01]</span>
+          <span className="hidden md:inline">[01] Swap</span>
+        </Link>
         <Link href="/leaderboard" className={active === "leaderboard" ? "is-active" : ""}>
-          [02] Leaderboard
+          <span className="md:hidden">[02]</span>
+          <span className="hidden md:inline">[02] Leaderboard</span>
         </Link>
         <Link href="/charities" className={active === "charities" ? "is-active" : ""}>
-          [03] Charities
+          <span className="md:hidden">[03]</span>
+          <span className="hidden md:inline">[03] Charities</span>
         </Link>
       </nav>
       <div className="vc-topbar__tail">
