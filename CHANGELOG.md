@@ -7,6 +7,14 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ## Day 12 — Fri 2026-05-29 — Full audit pass + points integrity
 
+### Charity panel — show sub-cent fees + token basket
+- First real fee landed (0.001009 USDC = 0.1% of a ~$1 swap) but the panel
+  showed "$0.00" because it rounded USD to 2 decimals. Now the headline shows
+  4 decimals while the pot is < $1, and the panel itemizes the **accrued token
+  basket** (amount · origin chain · ~USD) so even a tenth-of-a-cent fee is
+  visible. Confirms the partner fee accrues correctly to the charity EOA (no
+  partner registration needed).
+
 ### 🐛 Insufficient-balance guard + swap timeout
 - A swap for more than the wallet's token balance reached a doomed tx (wallet
   sim: "ERC20: transfer amount exceeds balance"; on-chain: reverted) and then

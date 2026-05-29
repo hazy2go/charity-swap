@@ -63,6 +63,10 @@ export function WalletBalancePanel() {
   const usd = data?.usd?.value ?? 0;
   const animUsd = useCountUp(usd);
   const progress = Math.min(1, (usd || 0) / NEXT_PAYOUT_THRESHOLD_USD);
+  // Sub-cent fees (e.g. 0.1% of a $1 swap) would render as $0.00 at two
+  // decimals — show more precision when the pot is still tiny.
+  const usdFrac = usd > 0 && usd < 1 ? 4 : 2;
+  const accruedAssets = (data?.assets ?? []).filter((a) => a.formatted > 0);
 
   return (
     <div className="vh-card">
@@ -104,8 +108,8 @@ export function WalletBalancePanel() {
             }}
           >
             ${animUsd.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
+              minimumFractionDigits: usdFrac,
+              maximumFractionDigits: usdFrac,
             })}
           </div>
           <div
@@ -118,9 +122,40 @@ export function WalletBalancePanel() {
             }}
           >
             {data?.model === "partner-accrual"
-              ? `accrued across ${data.assets?.filter((a) => a.formatted > 0).length ?? 0} token${(data.assets?.filter((a) => a.formatted > 0).length ?? 0) === 1 ? "" : "s"} · partner registry on Sonic hub`
+              ? `accrued across ${accruedAssets.length} token${accruedAssets.length === 1 ? "" : "s"} · partner registry on Sonic hub`
               : `${balanceS.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} S native`}
           </div>
+
+          {/* Accrued token basket — itemizes even sub-cent fees */}
+          {accruedAssets.length > 0 && (
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
+              {accruedAssets.slice(0, 6).map((a, i) => (
+                <div
+                  key={`${a.symbol}-${a.originalChain}-${i}`}
+                  className="vh-mono"
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    fontSize: 11,
+                    color: "var(--vh-text-3)",
+                  }}
+                >
+                  <span>
+                    <span style={{ color: "var(--vh-text-2)" }}>
+                      {a.formatted.toLocaleString("en-US", { maximumFractionDigits: 6 })} {a.symbol}
+                    </span>{" "}
+                    <span style={{ color: "var(--vh-text-4)" }}>· {a.originalChain}</span>
+                  </span>
+                  {a.usd != null && (
+                    <span style={{ color: "var(--vh-cyan-500)" }}>
+                      ${a.usd.toLocaleString("en-US", { maximumFractionDigits: a.usd < 1 ? 4 : 2 })}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           <div
             style={{
