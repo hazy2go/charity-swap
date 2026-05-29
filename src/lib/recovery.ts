@@ -25,6 +25,7 @@ import {
   assetManagerAbi,
   type Sodax,
 } from "@sodax/sdk";
+import { decodeAbiParameters, parseAbiParameters, decodeFunctionData, getAddress } from "viem";
 import { CHAINS, type ChainKey } from "@/lib/swap-tokens";
 
 const EVM_CHAIN_KEYS = CHAINS.filter((c) => c.type === "EVM").map((c) => c.key);
@@ -121,9 +122,41 @@ async function resolveHome(
   return { homeChainKey, spokeToken };
 }
 
+// Safety invariant — decode the bytes we're about to sign and PROVE they do
+// exactly one thing: move the one scanned asset, in the live amount, back to the
+// user themselves. Anything else (extra calls, a different token, a third-party
+// recipient, an amount above the on-chain balance) throws and nothing is signed.
+// This makes "drains other assets / sends elsewhere" impossible by construction,
+// independent of any bug elsewhere in this file or the SDK.
+function assertOnlyReturnsToSelf(
+  payload: `0x${string}`,
+  expected: { hubAsset: `0x${string}`; user: `0x${string}`; amount: bigint },
+) {
+  const calls = decodeAbiParameters(parseAbiParameters("(address,uint256,bytes)[]"), payload)[0] as readonly [
+    `0x${string}`,
+    bigint,
+    `0x${string}`,
+  ][];
+  if (calls.length !== 1) throw new Error(`unsafe: payload has ${calls.length} calls, expected exactly 1`);
+  const [, value, data] = calls[0];
+  if (value !== 0n) throw new Error(`unsafe: non-zero native value ${value}`);
+  // AssetManager.transfer(address token, bytes to, uint256 amount, bytes data)
+  const decoded = decodeFunctionData({ abi: assetManagerAbi, data });
+  if (decoded.functionName !== "transfer") throw new Error(`unsafe: call is ${decoded.functionName}, not transfer`);
+  const [token, to, amount] = decoded.args as unknown as [`0x${string}`, `0x${string}`, bigint, `0x${string}`];
+  if (getAddress(token) !== getAddress(expected.hubAsset))
+    throw new Error(`unsafe: token ${token} != scanned asset ${expected.hubAsset}`);
+  // `to` is the spoke-encoded recipient — for EVM the trailing 20 bytes are the address.
+  const recipient = ("0x" + to.slice(-40)).toLowerCase();
+  if (recipient !== expected.user.toLowerCase())
+    throw new Error(`unsafe: recipient ${recipient} != you (${expected.user})`);
+  if (amount !== expected.amount) throw new Error(`unsafe: amount ${amount} != live balance ${expected.amount}`);
+}
+
 // Build the (unsigned-capable) spoke message that releases a stranded asset.
 // The user signs this on `derivationChainKey`; funds return to them on the
-// asset's home chain.
+// asset's home chain. Re-reads the live balance at sign time (never trusts the
+// stale scan) and asserts the payload only ever returns that asset to the user.
 export async function buildRecovery(
   sodax: Sodax,
   item: Pick<StrandedAsset, "derivationChainKey" | "hubAsset" | "balance">,
@@ -131,13 +164,28 @@ export async function buildRecovery(
 ) {
   const hub = sodax.hubProvider;
   const hubWallet = (await hub.getUserHubWalletAddress(user, item.derivationChainKey as never)) as `0x${string}`;
+
+  // Authoritative, fresh balance of THIS asset at THIS wallet — the only thing
+  // we'll move. Guards against a stale scan and bounds the amount to what's
+  // actually there (a transfer above balance would revert anyway).
+  const liveBalance = (await hub.publicClient.readContract({
+    address: item.hubAsset,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [hubWallet],
+  })) as bigint;
+  if (liveBalance <= 0n) throw new Error("Nothing to recover — balance is 0 (already recovered?).");
+
   const { homeChainKey, spokeToken } = await resolveHome(sodax, item.hubAsset);
 
   const payload = EvmAssetManagerService.withdrawAssetData(
-    { token: spokeToken, to: encodeAddress(homeChainKey as never, user), amount: item.balance },
+    { token: spokeToken, to: encodeAddress(homeChainKey as never, user), amount: liveBalance },
     hub,
     homeChainKey as never,
   );
+
+  // Defense-in-depth: prove the encoded bytes do exactly what we intend.
+  assertOnlyReturnsToSelf(payload, { hubAsset: item.hubAsset, user, amount: liveBalance });
 
   const coreParams = {
     srcChainKey: item.derivationChainKey,
@@ -146,7 +194,7 @@ export async function buildRecovery(
     dstAddress: hubWallet,
     payload,
   };
-  return { hubWallet, homeChainKey, spokeToken, payload, coreParams };
+  return { hubWallet, homeChainKey, spokeToken, payload, coreParams, amount: liveBalance };
 }
 
 // Dry-run the hub-side withdrawal (eth_call as the hub wallet). Returns true if
@@ -158,9 +206,9 @@ export async function simulateRecovery(
 ): Promise<{ ok: boolean; reason?: string }> {
   try {
     const { hubWallet, coreParams } = await buildRecovery(sodax, item, user);
-    // The payload is an array of (address,uint256,bytes) calls; decode the first
-    // (the AssetManager.transfer) and eth_call it from the hub wallet.
-    const { decodeAbiParameters, parseAbiParameters } = await import("viem");
+    // buildRecovery already asserted the payload only returns the asset to the
+    // user. Now eth_call the (single) transfer as the hub wallet to confirm it
+    // won't revert on-chain before we ask for a signature.
     const calls = decodeAbiParameters(parseAbiParameters("(address,uint256,bytes)[]"), coreParams.payload)[0] as readonly [
       `0x${string}`,
       bigint,
