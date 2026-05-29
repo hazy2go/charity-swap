@@ -350,7 +350,8 @@ export function SwapCard() {
       if (needsApprove) {
         await approve({ params: intentParams, walletProvider });
       }
-      const swapRes = await swap({ params: intentParams, walletProvider });
+      // Bound the cross-chain settlement wait so the UI can't hang forever.
+      const swapRes = await swap({ params: intentParams, walletProvider, timeout: 120_000 });
 
       // SwapResponse: { solverExecutionResponse, intent, intentDeliveryInfo }.
       // Pull every hash the server might verify against — the solver keys off
@@ -412,12 +413,23 @@ export function SwapCard() {
       // once the intent actually executes.
       if (eventId) void pollConfirm(eventId, pendingPts);
     } catch (e) {
-      setStatus({
-        kind: "err",
-        message: e instanceof Error ? e.message : "Swap failed",
-      });
+      const msg = e instanceof Error ? e.message : "Swap failed";
+      const friendly = /timeout|relay/i.test(msg)
+        ? "Signed on-chain, but cross-chain delivery is taking longer than usual. It may still complete — check your wallet/explorer before resending."
+        : /exceeds balance|insufficient/i.test(msg)
+          ? `Not enough ${src.symbol} in your wallet for this amount.`
+          : msg;
+      setStatus({ kind: "err", message: friendly });
     }
   };
+
+  // Block swaps that exceed the wallet balance before signing — otherwise the
+  // ERC-20 deposit reverts ("transfer amount exceeds balance") and the SDK
+  // hangs polling the relay for a packet that never gets created.
+  const srcBalanceKnown =
+    !srcIsBitcoin && srcBalances !== undefined && !!srcAccount.address;
+  const insufficientBalance =
+    srcBalanceKnown && parsedAmount > 0n && parsedAmount > srcBalanceRaw;
 
   const canSwap =
     !!intentParams &&
@@ -426,6 +438,7 @@ export function SwapCard() {
     !isApproving &&
     !samePair &&
     !needsChainSwitch &&
+    !insufficientBalance &&
     btcReady;
 
   const srcLabel = chainInfo(src.chain)?.label ?? srcType;
@@ -436,6 +449,8 @@ export function SwapCard() {
       ? `Connect ${dstLabel}`
       : needsChainSwitch
         ? `Switch wallet to ${srcLabel}`
+        : insufficientBalance
+        ? `Insufficient ${src.symbol} balance`
         : samePair
         ? "Pick two different tokens"
         : btcInvolved && !radfi.isAuthed
@@ -502,14 +517,15 @@ export function SwapCard() {
                 color: "var(--vh-text-3)",
               }}
             >
-              <span>
+              <span style={insufficientBalance ? { color: "var(--vh-magenta-500)" } : undefined}>
                 Balance:{" "}
-                <span style={{ color: "var(--vh-text)" }}>
+                <span style={{ color: insufficientBalance ? "var(--vh-magenta-500)" : "var(--vh-text)" }}>
                   {Number(formatUnits(srcBalanceRaw, src.decimals)).toLocaleString("en-US", {
                     maximumFractionDigits: 6,
                   })}
                 </span>{" "}
                 {src.symbol}
+                {insufficientBalance ? " · too low" : ""}
               </span>
               <button
                 type="button"

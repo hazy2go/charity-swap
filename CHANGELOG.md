@@ -7,6 +7,16 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ## Day 12 — Fri 2026-05-29 — Full audit pass + points integrity
 
+### 🐛 Insufficient-balance guard + swap timeout
+- A swap for more than the wallet's token balance reached a doomed tx (wallet
+  sim: "ERC20: transfer amount exceeds balance"; on-chain: reverted) and then
+  the SDK hung polling the relay. Now the From row turns the balance red ("too
+  low"), the button reads **"Insufficient {token} balance"**, and signing is
+  blocked. Confirmed against a reverted Polygon tx.
+- `swap()` now passes a 120s `timeout` so cross-chain settlement can't hang the
+  UI forever; on timeout the user gets "signed on-chain, delivery taking longer
+  than usual — check before resending" instead of a spinning button.
+
 ### 🐛 Wrong-network guard (real bug — stuck swap)
 - Diagnosed a hung swap: an EVM wallet on the **wrong network** broadcast the
   intent tx on whatever chain it was on. The calldata targets the *source*
