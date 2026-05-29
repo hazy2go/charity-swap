@@ -255,16 +255,38 @@ export function chainInfo(key: ChainKey): ChainInfo | undefined {
   return CHAINS.find((c) => c.key === key);
 }
 
-export function tokensForChain(chainKey: ChainKey): TokenInfo[] {
-  return TOKENS.filter((t) => t.chain === chainKey);
-}
+// Sonic is the SODAX hub chain. Native gas tokens behave differently here.
+export const HUB_CHAIN: ChainKey = ChainKeys.SONIC_MAINNET;
 
-export function findToken(chainKey: ChainKey, address: string): TokenInfo | undefined {
-  return TOKENS.find((t) => t.chain === chainKey && t.address === address);
+export function isHubChain(chainKey: ChainKey): boolean {
+  return chainKey === HUB_CHAIN;
 }
 
 export function isNativeToken(address: string): boolean {
   return address.toLowerCase() === NATIVE;
+}
+
+// Native gas tokens (address(0)) are HUB-ONLY in SODAX. Per the Intents spec
+// (https://docs.sodax.com/developers/technical-overview/intents):
+//   "Native tokens can only be used on the hub chain"
+//   "Cross-chain transfers of native tokens are not supported"
+// A native token on a spoke (e.g. ETH on Optimism) bridges its deposit fine,
+// but the hub swap hook reverts: recvMessage mints the asset to the recipient
+// hub wallet (_transfer.to) while the hook executes in the SOURCE hub wallet
+// (getWallet(srcChainId, _transfer.from)) — different wallet, balance 0,
+// HookFailed("External call failed"). This cost a real user 0.001 ETH on
+// mainnet (Optimism→Sonic, tx 0xe026b4c9…). So a native token is only
+// swappable when it lives on the hub chain itself.
+export function isSwappableToken(t: TokenInfo): boolean {
+  return !isNativeToken(t.address) || isHubChain(t.chain);
+}
+
+export function tokensForChain(chainKey: ChainKey): TokenInfo[] {
+  return TOKENS.filter((t) => t.chain === chainKey && isSwappableToken(t));
+}
+
+export function findToken(chainKey: ChainKey, address: string): TokenInfo | undefined {
+  return TOKENS.find((t) => t.chain === chainKey && t.address === address);
 }
 
 // Default pair: Arbitrum USDC → Sonic SODA (the headline "buy SODA" route).

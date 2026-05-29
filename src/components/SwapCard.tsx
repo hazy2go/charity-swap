@@ -26,6 +26,7 @@ import {
   findToken,
   chainInfo,
   isNativeToken,
+  isHubChain,
   xChainTypeOf,
   DEFAULT_SRC,
   DEFAULT_DST,
@@ -454,6 +455,16 @@ export function SwapCard() {
   const insufficientBalance =
     srcBalanceKnown && parsedAmount > 0n && parsedAmount > srcBalanceRaw;
 
+  // Native gas tokens are hub-only in SODAX — a native source/dest on a spoke
+  // bridges the deposit but reverts at the hub swap hook (asset minted to one
+  // hub wallet, hook runs in another → balance 0, HookFailed). tokensForChain
+  // already hides these from the pickers; this is the defense-in-depth block in
+  // case a native token reaches the intent another way (stale state, flip, a
+  // pre-filter URL). See isSwappableToken in swap-tokens.ts.
+  const nativeOnSpoke =
+    (isNativeToken(src.address) && !isHubChain(src.chain)) ||
+    (isNativeToken(dst.address) && !isHubChain(dst.chain));
+
   const canSwap =
     !!intentParams &&
     !!walletProvider &&
@@ -462,6 +473,7 @@ export function SwapCard() {
     !samePair &&
     !needsChainSwitch &&
     !insufficientBalance &&
+    !nativeOnSpoke &&
     btcReady;
 
   const srcLabel = chainInfo(src.chain)?.label ?? srcType;
@@ -472,6 +484,8 @@ export function SwapCard() {
       ? `Connect ${dstLabel}`
       : needsChainSwitch
         ? `Switch wallet to ${srcLabel}`
+        : nativeOnSpoke
+        ? `Native ${isNativeToken(src.address) && !isHubChain(src.chain) ? `${src.symbol} on ${srcLabel}` : `${dst.symbol} on ${dstLabel}`} isn't cross-chain swappable`
         : insufficientBalance
         ? `Insufficient ${src.symbol} balance`
         : samePair

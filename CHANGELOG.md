@@ -5,6 +5,34 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## v1.0.1 — Fri 2026-05-29 — 🐛 hotfix · native gas tokens are hub-only
+
+### Native source/dest token revert (real bug — real loss)
+- A user swapped **0.001 native ETH from Optimism → SODA on Sonic** and got
+  nothing. Traced end-to-end: the Optimism deposit succeeded, the relay packet
+  reached Sonic (`executed`), and the hub **minted the bridged ETH** — but the
+  destination swap **hook reverted** with `HookFailed("External call failed")` /
+  `ERC20InsufficientBalance(balance=0)`.
+- Root cause is ours: we listed **native gas tokens** (`address(0)` — ETH, POL,
+  BNB, AVAX, …) as selectable swap tokens on every spoke chain. Per the SODAX
+  Intents spec, native tokens are **hub-only**: *"Native tokens can only be used
+  on the hub chain … cross-chain transfers of native tokens are not supported."*
+  On a spoke the deposit bridges, but `recvMessage` mints the asset to the
+  recipient hub wallet (`_transfer.to`) while the hook runs in the **source** hub
+  wallet (`getWallet(srcChainId, _transfer.from)`) — different wallet, balance 0,
+  revert. ERC-20 routes (USDC, etc.) were never affected.
+- Fix: a native token is now swappable **only on the hub chain (Sonic)**.
+  `tokensForChain` hides native gas tokens from the pickers on every spoke
+  (`isSwappableToken` in `swap-tokens.ts`), and a defense-in-depth submit guard
+  (`nativeOnSpoke`) blocks signing if one reaches the intent another way — button
+  reads **"Native {TOKEN} on {CHAIN} isn't cross-chain swappable."**
+- The affected user's funds are **not lost**: the bridged ETH (`0xad3328…78cd`,
+  1e15) sits in their recipient hub wallet `0x2c97…fbb3` on Sonic, recoverable
+  via the hub wallet. Escalated to SODAX core for the sweep/fill.
+  (Optimism `0xe026b4c9…4178d2e` · Sonic `0xd230f0b6…88ccb1f`.)
+
+---
+
 ## v1.0.0 — Fri 2026-05-29 — 🎉 1.0 · Final release
 
 Two weeks, built fully in public on the **SODAX SDK (`2.0.0-rc.8`)** via the
