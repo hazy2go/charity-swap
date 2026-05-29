@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useXAccount, useWalletProvider } from "@sodax/wallet-sdk-react";
 import { TopBar } from "@/components/TopBar";
 import { SiteFooter } from "@/components/SiteFooter";
+import { FeeClaimCard } from "@/components/FeeClaimCard";
 import { RegMark, Slash } from "@/components/hud";
 
 const ADMIN_WALLET =
@@ -50,6 +51,10 @@ export default function AdminVotePage() {
             </p>
 
             <AdminBody />
+
+            <div style={{ marginTop: 18 }}>
+              <FeeClaimCard />
+            </div>
           </div>
         </div>
       </main>

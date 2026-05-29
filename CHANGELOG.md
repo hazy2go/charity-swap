@@ -59,6 +59,19 @@ cross-VM — and the partner fee-accrual read works. No money-routing bugs.
 - **Max on a native token leaves a small gas reserve** (0.003 ETH on Ethereum,
   0.001 elsewhere) so the swap tx can still pay gas; ERC-20 reserves nothing.
 
+### Fee claim (admin page)
+- New `FeeClaimCard` on `/vote/admin` — the partner fee-claim flow, wired to the
+  rc.8 `sodax.partners.feeClaim` lifecycle.
+- **Gated to the charity wallet**, not the admin wallet: fees are owned by the
+  charity EOA on the Sonic hub, so only it can sign the claim. The card refuses
+  to act for any other connected wallet.
+- Flow: read accrued basket (`useFetchAssetsBalances`) → one-time
+  `useSetSwapPreference` (output = **USDC on Sonic**, back to the charity wallet)
+  → per token `isTokenApproved`/`useApproveToken` then `useFeeClaimSwap`. A
+  "Claim all → USDC" button loops the basket with a live progress log.
+- Read path verified against the live hub (balances / preferences / approval
+  state all resolve); signing requires the charity key, untested headlessly.
+
 ### RPC fix
 - Swept all 12 default EVM RPCs — **Polygon's `polygon-rpc.com` now 401s**
   (gated behind a key), which would break Polygon balances + swaps. Swapped the
