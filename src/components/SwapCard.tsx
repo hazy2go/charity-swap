@@ -70,6 +70,14 @@ type PreviewPrice = {
 const SLIPPAGE_KEY = "swb_slippage_bps";
 const SLIPPAGE_PRESETS = [10, 50, 100, 300] as const; // 0.10%, 0.50%, 1.00%, 3.00%
 
+// Gas left behind when "Max" is used on a NATIVE token (human units), so the
+// swap tx still has gas to spend. Ethereum mainnet gas is dear; the L2s /
+// alt-L1s are cheap, hence the small default. ERC-20 sources reserve nothing.
+const NATIVE_GAS_RESERVE: Partial<Record<ChainKey, number>> = {
+  [ChainKeys.ETHEREUM_MAINNET]: 0.003,
+};
+const DEFAULT_NATIVE_RESERVE = 0.001;
+
 export function SwapCard() {
   const [srcChain, setSrcChain] = useState<ChainKey>(DEFAULT_SRC.chain);
   const [srcAddr, setSrcAddr] = useState(DEFAULT_SRC.address);
@@ -135,7 +143,17 @@ export function SwapCard() {
   // Exactly one token queried → the single value is its raw balance.
   const srcBalanceRaw =
     srcBalances && !srcIsBitcoin ? Object.values(srcBalances)[0] ?? 0n : 0n;
-  const setMax = () => setAmount(formatUnits(srcBalanceRaw, src.decimals));
+  const setMax = () => {
+    let raw = srcBalanceRaw;
+    // Native source pays gas in the same token — leave a reserve.
+    if (isNativeToken(src.address)) {
+      const reserveHuman = NATIVE_GAS_RESERVE[src.chain] ?? DEFAULT_NATIVE_RESERVE;
+      let reserve = 0n;
+      try { reserve = parseUnits(String(reserveHuman), src.decimals); } catch { /* keep 0 */ }
+      raw = raw > reserve ? raw - reserve : 0n;
+    }
+    setAmount(formatUnits(raw, src.decimals));
+  };
 
   // Bitcoin via Radfi — separate flow: 2-of-2 multisig trading wallet,
   // sign-in + fund + per-swap dust limit + trading address as dst. See
@@ -485,6 +503,11 @@ export function SwapCard() {
                 type="button"
                 onClick={setMax}
                 disabled={srcBalanceRaw <= 0n}
+                title={
+                  isNativeToken(src.address)
+                    ? "Use balance minus a small gas reserve"
+                    : "Use full balance"
+                }
                 className="vh-btn vh-btn--ghost vh-btn--xs"
                 style={{ height: 24, padding: "0 10px", fontSize: 10 }}
               >

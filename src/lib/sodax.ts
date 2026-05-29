@@ -50,7 +50,8 @@ export const sodaxConfig: DeepPartial<SodaxConfig> = {
       rpcUrl: process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL ?? "https://mainnet.optimism.io",
     },
     [ChainKeys.POLYGON_MAINNET]: {
-      rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC_URL ?? "https://polygon-rpc.com",
+      // polygon-rpc.com now 401s (gated behind a key); publicnode is open.
+      rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC_URL ?? "https://polygon-bor-rpc.publicnode.com",
     },
     [ChainKeys.BSC_MAINNET]: {
       rpcUrl: process.env.NEXT_PUBLIC_BSC_RPC_URL ?? "https://bsc-dataseed.binance.org",

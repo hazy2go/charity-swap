@@ -56,6 +56,15 @@ cross-VM — and the partner fee-accrual read works. No money-routing bugs.
   **Max** button that fills the amount with the full balance.
 - Skipped for Bitcoin (its Radfi trading wallet has a separate balance flow).
 - Live-refetches on the SDK's interval; reads keyed by token address.
+- **Max on a native token leaves a small gas reserve** (0.003 ETH on Ethereum,
+  0.001 elsewhere) so the swap tx can still pay gas; ERC-20 reserves nothing.
+
+### RPC fix
+- Swept all 12 default EVM RPCs — **Polygon's `polygon-rpc.com` now 401s**
+  (gated behind a key), which would break Polygon balances + swaps. Swapped the
+  default to `polygon-bor-rpc.publicnode.com` (open, verified) in both
+  `sodax.ts` and `wallet-config.ts`. Still overridable via
+  `NEXT_PUBLIC_POLYGON_RPC_URL`. The other 11 RPCs are healthy.
 
 ### Mobile nav fix
 - Top bar was cramming the full 5-item inline nav next to the brand + Connect
