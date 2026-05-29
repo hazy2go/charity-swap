@@ -13,11 +13,12 @@ import {
   useFundTradingWallet,
   useRenewUtxos,
   loadRadfiSession,
+  useXBalances,
 } from "@sodax/dapp-kit";
-import { useWalletProvider, useXAccount } from "@sodax/wallet-sdk-react";
+import { useWalletProvider, useXAccount, useXService } from "@sodax/wallet-sdk-react";
 import { ChainKeys } from "@sodax/sdk";
 import { useQuery } from "@tanstack/react-query";
-import type { CreateIntentParams } from "@sodax/sdk";
+import type { CreateIntentParams, XToken } from "@sodax/sdk";
 import {
   CHAINS,
   tokensForChain,
@@ -107,6 +108,34 @@ export function SwapCard() {
   const srcAccount = useXAccount({ xChainType: srcType });
   const dstAccount = useXAccount({ xChainType: dstType });
   const walletProvider = useWalletProvider({ xChainId: src.chain });
+
+  // Source-token wallet balance + Max button. Bitcoin is skipped (its Radfi
+  // trading wallet has a separate balance flow). getBalances keys off
+  // symbol+address and never reads hubAsset/vault, so a minimal XToken cast
+  // is safe — avoids threading the full SDK token config through the picker.
+  const srcIsBitcoin = src.chain === ChainKeys.BITCOIN_MAINNET;
+  const srcXService = useXService({ xChainType: srcType });
+  // Plain object (not memoized): useXBalances keys its query by token
+  // content (symbol+address), so a fresh ref each render is harmless.
+  const srcXToken = {
+    symbol: src.symbol,
+    name: src.name,
+    decimals: src.decimals,
+    address: src.address,
+    chainKey: src.chain,
+  } as unknown as XToken;
+  const { data: srcBalances } = useXBalances({
+    params: {
+      xService: srcXService,
+      xChainId: src.chain,
+      xTokens: srcAccount.address && !srcIsBitcoin ? [srcXToken] : [],
+      address: srcAccount.address,
+    },
+  });
+  // Exactly one token queried → the single value is its raw balance.
+  const srcBalanceRaw =
+    srcBalances && !srcIsBitcoin ? Object.values(srcBalances)[0] ?? 0n : 0n;
+  const setMax = () => setAmount(formatUnits(srcBalanceRaw, src.decimals));
 
   // Bitcoin via Radfi — separate flow: 2-of-2 multisig trading wallet,
   // sign-in + fund + per-swap dust limit + trading address as dst. See
@@ -430,6 +459,39 @@ export function SwapCard() {
             onChange={(e) => setAmount(e.target.value)}
             className="vh-input vh-input-amount vh-input-big"
           />
+          {srcAccount.address && !srcIsBitcoin && (
+            <div
+              className="vh-mono"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 8,
+                fontSize: 11,
+                letterSpacing: "0.06em",
+                color: "var(--vh-text-3)",
+              }}
+            >
+              <span>
+                Balance:{" "}
+                <span style={{ color: "var(--vh-text)" }}>
+                  {Number(formatUnits(srcBalanceRaw, src.decimals)).toLocaleString("en-US", {
+                    maximumFractionDigits: 6,
+                  })}
+                </span>{" "}
+                {src.symbol}
+              </span>
+              <button
+                type="button"
+                onClick={setMax}
+                disabled={srcBalanceRaw <= 0n}
+                className="vh-btn vh-btn--ghost vh-btn--xs"
+                style={{ height: 24, padding: "0 10px", fontSize: 10 }}
+              >
+                Max
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Flip */}

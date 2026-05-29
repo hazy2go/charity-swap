@@ -50,6 +50,13 @@ cross-VM — and the partner fee-accrual read works. No money-routing bugs.
 - `pnpm db:push` applied: adds `dstTxHash`/`intentHash`/`used_nonces`, drops the
   dead `payout_votes`/`ballots` tables (were empty).
 
+### Swap UX — wallet balance + Max
+- The From section now shows the **connected wallet's balance** of the selected
+  source token (e.g. Polygon USDC) via `useXBalances` + `useXService`, with a
+  **Max** button that fills the amount with the full balance.
+- Skipped for Bitcoin (its Radfi trading wallet has a separate balance flow).
+- Live-refetches on the SDK's interval; reads keyed by token address.
+
 ### Mobile nav fix
 - Top bar was cramming the full 5-item inline nav next to the brand + Connect
   button on phones, so the links collided/scrolled into each other.
