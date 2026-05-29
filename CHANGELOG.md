@@ -5,7 +5,41 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
-## Day 12 — Fri 2026-05-29 — Full audit pass + points integrity
+## v1.0.0 — Fri 2026-05-29 — 🎉 1.0 · Final release
+
+Two weeks, built fully in public on the **SODAX SDK (`2.0.0-rc.8`)** via the
+[Builders MCP](https://builders.sodax.com/mcp). This is the 1.0 cut — and the
+final patch note.
+
+**What Swaps without Borders is:** a mainnet cross-chain swap dapp where every
+swap charges a flat **0.1% fee that goes 100% to a community-voted charity** —
+no skim, no ops cut, every inflow and outflow auditable on the Sonic explorer.
+
+### v1.0 capabilities
+- **Swaps across 19 networks** — 12 EVM chains, 6 non-EVM ecosystems (Solana,
+  Sui, Injective, ICON, Stellar, NEAR) and **Bitcoin via Radfi** — routed by the
+  SODAX solver. Live quotes, chain→token picker, wallet balance + Max (gas-aware),
+  user-set slippage, and a live execution progress modal.
+- **Charity fee engine** — the 0.1% partner fee accrues to a dedicated public
+  Sonic wallet as a token basket on the hub; `/charities` shows it live (basket
+  + USD, down to sub-cent).
+- **Points + leaderboard** — every **solver-confirmed** swap earns points by USD
+  value, server-verified against the solver so failed/fake swaps earn nothing.
+- **Payout voting** — admin opens threshold-based rounds; connected wallets vote
+  weighted by their points; the winning charity takes the pot. Admin actions are
+  signature-gated and nonce-replay-protected.
+- **Fee-claim treasury** — a charity-wallet-gated claim flow consolidates the
+  accrued basket into USDC on Sonic.
+- **Hardened** — wrong-network + insufficient-balance guards, bounded swap
+  timeout, security headers, in-memory rate limiting, strict input validation,
+  mobile-first nav.
+
+**Verified live on mainnet:** first real swap end-to-end (USDC→POL, solver
+SOLVED, point credited, 0.1% fee landed in the charity wallet). 🩷
+
+---
+
+### Today — final day (Day 12) · full audit + integrity hardening
 
 ### Swap progress modal
 - New live progress modal so the "Engaging" phase never looks stuck. Steps:
