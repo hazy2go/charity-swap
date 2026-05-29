@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { parseUnits, formatUnits } from "viem";
 import {
   useQuote,
@@ -77,6 +78,14 @@ const NATIVE_GAS_RESERVE: Partial<Record<ChainKey, number>> = {
   [ChainKeys.ETHEREUM_MAINNET]: 0.003,
 };
 const DEFAULT_NATIVE_RESERVE = 0.001;
+
+// Live progress for the swap modal so "Engaging…" never looks stuck.
+type SwapPhase = {
+  step: "approve" | "submit" | "confirm" | "done" | "error";
+  withApprove: boolean;
+  route: string;
+  message?: string;
+};
 
 export function SwapCard() {
   const [srcChain, setSrcChain] = useState<ChainKey>(DEFAULT_SRC.chain);
@@ -313,6 +322,7 @@ export function SwapCard() {
     | { kind: "ok"; message: string }
     | { kind: "err"; message: string }
   >({ kind: "idle" });
+  const [phase, setPhase] = useState<SwapPhase | null>(null);
 
   const needsApprove = !srcIsNative && !srcIsBtc && isApproved === false;
 
@@ -333,23 +343,33 @@ export function SwapCard() {
         if (j.status === "confirmed") {
           const pts = j.pointsAwarded ?? pendingPts ?? 0;
           setStatus({ kind: "ok", message: `Swap confirmed · +${pts.toLocaleString()} pts credited` });
+          setPhase((p) => (p ? { ...p, step: "done", message: `+${pts.toLocaleString()} pts credited` } : p));
           return;
         }
         if (j.status === "failed") {
           setStatus({ kind: "err", message: "Swap failed on-chain — no points credited." });
+          setPhase((p) => (p ? { ...p, step: "error", message: "Swap failed on-chain — no points credited." } : p));
           return;
         }
       } catch { /* keep polling */ }
     }
+    // Still settling after the polling window — it'll credit automatically.
+    setPhase((p) =>
+      p ? { ...p, step: "done", message: "Submitted — still settling. Points credit once delivered." } : p,
+    );
   };
 
   const handleSwap = async () => {
     if (!intentParams || !walletProvider) return;
     setStatus({ kind: "idle" });
+    const route = `${src.symbol} → ${dst.symbol}`;
+    const withApprove = needsApprove;
+    setPhase({ step: withApprove ? "approve" : "submit", withApprove, route });
     try {
       if (needsApprove) {
         await approve({ params: intentParams, walletProvider });
       }
+      setPhase((p) => (p ? { ...p, step: "submit" } : p));
       // Bound the cross-chain settlement wait so the UI can't hang forever.
       const swapRes = await swap({ params: intentParams, walletProvider, timeout: 120_000 });
 
@@ -411,7 +431,9 @@ export function SwapCard() {
 
       // Reconcile against the solver in the background; credits points only
       // once the intent actually executes.
+      setPhase((p) => (p ? { ...p, step: "confirm" } : p));
       if (eventId) void pollConfirm(eventId, pendingPts);
+      else setPhase((p) => (p ? { ...p, step: "done", message: "Swap submitted." } : p));
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Swap failed";
       const friendly = /timeout|relay/i.test(msg)
@@ -420,6 +442,7 @@ export function SwapCard() {
           ? `Not enough ${src.symbol} in your wallet for this amount.`
           : msg;
       setStatus({ kind: "err", message: friendly });
+      setPhase((p) => (p ? { ...p, step: "error", message: friendly } : p));
     }
   };
 
@@ -911,7 +934,135 @@ export function SwapCard() {
           {srcLabel} → {dstLabel}
         </span>
       </div>
+
+      {phase && typeof document !== "undefined" &&
+        createPortal(
+          <SwapProgress phase={phase} onClose={() => setPhase(null)} />,
+          document.body,
+        )}
     </div>
+  );
+}
+
+function SwapProgress({ phase, onClose }: { phase: SwapPhase; onClose: () => void }) {
+  const steps: ReadonlyArray<"approve" | "submit" | "confirm"> = phase.withApprove
+    ? ["approve", "submit", "confirm"]
+    : ["submit", "confirm"];
+  const labels: Record<string, { title: string; note: string }> = {
+    approve: { title: "Approve token", note: "Confirm the allowance in your wallet." },
+    submit: { title: "Sign & settle", note: "Sign in your wallet, then it settles cross-chain — can take ~1–2 min." },
+    confirm: { title: "Confirm & credit", note: "Verifying delivery with the solver and crediting points." },
+  };
+  const isError = phase.step === "error";
+  const isDone = phase.step === "done";
+  const activeIdx = isDone ? steps.length : isError ? -1 : steps.indexOf(phase.step as "approve" | "submit" | "confirm");
+
+  const statusOf = (i: number): "done" | "active" | "pending" | "error" => {
+    if (isDone) return "done";
+    if (isError) return i === Math.max(0, steps.length - 1) ? "error" : i < steps.length - 1 ? "done" : "pending";
+    if (i < activeIdx) return "done";
+    if (i === activeIdx) return "active";
+    return "pending";
+  };
+
+  return (
+    <>
+      <div
+        onClick={isDone || isError ? onClose : undefined}
+        aria-hidden
+        style={{
+          position: "fixed", inset: 0, zIndex: 80,
+          background: "rgba(4,6,12,0.72)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)",
+          animation: "vh-fade-in 160ms ease both",
+        }}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Swap progress"
+        className="vh-card"
+        style={{
+          position: "fixed", zIndex: 81, left: "50%", top: "50%", transform: "translate(-50%,-50%)",
+          width: "min(92vw, 420px)", maxHeight: "88vh", overflow: "auto",
+          animation: "vh-sheet-drop 200ms ease both",
+        }}
+      >
+        <div className="vh-card__head">
+          <span className="vh-eyebrow" style={{ color: isError ? "var(--vh-magenta-500)" : "var(--vh-cyan-500)" }}>
+            {isError ? "Swap failed" : isDone ? "Swap complete" : "Swap in progress"}
+          </span>
+          <span style={{ marginLeft: "auto" }} className="vh-pill">{phase.route}</span>
+        </div>
+
+        <div className="vh-card__body" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {steps.map((s, i) => {
+              const st = statusOf(i);
+              const color =
+                st === "done" ? "var(--vh-acid-500)" :
+                st === "active" ? "var(--vh-cyan-500)" :
+                st === "error" ? "var(--vh-magenta-500)" : "var(--vh-text-4)";
+              return (
+                <div key={s} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <span
+                    aria-hidden
+                    className={st === "active" ? "vh-pulse" : undefined}
+                    style={{
+                      marginTop: 2, width: 16, height: 16, flexShrink: 0,
+                      display: "grid", placeItems: "center", borderRadius: 999,
+                      border: `1.5px solid ${color}`, color,
+                      boxShadow: st === "active" ? "0 0 8px var(--vh-cyan-glow)" : "none",
+                      fontSize: 10, fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    {st === "done" ? "✓" : st === "error" ? "✕" : st === "active" ? "" : ""}
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="vh-mono" style={{ fontSize: 13, color: st === "pending" ? "var(--vh-text-4)" : "var(--vh-text)" }}>
+                      {labels[s].title}
+                    </div>
+                    {st === "active" && (
+                      <div className="vh-mono" style={{ fontSize: 11, color: "var(--vh-text-3)", marginTop: 2, lineHeight: 1.45 }}>
+                        {labels[s].note}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {(isDone || isError) && phase.message && (
+            <div
+              role="status"
+              style={{
+                padding: 10,
+                border: `1px solid ${isError ? "var(--vh-magenta-soft)" : "var(--vh-acid-soft)"}`,
+                background: isError ? "var(--vh-magenta-soft)" : "var(--vh-acid-soft)",
+                color: isError ? "var(--vh-magenta-500)" : "var(--vh-acid-500)",
+                fontFamily: "var(--font-mono)", fontSize: 12, lineHeight: 1.5,
+              }}
+            >
+              <strong>{isError ? "ERR · " : "OK · "}</strong>{phase.message}
+            </div>
+          )}
+
+          {!isDone && !isError && (
+            <div className="vh-mono" style={{ fontSize: 11, color: "var(--vh-text-3)", lineHeight: 1.5 }}>
+              Keep this open. Cross-chain delivery can take a minute or two — it isn&apos;t stuck.
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={onClose}
+            className={`vh-btn vh-btn--block ${isDone || isError ? "vh-btn--primary" : "vh-btn--ghost"}`}
+          >
+            {isDone || isError ? "Close" : "Hide (keeps running)"}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 

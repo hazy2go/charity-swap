@@ -7,6 +7,13 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ## Day 12 — Fri 2026-05-29 — Full audit pass + points integrity
 
+### Swap progress modal
+- New live progress modal so the "Engaging" phase never looks stuck. Steps:
+  **Approve** (if needed) → **Sign & settle** (signs, then cross-chain settle,
+  ~1–2 min) → **Confirm & credit** → done/error. Active step pulses with a
+  reassurance note ("isn't stuck"), and the result (✓ +N pts / error) shows
+  inline. Dismissable ("Hide — keeps running"); the background poll continues.
+
 ### Charity panel — show sub-cent fees + token basket
 - First real fee landed (0.001009 USDC = 0.1% of a ~$1 swap) but the panel
   showed "$0.00" because it rounded USD to 2 decimals. Now the headline shows
