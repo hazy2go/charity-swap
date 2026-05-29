@@ -40,7 +40,7 @@ function Hero() {
         <span style={{ color: "var(--vh-cyan-500)" }}>
           <RegMark size={12} />
         </span>
-        Day 11 <Slash color="yellow" /> Build in public <Slash color="yellow" /> Mainnet
+        Live <Slash color="yellow" /> Build in public <Slash color="yellow" /> Mainnet
       </div>
 
       <h1 className="vh-h1">
@@ -61,7 +61,7 @@ function Hero() {
 
       <div className="vh-data-band" style={{ marginTop: 28 }}>
         <DataCell label="Fee per swap" value="0.1%" />
-        <DataCell label="Networks live" value="18" />
+        <DataCell label="Networks live" value="19" />
         <DataCell label="To charity" value="100%" accent />
       </div>
     </section>

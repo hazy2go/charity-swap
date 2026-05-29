@@ -68,6 +68,16 @@ export async function POST(req: Request) {
     );
   }
 
+  // Replay guard: burn the nonce. A captured signature can't be replayed
+  // because the second attempt hits the unique-PK violation.
+  try {
+    await prisma.usedNonce.create({
+      data: { nonce, action: "OPEN_ROUND", usedBy: ADMIN_WALLET },
+    });
+  } catch {
+    return NextResponse.json({ error: "nonce already used (replay)" }, { status: 409 });
+  }
+
   // Close any other open rounds (one active at a time)
   await prisma.voteRound.updateMany({
     where: { status: "open" },

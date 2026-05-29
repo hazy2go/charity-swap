@@ -5,6 +5,58 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## Day 12 — Fri 2026-05-29 — Full audit pass + points integrity
+
+Full audit of the whole app (functionality, dead code, placeholders, SDK
+correctness). All SDK usage verified against rc.8 and exercised live: every
+quote route resolves on the real solver — incl. both Bitcoin directions and
+cross-VM — and the partner fee-accrual read works. No money-routing bugs.
+
+### Audit fixes
+- **Points were credited before on-chain success** — see "Points integrity" below.
+- `SwapCard.tsx` — slippage restore moved out of `useMemo` (a render-time side
+  effect that broke SSR) into a proper mount effect.
+- Network count corrected **18 → 19** everywhere (Bitcoin was uncounted):
+  home stat, About copy, `swap-tokens.ts`.
+- Stale "Day 11" hero eyebrow → evergreen "Live".
+- "confirmed swap" copy fixed where it actually meant "submitted".
+- Dead code removed: `src/lib/stub-empty.ts` (referenced nowhere) and the
+  superseded `PayoutVote` / `Ballot` Prisma models.
+- Cleared all unused-var lint warnings + two pre-existing lint errors.
+
+### Points integrity (new)
+- **Points now count only for solver-confirmed swaps.** Leaderboard (page +
+  API) and vote-weight all filter on `status = "confirmed"`; submitted-but-
+  unconfirmed and failed intents earn nothing.
+- **`POST /api/swap-events/confirm`** — server-side reconciliation. The server
+  independently asks the solver (`sodax.swaps.getStatus`) whether the intent
+  executed (`SOLVED`→confirmed, `FAILED`→failed). The client cannot self-confirm
+  — this is the anti-farm trust boundary.
+- `SwapCard.tsx` logs all candidate hashes (`dstTxHash` / `txHash` /
+  `intentHash`) and polls confirm in the background; status card shows
+  "pending confirmation…" → "+N pts credited" / "failed on-chain".
+- New `sodax-server.ts` — shared server Sodax singleton + `verifySwapStatus`
+  (tries every candidate hash, since the solver keys off the hub tx; for
+  Sonic-destination swaps that's `dstTxHash`).
+- `swap_events` schema: added `dstTxHash` + `intentHash` (both `@unique`,
+  blocking hash replay).
+
+### Admin nonce replay guard (new)
+- New `UsedNonce` table. `/api/rounds` (open) and `/api/rounds/close` now burn
+  the signed nonce on use — a captured admin signature can't be replayed
+  (`409 nonce already used`).
+
+### DB
+- `pnpm db:push` applied: adds `dstTxHash`/`intentHash`/`used_nonces`, drops the
+  dead `payout_votes`/`ballots` tables (were empty).
+
+### Known follow-up
+- A sophisticated attacker reusing a *stranger's* real `SOLVED` hash with a
+  forged amount is still possible; fully closing it needs amount-binding via
+  `getIntent`. Unique hash constraints reduce but don't eliminate it.
+
+---
+
 ## Day 11 — Thu 2026-05-28 (BTC) — SDK rc.8 + Bitcoin via Radfi
 
 Boss feedback: bump to latest SDK (rc.8) and wire native BTC via the

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { Sodax, type SodaxConfig } from "@sodax/sdk";
-import { sodaxConfig } from "@/lib/sodax";
+import { getServerSodax } from "@/lib/sodax-server";
 import { priceOf } from "@/lib/pricing";
 
 // Live read of the charity wallet's accrued partner fees.
@@ -18,13 +17,6 @@ const CHARITY_WALLET =
   (process.env.NEXT_PUBLIC_CHARITY_FEE_ADDRESS ??
     "0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD") as `0x${string}`;
 
-// Lazy-init: keep one Sodax instance per server boot.
-let _sodax: Sodax | null = null;
-function getSodax() {
-  if (!_sodax) _sodax = new Sodax(sodaxConfig as SodaxConfig);
-  return _sodax;
-}
-
 export const dynamic = "force-dynamic";
 
 type AssetRow = {
@@ -40,7 +32,7 @@ type AssetRow = {
 
 export async function GET() {
   try {
-    const sodax = getSodax();
+    const sodax = getServerSodax();
     const result =
       await sodax.partners.feeClaim.fetchAssetsBalances(CHARITY_WALLET);
 
@@ -60,7 +52,7 @@ export async function GET() {
     let totalUsd = 0;
     let anyPriced = false;
 
-    for (const [_addr, b] of result.value.entries()) {
+    for (const [, b] of result.value.entries()) {
       const formatted = Number(b.balance) / 10 ** b.decimal;
       if (!Number.isFinite(formatted) || formatted <= 0) continue;
       const price = await priceOf(b.symbol);

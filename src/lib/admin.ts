@@ -47,7 +47,7 @@ export async function verifyAdmin({
       ok: getAddress(recovered) === ADMIN_WALLET,
       recovered,
     };
-  } catch (err) {
+  } catch {
     return { ok: false, recovered: null };
   }
 }

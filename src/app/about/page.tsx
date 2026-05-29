@@ -44,7 +44,7 @@ export default function AboutPage() {
                 body={
                   <>
                     Pick any two tokens across{" "}
-                    <strong style={{ color: "var(--vh-text)" }}>18 networks</strong>. The
+                    <strong style={{ color: "var(--vh-text)" }}>19 networks</strong>. The
                     SODAX solver routes the swap. A 0.1% partner fee is
                     deducted in the input token and forwarded to a public
                     wallet on Sonic.

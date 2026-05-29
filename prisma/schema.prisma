@@ -45,8 +45,13 @@ model SwapEvent {
   // Points awarded (points-to-USD ratio is community-decided, Day 4 vote)
   pointsAwarded Int      @default(0)
 
-  // Result
-  txHash        String?  @unique
+  // Result — candidate hashes the confirm step verifies against the solver.
+  // `getStatus` keys off the hub-chain (Sonic) tx; depending on the route
+  // that surfaces as the destination tx (hub-dest swaps) or must be resolved
+  // from the source tx, so we keep all three and let the server try each.
+  txHash        String?  @unique  // source-spoke tx hash (intent creation)
+  dstTxHash     String?  @unique  // destination tx hash (== hub tx for Sonic-dest)
+  intentHash    String?  @unique  // solver intent_hash
   status        SwapStatus @default(submitted)
 
   createdAt     DateTime @default(now())
@@ -62,47 +67,6 @@ enum SwapStatus {
   submitted
   confirmed
   failed
-}
-
-/// Snapshot of an in-flight or completed payout vote.
-/// Wired up Day 11 once the threshold + duration polls close.
-model PayoutVote {
-  id            String   @id @default(cuid())
-
-  thresholdUsd  Decimal  @db.Decimal(20, 6)
-  startsAt      DateTime
-  endsAt        DateTime
-  totalPoints   Int      @default(0)
-
-  // FK to Charity once it's seeded — stays nullable until the vote closes
-  winningCharityId String?
-
-  ballots       Ballot[]
-
-  createdAt     DateTime @default(now())
-  closedAt      DateTime?
-
-  @@index([endsAt])
-  @@map("payout_votes")
-}
-
-/// A wallet's spend of points on a candidate charity within one vote.
-model Ballot {
-  id           String   @id @default(cuid())
-
-  voteId       String
-  vote         PayoutVote @relation(fields: [voteId], references: [id])
-
-  wallet       String
-  charityId    String
-  pointsSpent  Int
-
-  createdAt    DateTime @default(now())
-
-  @@unique([voteId, wallet, charityId])
-  @@index([voteId])
-  @@index([wallet])
-  @@map("ballots")
 }
 
 /// Curated shortlist seeded Day 8 from the community suggestion pool.
@@ -144,6 +108,18 @@ model VoteRound {
 
   @@index([status, openedAt])
   @@map("vote_rounds")
+}
+
+/// Single-use nonce ledger for signed admin actions (open/close round).
+/// Each signed message embeds a random nonce; we record it on first use so
+/// a captured signature can't be replayed. Unique PK = the replay guard.
+model UsedNonce {
+  nonce     String   @id
+  action    String   // "OPEN_ROUND" | "CLOSE_ROUND"
+  usedBy    String   // admin wallet that signed it
+  createdAt DateTime @default(now())
+
+  @@map("used_nonces")
 }
 
 /// One wallet's vote in a round. Points snapshot is captured at cast time

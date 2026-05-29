@@ -101,6 +101,9 @@ export function Picker({
     [filteredGroups],
   );
 
+  // Reset the keyboard-highlighted row whenever the query or open state
+  // changes, so navigation always starts from the top of the new list.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setActiveIdx(0); }, [query, open]);
 
   useEffect(() => {

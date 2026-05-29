@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  * Body: { roundId: string, wallet: 0x…, candidateId: string }
  *
  * A wallet casts a vote in the current open round. We snapshot their
- * current points balance (sum of pointsAwarded from confirmed swaps).
+ * current points balance (sum of pointsAwarded from submitted swaps).
  * Unique constraint [roundId, wallet] prevents double-voting.
  *
  * Note: this is intentionally NOT signature-gated. A wallet only "votes"
@@ -52,7 +52,8 @@ export async function POST(req: Request) {
   // (case-insensitive match on the leaderboard wallet column).
   const grouped = await prisma.swapEvent.groupBy({
     by: ["wallet"],
-    where: { wallet: { in: [normalized, lowercased] } },
+    // Vote weight = points from solver-confirmed swaps only.
+    where: { wallet: { in: [normalized, lowercased] }, status: "confirmed" },
     _sum: { pointsAwarded: true },
   });
   const points = grouped.reduce(
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
       { ok: true, ballotId: ballot.id, pointsCast: points },
       { status: 200 },
     );
-  } catch (e) {
+  } catch {
     // unique constraint violation = wallet already voted
     return NextResponse.json(
       { error: "already voted in this round" },

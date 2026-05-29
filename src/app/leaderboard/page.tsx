@@ -24,6 +24,8 @@ async function loadLeaderboard(): Promise<{
   try {
     const grouped = await prisma.swapEvent.groupBy({
       by: ["wallet"],
+      // Only solver-confirmed swaps count toward points + rank.
+      where: { status: "confirmed" },
       _sum: { pointsAwarded: true, usdValue: true },
       _count: { _all: true },
       orderBy: { _sum: { pointsAwarded: "desc" } },
@@ -87,8 +89,8 @@ export default async function LeaderboardPage() {
               Leader<span style={{ color: "var(--vh-magenta-500)" }}>board.</span>
             </h1>
             <p className="vh-lede" style={{ maxWidth: 580 }}>
-              Every confirmed swap earns points proportional to its USD value
-              at submit time. Points-to-USD ratio is community-vote-pinned —
+              Every swap submitted through the dapp earns points proportional
+              to its USD value at submit time. Points-to-USD ratio is community-vote-pinned —
               today, <strong style={{ color: "var(--vh-text)" }}>1 pt = $1 swapped</strong>.
             </p>
 

@@ -11,6 +11,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => createSodaxQueryClient());
   const [mounted, setMounted] = useState(false);
 
+  // Gate the provider tree on a client mount so SSR emits a static
+  // skeleton and the wallet SDK only boots in the browser. Setting state
+  // once on mount is the intended pattern here.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
 
   if (!mounted) return <SsrBootSkeleton />;

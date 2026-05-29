@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { parseUnits, formatUnits } from "viem";
 import {
   useQuote,
@@ -78,12 +78,14 @@ export function SwapCard() {
   const [slippageBps, setSlippageBps] = useState<number>(50); // 0.50%
   const [showSlippage, setShowSlippage] = useState(false);
 
-  // Persist user slippage choice across reloads
-  useMemo(() => {
-    if (typeof window === "undefined") return;
+  // Restore the persisted slippage choice once, after mount. (Reading
+  // localStorage during render — e.g. in useMemo — is a side effect and
+  // breaks SSR hydration; do it in an effect instead.)
+  useEffect(() => {
     const saved = window.localStorage.getItem(SLIPPAGE_KEY);
     if (saved) {
       const n = Number(saved);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (Number.isFinite(n) && n >= 1 && n <= 5000) setSlippageBps(n);
     }
   }, []);
@@ -258,6 +260,33 @@ export function SwapCard() {
 
   const needsApprove = !srcIsNative && !srcIsBtc && isApproved === false;
 
+  // Poll the server-side confirmation (the trust boundary: the server asks
+  // the solver whether the intent actually executed). Points only count
+  // once a swap is confirmed, so we surface that transition to the user.
+  const pollConfirm = async (id: string, pendingPts: number | null) => {
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 6000));
+      try {
+        const r = await fetch("/api/swap-events/confirm", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        if (!r.ok) continue;
+        const j = (await r.json()) as { status?: string; pointsAwarded?: number };
+        if (j.status === "confirmed") {
+          const pts = j.pointsAwarded ?? pendingPts ?? 0;
+          setStatus({ kind: "ok", message: `Swap confirmed · +${pts.toLocaleString()} pts credited` });
+          return;
+        }
+        if (j.status === "failed") {
+          setStatus({ kind: "err", message: "Swap failed on-chain — no points credited." });
+          return;
+        }
+      } catch { /* keep polling */ }
+    }
+  };
+
   const handleSwap = async () => {
     if (!intentParams || !walletProvider) return;
     setStatus({ kind: "idle" });
@@ -265,21 +294,27 @@ export function SwapCard() {
       if (needsApprove) {
         await approve({ params: intentParams, walletProvider });
       }
-      const { solverExecutionResponse, intent } = await swap({
-        params: intentParams,
-        walletProvider,
-      });
+      const swapRes = await swap({ params: intentParams, walletProvider });
 
-      const txHash =
-        (intent && typeof intent === "object" && "txHash" in intent
-          ? (intent as { txHash?: string }).txHash
-          : undefined) ?? undefined;
+      // SwapResponse: { solverExecutionResponse, intent, intentDeliveryInfo }.
+      // Pull every hash the server might verify against — the solver keys off
+      // the hub-chain tx, which for a Sonic-destination swap is dstTxHash.
+      const delivery = swapRes.intentDeliveryInfo as
+        | { srcTxHash?: string; dstTxHash?: string }
+        | undefined;
+      const intentHashRaw = swapRes.solverExecutionResponse?.intent_hash;
+      const isHash64 = (h?: string) => typeof h === "string" && /^0x[0-9a-fA-F]{64}$/.test(h);
+      const isHex = (h?: string) => typeof h === "string" && /^0x[0-9a-fA-F]+$/.test(h);
+      const txHash = isHash64(delivery?.srcTxHash) ? delivery!.srcTxHash : undefined;
+      const dstTxHash = isHex(delivery?.dstTxHash) ? delivery!.dstTxHash : undefined;
+      const intentHash = isHex(intentHashRaw) ? intentHashRaw : undefined;
 
       const routeId = `${src.chain}.${src.symbol}__${dst.chain}.${dst.symbol}`
         .replace(/[^A-Za-z0-9._-]/g, "-")
         .slice(0, 64);
 
-      let pointsAwarded: number | null = null;
+      let eventId: string | null = null;
+      let pendingPts: number | null = null;
       try {
         const res = await fetch("/api/swap-events", {
           method: "POST",
@@ -298,21 +333,28 @@ export function SwapCard() {
             dstQuotedRaw: quotedOut.toString(),
             dstDecimals: dst.decimals,
             txHash,
+            dstTxHash,
+            intentHash,
           }),
         });
         if (res.ok) {
-          const j = (await res.json()) as { pointsAwarded?: number };
-          pointsAwarded = j.pointsAwarded ?? null;
+          const j = (await res.json()) as { id?: string; pointsAwarded?: number };
+          eventId = j.id ?? null;
+          pendingPts = j.pointsAwarded ?? null;
         }
-      } catch { /* swallow */ }
+      } catch { /* swallow — logging is best-effort */ }
 
       setStatus({
         kind: "ok",
         message:
-          pointsAwarded != null
-            ? `Swap submitted · +${pointsAwarded.toLocaleString()} pts logged`
-            : `Swap submitted. Solver: ${JSON.stringify(solverExecutionResponse).slice(0, 80)}…`,
+          pendingPts != null
+            ? `Swap submitted · +${pendingPts.toLocaleString()} pts pending confirmation…`
+            : "Swap submitted — confirming on-chain…",
       });
+
+      // Reconcile against the solver in the background; credits points only
+      // once the intent actually executes.
+      if (eventId) void pollConfirm(eventId, pendingPts);
     } catch (e) {
       setStatus({
         kind: "err",

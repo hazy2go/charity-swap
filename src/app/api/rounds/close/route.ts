@@ -58,6 +58,15 @@ export async function POST(req: Request) {
     );
   }
 
+  // Replay guard: burn the nonce (unique PK rejects a reused signature).
+  try {
+    await prisma.usedNonce.create({
+      data: { nonce, action: "CLOSE_ROUND", usedBy: ADMIN_WALLET },
+    });
+  } catch {
+    return NextResponse.json({ error: "nonce already used (replay)" }, { status: 409 });
+  }
+
   await prisma.voteRound.update({
     where: { id: roundId },
     data: {

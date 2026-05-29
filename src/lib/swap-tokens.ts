@@ -7,13 +7,14 @@ export type ChainKey = (typeof ChainKeys)[keyof typeof ChainKeys];
 // ── SODAX swap registry ───────────────────────────────────────────────
 // Full network + token list, sourced from the SODAX Builders MCP
 // (https://builders.sodax.com/mcp · sodax_get_swap_tokens +
-// sodax_get_supported_chains). All 18 networks, ~115 tokens.
+// sodax_get_supported_chains). All 19 networks, ~115 tokens.
 //
-// Every network is swappable: the 12 EVM chains and the 6 non-EVM
-// ecosystems (Solana, Sui, Injective, ICON, Stellar, NEAR), whose wallet
-// adapters all ship bundled in @sodax/wallet-sdk. A swap signs on the
-// source chain and settles to the connected address on the destination
-// chain, so a cross-ecosystem route needs a wallet connected on both.
+// Every network is swappable: the 12 EVM chains, the 6 non-EVM
+// ecosystems (Solana, Sui, Injective, ICON, Stellar, NEAR), and Bitcoin
+// (via Radfi) — whose wallet adapters all ship bundled in
+// @sodax/wallet-sdk. A swap signs on the source chain and settles to the
+// connected address on the destination chain, so a cross-ecosystem route
+// needs a wallet connected on both.
 
 export type ChainType =
   | "EVM" | "SOLANA" | "SUI" | "INJECTIVE" | "ICON" | "STELLAR" | "NEAR" | "BITCOIN";

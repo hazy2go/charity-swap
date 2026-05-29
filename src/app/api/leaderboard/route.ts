@@ -52,6 +52,9 @@ export async function GET(req: Request) {
   try {
     const grouped = await prisma.swapEvent.groupBy({
       by: ["wallet"],
+      // Only solver-confirmed swaps earn points / rank — submitted-but-
+      // unconfirmed and failed intents are excluded.
+      where: { status: "confirmed" },
       _sum: { pointsAwarded: true, usdValue: true },
       _count: { _all: true },
       orderBy: { _sum: { pointsAwarded: "desc" } },

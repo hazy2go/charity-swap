@@ -241,5 +241,5 @@ export function Bracketed({ children, color = "cyan" }: { children: ReactNode; c
 /** Slash divider used in display copy */
 export function Slash({ color = "magenta" }: { color?: "magenta" | "cyan" | "yellow" }) {
   const c = color === "magenta" ? "var(--vh-magenta-500)" : color === "cyan" ? "var(--vh-cyan-500)" : "var(--vh-yellow-500)";
-  return <span style={{ color: c, fontFamily: "var(--font-mono)", fontWeight: 700 }}>//</span>;
+  return <span style={{ color: c, fontFamily: "var(--font-mono)", fontWeight: 700 }}>{"//"}</span>;
 }
