@@ -336,6 +336,141 @@ img, svg, video { max-width: 100%; height: auto; }
   flex-shrink: 0;
 }
 
+/* ── Mobile nav: hamburger + drop-sheet (< 768px) ───────────────────── */
+
+/* Inline nav is desktop-only; on mobile it moves into the drop-sheet. */
+@media (max-width: 767px) {
+  .vh-nav { display: none; }
+}
+
+/* Hamburger trigger — hidden on desktop, where the inline nav shows. */
+.vh-nav-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  background: var(--vh-s2);
+  border: 1px solid var(--vh-line-mid);
+  border-radius: var(--vh-r);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--vh-d1) var(--vh-ease), background var(--vh-d1) var(--vh-ease);
+}
+.vh-nav-toggle:hover,
+.vh-nav-toggle[aria-expanded="true"] {
+  border-color: var(--vh-cyan-500);
+  background: var(--vh-cyan-soft);
+}
+@media (min-width: 768px) {
+  .vh-nav-toggle { display: none; }
+}
+/* The bars: a center bar + two pseudo-element bars that fold into an X. */
+.vh-nav-toggle__bars,
+.vh-nav-toggle__bars::before,
+.vh-nav-toggle__bars::after {
+  display: block;
+  width: 17px;
+  height: 2px;
+  background: var(--vh-cyan-500);
+  box-shadow: 0 0 6px var(--vh-cyan-glow);
+  transition: transform var(--vh-d2) var(--vh-ease), opacity var(--vh-d1) var(--vh-ease);
+}
+.vh-nav-toggle__bars { position: relative; }
+.vh-nav-toggle__bars::before,
+.vh-nav-toggle__bars::after { content: ""; position: absolute; left: 0; }
+.vh-nav-toggle__bars::before { top: -6px; }
+.vh-nav-toggle__bars::after  { top: 6px; }
+.vh-nav-toggle__bars[data-open] { background: transparent; box-shadow: none; }
+.vh-nav-toggle__bars[data-open]::before { top: 0; transform: rotate(45deg); background: var(--vh-magenta-500); box-shadow: 0 0 6px var(--vh-magenta-glow); }
+.vh-nav-toggle__bars[data-open]::after  { top: 0; transform: rotate(-45deg); background: var(--vh-magenta-500); box-shadow: 0 0 6px var(--vh-magenta-glow); }
+
+/* Full-bleed scrim under the sheet, catching outside taps. */
+.vh-navsheet__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  border: 0;
+  padding: 0;
+  background: rgba(4, 6, 12, 0.6);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: vh-fade-in var(--vh-d2) var(--vh-ease) both;
+  cursor: default;
+}
+
+/* The sheet itself — drops below the header, full width. */
+.vh-navsheet {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 4px;
+  background: rgba(6, 8, 15, 0.97);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid var(--vh-line-mid);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.65);
+  animation: vh-sheet-drop var(--vh-d2) var(--vh-ease) both;
+}
+@media (min-width: 768px) {
+  .vh-navsheet, .vh-navsheet__scrim { display: none; }
+}
+.vh-navsheet__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 50px;
+  padding: 0 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vh-text-2);
+  text-decoration: none;
+  background: var(--vh-s2);
+  border: 1px solid var(--vh-line);
+  border-left: 2px solid transparent;
+  border-radius: var(--vh-r);
+  transition: color var(--vh-d1) var(--vh-ease), border-color var(--vh-d1) var(--vh-ease), background var(--vh-d1) var(--vh-ease);
+  animation: vh-sheet-item var(--vh-d2) var(--vh-ease) both;
+}
+.vh-navsheet__link:active { background: var(--vh-s3); }
+.vh-navsheet__link:hover { text-decoration: none; color: var(--vh-text); }
+.vh-navsheet__idx {
+  font-size: 10px;
+  color: var(--vh-text-4);
+  letter-spacing: 0.1em;
+}
+.vh-navsheet__label { flex: 1; }
+.vh-navsheet__arrow { color: var(--vh-magenta-500); font-size: 13px; }
+.vh-navsheet__link.is-active {
+  color: var(--vh-cyan-500);
+  border-color: var(--vh-cyan-soft);
+  border-left-color: var(--vh-cyan-500);
+  background: var(--vh-cyan-soft);
+}
+.vh-navsheet__link.is-active .vh-navsheet__idx { color: var(--vh-cyan-500); }
+.vh-navsheet__link.is-active .vh-navsheet__arrow { color: var(--vh-cyan-500); }
+
+@keyframes vh-sheet-drop {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes vh-sheet-item {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes vh-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ─────────────────────────── Pills / chips ─────────────────────────── */
 
 .vh-pill {

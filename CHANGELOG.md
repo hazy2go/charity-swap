@@ -50,6 +50,14 @@ cross-VM — and the partner fee-accrual read works. No money-routing bugs.
 - `pnpm db:push` applied: adds `dstTxHash`/`intentHash`/`used_nonces`, drops the
   dead `payout_votes`/`ballots` tables (were empty).
 
+### Mobile nav fix
+- Top bar was cramming the full 5-item inline nav next to the brand + Connect
+  button on phones, so the links collided/scrolled into each other.
+- `TopBar` is now a client component: **inline nav is desktop-only (≥768px)**;
+  on mobile it collapses to an animated hamburger that opens a Vectorheart drop-
+  sheet (stacked links, numbered, cyan active rail, magenta arrows, staggered
+  reveal, scrim + Escape + scroll-lock to dismiss).
+
 ### Known follow-up
 - A sophisticated attacker reusing a *stranger's* real `SOLVED` hash with a
   forged amount is still possible; fully closing it needs amount-binding via
