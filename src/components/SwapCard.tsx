@@ -15,7 +15,7 @@ import {
   loadRadfiSession,
   useXBalances,
 } from "@sodax/dapp-kit";
-import { useWalletProvider, useXAccount, useXService } from "@sodax/wallet-sdk-react";
+import { useWalletProvider, useXAccount, useXService, useEvmSwitchChain } from "@sodax/wallet-sdk-react";
 import { ChainKeys } from "@sodax/sdk";
 import { useQuery } from "@tanstack/react-query";
 import type { CreateIntentParams, XToken } from "@sodax/sdk";
@@ -113,9 +113,18 @@ export function SwapCard() {
 
   const srcType = xChainTypeOf(src.chain);
   const dstType = xChainTypeOf(dst.chain);
+  const srcIsEvm = srcType === "EVM";
   const srcAccount = useXAccount({ xChainType: srcType });
   const dstAccount = useXAccount({ xChainType: dstType });
   const walletProvider = useWalletProvider({ xChainId: src.chain });
+
+  // CRITICAL: an EVM wallet sitting on the wrong network will broadcast the
+  // intent tx on whatever chain it's on — the calldata targets the source
+  // chain's assetManager, so on the wrong chain it hits that address as a
+  // no-op (succeeds, moves nothing, creates no intent) and the swap hangs.
+  // Force the wallet onto the source chain before signing.
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain({ xChainId: src.chain });
+  const needsChainSwitch = srcIsEvm && !!srcAccount.address && isWrongChain;
 
   // Source-token wallet balance + Max button. Bitcoin is skipped (its Radfi
   // trading wallet has a separate balance flow). getBalances keys off
@@ -416,6 +425,7 @@ export function SwapCard() {
     !isSwapping &&
     !isApproving &&
     !samePair &&
+    !needsChainSwitch &&
     btcReady;
 
   const srcLabel = chainInfo(src.chain)?.label ?? srcType;
@@ -424,7 +434,9 @@ export function SwapCard() {
     ? `Connect ${srcLabel}`
     : !dstAccount.address
       ? `Connect ${dstLabel}`
-      : samePair
+      : needsChainSwitch
+        ? `Switch wallet to ${srcLabel}`
+        : samePair
         ? "Pick two different tokens"
         : btcInvolved && !radfi.isAuthed
           ? "Sign in to Bitcoin (Radfi)"
@@ -752,6 +764,13 @@ export function SwapCard() {
           className="vh-btn vh-btn--primary vh-btn--block"
           type="button"
           onClick={async () => {
+            // Wrong-network guard: an EVM wallet on the wrong chain would
+            // broadcast the intent on the wrong network (no-op, funds stuck,
+            // swap hangs). Switch to the source chain first.
+            if (needsChainSwitch) {
+              try { handleSwitchChain(); } catch { /* user rejected */ }
+              return;
+            }
             // Bitcoin readiness dispatch
             if (btcInvolved && !radfi.isAuthed) {
               try { await radfi.login(); } catch { /* user rejected */ }
@@ -814,7 +833,7 @@ export function SwapCard() {
           disabled={
             isSwapping || isApproving || isFunding || isRenewing ||
             radfi.isLoginPending ||
-            (!btcInvolved && !canSwap) ||
+            (!needsChainSwitch && !btcInvolved && !canSwap) ||
             (btcInvolved && radfi.isAuthed && btcReady && !canSwap)
           }
         >

@@ -11,7 +11,7 @@ import {
   useFeeClaimSwap,
   useSodaxContext,
 } from "@sodax/dapp-kit";
-import { useXAccount, useWalletProvider } from "@sodax/wallet-sdk-react";
+import { useXAccount, useWalletProvider, useEvmSwitchChain } from "@sodax/wallet-sdk-react";
 
 // Fees accrue to the charity wallet on the Sonic hub as a basket of wrapped
 // ERC-20s (one per token people swapped FROM). Only that wallet can claim
@@ -31,6 +31,10 @@ export function FeeClaimCard() {
   const isCharity = !!connected && connected.toLowerCase() === CHARITY_WALLET;
   const walletProvider = useWalletProvider({ xChainId: SONIC });
   const { sodax } = useSodaxContext();
+  // Claiming signs on Sonic — a wallet on the wrong network would broadcast
+  // there as a no-op. Force it onto Sonic first.
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain({ xChainId: SONIC });
+  const needsChainSwitch = isCharity && isWrongChain;
 
   const queryAddress = isCharity ? connected : undefined;
   const { data: basket, isLoading: basketLoading, refetch: refetchBasket } =
@@ -157,6 +161,22 @@ export function FeeClaimCard() {
             <code style={{ color: "var(--vh-magenta-500)" }}>0x95A8…721AD</code> — only it can
             claim. Connect that wallet on Sonic.
           </Note>
+        ) : needsChainSwitch ? (
+          <>
+            <Note tone="warn">
+              Your wallet is on the wrong network. Claiming signs on{" "}
+              <strong>Sonic</strong> — switch first.
+            </Note>
+            <button
+              type="button"
+              className="vh-btn vh-btn--primary vh-btn--block"
+              onClick={() => {
+                try { handleSwitchChain(); } catch { /* user rejected */ }
+              }}
+            >
+              Switch wallet to Sonic
+            </button>
+          </>
         ) : (
           <>
             <p className="vh-body" style={{ fontSize: 13, color: "var(--vh-text-3)" }}>

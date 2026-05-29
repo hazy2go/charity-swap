@@ -7,6 +7,18 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ## Day 12 — Fri 2026-05-29 — Full audit pass + points integrity
 
+### 🐛 Wrong-network guard (real bug — stuck swap)
+- Diagnosed a hung swap: an EVM wallet on the **wrong network** broadcast the
+  intent tx on whatever chain it was on. The calldata targets the *source*
+  chain's assetManager, so on the wrong chain it hit that address as a **no-op**
+  (tx succeeded, 0 events, moved nothing, no intent created) and the app hung
+  forever polling the relay. Funds never moved — but it looked broken.
+  (Trace: a tx on Ethereum to `0x348be4…` = Arbitrum's assetManager, while the
+  default route is Arbitrum.)
+- Fix: `SwapCard` and `FeeClaimCard` now use `useEvmSwitchChain` — when the
+  wallet is on the wrong network the action button becomes **"Switch wallet to
+  {chain}"** and signing is blocked until it's on the correct chain.
+
 Full audit of the whole app (functionality, dead code, placeholders, SDK
 correctness). All SDK usage verified against rc.8 and exercised live: every
 quote route resolves on the real solver — incl. both Bitcoin directions and
