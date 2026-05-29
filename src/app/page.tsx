@@ -1,4 +1,5 @@
 import { SwapCard } from "@/components/SwapCard";
+import { RecoverCard } from "@/components/RecoverCard";
 import { TopBar } from "@/components/TopBar";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RegMark, Slash } from "@/components/hud";
@@ -19,6 +20,7 @@ export default function Home() {
                 style={{ scrollMarginTop: 80 }}
               >
                 <SwapCard />
+                <RecoverCard />
               </div>
             </div>
           </div>

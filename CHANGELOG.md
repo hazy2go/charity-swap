@@ -5,6 +5,34 @@ see [BUILD-LOG.md](BUILD-LOG.md).
 
 ---
 
+## v1.0.2 — Fri 2026-05-29 — 🛟 feature · recover stuck funds
+
+### Self-serve recovery for funds stranded by a failed hook
+- Built on the diagnosis from v1.0.1. When a cross-chain action's spoke deposit
+  lands but the hub-side swap hook reverts, the bridged asset is minted into the
+  user's hub wallet on Sonic and parked there — safe, but not forwarded. New
+  **Recover // Stuck funds** panel (`RecoverCard`, under the swap card) detects
+  these for the connected EVM wallet and returns them with one signature.
+- How it works (`src/lib/recovery.ts`): scans every EVM hub-wallet derivation for
+  the user and reads `balanceOf` of every known hub asset (catches the
+  cross-chain-derivation bug, where the asset sits in a wallet derived from a
+  *different* chain than its own). For each stranded balance it builds the
+  withdrawal that makes that hub wallet call `AssetManager.transfer(asset, you,
+  amount)`, releasing it back to the asset's home chain. The user signs once on
+  the origin chain.
+- Why not the SDK's `sodax.recovery.withdrawHubAsset`? It derives the wallet AND
+  looks up the asset from a single `chainKey` — but the native-token bug strands
+  funds in a wallet derived from one chain (e.g. Base) while the asset belongs to
+  another (e.g. Optimism). We split those two lookups; the SDK helper can't.
+- **Safety:** every withdrawal is dry-run simulated (`eth_call` as the hub
+  wallet) before signing — if the simulation reverts, we never broadcast.
+  Verified on-chain against the real incident: payload decodes to exactly
+  `AssetManager.transfer(0xad3328…, user, 0.001)` and the hub execution
+  simulates clean. The affected user (0.001 ETH, Optimism→Sonic) can now recover
+  directly: connect on Base, hit Recover.
+
+---
+
 ## v1.0.1 — Fri 2026-05-29 — 🐛 hotfix · native gas tokens are hub-only
 
 ### Native source/dest token revert (real bug — real loss)
